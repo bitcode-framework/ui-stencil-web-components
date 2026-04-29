@@ -31,7 +31,8 @@ func DefaultRuntimeConfig() RuntimeConfig {
 }
 
 type Manager struct {
-	nodePool       *ProcessPool
+	workerPool     *ProcessPool
+	backgroundPool *ProcessPool
 	bridgeHandler  *BridgeHandler
 	bridgeFactory  *bridge.Factory
 	runtimeConfig  RuntimeConfig
@@ -73,17 +74,34 @@ func (m *Manager) StartNodePool() error {
 
 	log.Printf("[PLUGIN] detected %s engine: %s", engine, command)
 
-	pool := NewProcessPool(command, []string{"plugins/node/runtime.js"}, cfg.WorkerPool)
-	if err := pool.Start(); err != nil {
-		return fmt.Errorf("failed to start Node.js pool: %w", err)
+	args := []string{"plugins/node/runtime.js"}
+
+	workerPool := NewProcessPool(command, args, cfg.WorkerPool)
+	if err := workerPool.Start(); err != nil {
+		return fmt.Errorf("failed to start Node.js worker pool: %w", err)
+	}
+
+	var bgPool *ProcessPool
+	if cfg.BackgroundPool.Size > 0 {
+		bgPool = NewProcessPool(command, args, cfg.BackgroundPool)
+		if err := bgPool.Start(); err != nil {
+			log.Printf("[WARN] failed to start background pool: %v — using worker pool as fallback", err)
+			bgPool = nil
+		}
 	}
 
 	m.mu.Lock()
-	m.nodePool = pool
+	m.workerPool = workerPool
+	m.backgroundPool = bgPool
 	m.nodeAvailable = true
 	m.mu.Unlock()
 
-	log.Printf("[PLUGIN] Node.js runtime started (pool: %d, engine: %s)", cfg.WorkerPool.Size, engine)
+	totalSize := cfg.WorkerPool.Size
+	if bgPool != nil {
+		totalSize += cfg.BackgroundPool.Size
+	}
+	log.Printf("[PLUGIN] Node.js runtime started (worker: %d, background: %d, engine: %s)",
+		cfg.WorkerPool.Size, cfg.BackgroundPool.Size, engine)
 	return nil
 }
 
@@ -108,11 +126,12 @@ func (m *Manager) Execute(ctx context.Context, script string, params map[string]
 	}
 
 	m.mu.RLock()
-	pool := m.nodePool
 	available := m.nodeAvailable
+	workerPool := m.workerPool
+	bgPool := m.backgroundPool
 	m.mu.RUnlock()
 
-	if !available || pool == nil {
+	if !available || workerPool == nil {
 		return nil, &bridge.BridgeError{
 			Code:    "RUNTIME_NOT_AVAILABLE",
 			Message: "Node.js runtime is not available. Install Node.js 20+ or set runtime.node.enabled in bitcode.yaml",
@@ -120,13 +139,22 @@ func (m *Manager) Execute(ctx context.Context, script string, params map[string]
 	}
 
 	moduleName := ""
-	if runtimeParam, ok := params["__runtime"]; ok {
+	poolName := ""
+	if _, ok := params["__runtime"]; ok {
 		delete(params, "__runtime")
-		_ = runtimeParam
 	}
 	if mn, ok := params["__module"]; ok {
 		moduleName = fmt.Sprintf("%v", mn)
 		delete(params, "__module")
+	}
+	if pn, ok := params["__pool"]; ok {
+		poolName = fmt.Sprintf("%v", pn)
+		delete(params, "__pool")
+	}
+
+	pool := workerPool
+	if poolName == "background" && bgPool != nil {
+		pool = bgPool
 	}
 
 	var bc *bridge.Context
@@ -317,11 +345,15 @@ func (m *Manager) detectRuntime(script string, explicitRuntime string) string {
 func (m *Manager) StopAll() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if m.nodePool != nil {
-		m.nodePool.Stop()
-		m.nodePool = nil
-		m.nodeAvailable = false
+	if m.workerPool != nil {
+		m.workerPool.Stop()
+		m.workerPool = nil
 	}
+	if m.backgroundPool != nil {
+		m.backgroundPool.Stop()
+		m.backgroundPool = nil
+	}
+	m.nodeAvailable = false
 }
 
 // StartTypescript is kept for backward compatibility. Delegates to StartNodePool.

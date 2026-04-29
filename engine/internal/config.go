@@ -67,6 +67,8 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 	v.SetDefault("runtime.node.command", "")
 	v.SetDefault("runtime.worker.pool_size", 4)
 	v.SetDefault("runtime.worker.max_executions", 1000)
+	v.SetDefault("runtime.background.pool_size", 2)
+	v.SetDefault("runtime.background.max_executions", 100)
 
 	v.SetDefault("execution_log.enabled", true)
 	v.SetDefault("execution_log.save_input", true)
@@ -282,6 +284,10 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 			WorkerPool: plugin.PoolConfig{
 				Size:          v.GetInt("runtime.worker.pool_size"),
 				MaxExecutions: v.GetInt("runtime.worker.max_executions"),
+			},
+			BackgroundPool: plugin.PoolConfig{
+				Size:          v.GetInt("runtime.background.pool_size"),
+				MaxExecutions: v.GetInt("runtime.background.max_executions"),
 			},
 		},
 		AppMode: v.GetString("app.mode"),

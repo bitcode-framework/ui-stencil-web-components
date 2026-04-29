@@ -72,6 +72,7 @@ type StepDefinition struct {
 	// script
 	Runtime string `json:"runtime,omitempty"`
 	Script  string `json:"script,omitempty"`
+	Pool    string `json:"pool,omitempty"`
 
 	// http
 	URL     string            `json:"url,omitempty"`

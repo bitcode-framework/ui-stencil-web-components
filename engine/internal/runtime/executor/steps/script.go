@@ -48,6 +48,9 @@ func (h *ScriptHandler) Execute(ctx context.Context, execCtx *executor.Context, 
 	if execCtx.ModuleName != "" {
 		params["__module"] = execCtx.ModuleName
 	}
+	if step.Pool != "" {
+		params["__pool"] = step.Pool
+	}
 
 	runner := h.selectRunner(step)
 	if runner == nil {
