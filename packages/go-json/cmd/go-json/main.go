@@ -38,6 +38,8 @@ func main() {
 		cmdAST(os.Args[2:])
 	case "codegen":
 		cmdCodegen(os.Args[2:])
+	case "openapi":
+		cmdOpenAPI(os.Args[2:])
 	case "migrate":
 		cmdMigrate(os.Args[2:])
 	case "--version", "-v", "version":
@@ -508,5 +510,48 @@ func cmdServe(args []string) {
 	if err := srv.Start(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
+	}
+}
+
+func cmdOpenAPI(args []string) {
+	fs := flag.NewFlagSet("openapi", flag.ExitOnError)
+	output := fs.String("output", "", "Output file (default: stdout)")
+	fs.Parse(args)
+
+	if fs.NArg() < 1 {
+		fmt.Fprintln(os.Stderr, "Usage: go-json openapi <program.json> [--output file.json]")
+		os.Exit(1)
+	}
+
+	programPath := fs.Arg(0)
+
+	reg := stdlib.DefaultRegistry()
+	rt := runtime.NewRuntime(
+		runtime.WithStdlib(reg.All()),
+		runtime.WithStdlibEnv(reg.EnvVars()),
+	)
+
+	compiled, err := rt.CompileFile(programPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	spec := server.GenerateOpenAPISpec(compiled)
+
+	data, err := json.MarshalIndent(spec, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if *output != "" {
+		if err := os.WriteFile(*output, data, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "OpenAPI spec written to %s\n", *output)
+	} else {
+		fmt.Println(string(data))
 	}
 }
