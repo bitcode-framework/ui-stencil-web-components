@@ -26,12 +26,22 @@ func NewRegistry() *Registry {
 	}
 }
 
+var ReservedNamespaces = []string{"ctx", "input", "old", "session", "self"}
+
 func (r *Registry) Register(model *parser.ModelDefinition) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	if model.Name == "" {
 		return fmt.Errorf("model name is required")
+	}
+
+	for fieldName := range model.Fields {
+		for _, reserved := range ReservedNamespaces {
+			if fieldName == reserved {
+				log.Printf("[MODEL] WARNING: model %q has field %q which is a reserved expression namespace — domain_filter_expr will not work for this model", model.Name, fieldName)
+			}
+		}
 	}
 
 	if model.Module != "" {

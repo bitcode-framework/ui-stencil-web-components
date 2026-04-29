@@ -38,7 +38,8 @@ func setupSecurityLoaderDB(t *testing.T) *gorm.DB {
 	)`)
 	sqlDB.Exec(`CREATE TABLE record_rule (
 		id TEXT PRIMARY KEY, name TEXT UNIQUE, model_name TEXT, group_names TEXT DEFAULT '',
-		domain_filter TEXT, can_read INTEGER DEFAULT 1, can_create INTEGER DEFAULT 1,
+		domain_filter TEXT, domain_filter_expr TEXT,
+		can_read INTEGER DEFAULT 1, can_create INTEGER DEFAULT 1,
 		can_write INTEGER DEFAULT 1, can_delete INTEGER DEFAULT 0,
 		is_global INTEGER DEFAULT 0, active INTEGER DEFAULT 1,
 		module TEXT, modified_source TEXT DEFAULT 'json',

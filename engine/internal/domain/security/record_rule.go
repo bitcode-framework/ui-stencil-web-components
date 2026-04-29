@@ -13,7 +13,8 @@ type RecordRule struct {
 	Name         string `json:"name" gorm:"uniqueIndex;size:100"`
 	ModelName    string `json:"model_name" gorm:"size:100;index"`
 	GroupNames   string `json:"group_names" gorm:"size:500"`
-	DomainFilter string `json:"domain_filter" gorm:"type:jsonb"`
+	DomainFilter     string `json:"domain_filter" gorm:"type:jsonb"`
+	DomainFilterExpr string `json:"domain_filter_expr" gorm:"type:text"`
 	CanRead      bool   `json:"can_read" gorm:"default:true"`
 	CanCreate    bool   `json:"can_create" gorm:"default:true"`
 	CanWrite     bool   `json:"can_write" gorm:"default:true"`

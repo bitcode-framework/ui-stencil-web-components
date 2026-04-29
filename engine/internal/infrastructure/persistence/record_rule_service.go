@@ -3,8 +3,10 @@ package persistence
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
+	"github.com/expr-lang/expr/ast"
 	"gorm.io/gorm"
 )
 
@@ -13,16 +15,25 @@ import (
 //   - Group rules UNION (OR)
 //   - Final = AND(global) AND OR(group)
 type RecordRuleService struct {
-	db        *gorm.DB
-	tableName func(string) string
+	db          *gorm.DB
+	tableName   func(string) string
+	modelFields func(string) []string
 }
 
 func NewRecordRuleService(db *gorm.DB) *RecordRuleService {
-	return &RecordRuleService{db: db, tableName: func(n string) string { return n }}
+	return &RecordRuleService{
+		db:          db,
+		tableName:   func(n string) string { return n },
+		modelFields: func(n string) []string { return nil },
+	}
 }
 
 func (s *RecordRuleService) SetTableNameResolver(fn func(string) string) {
 	s.tableName = fn
+}
+
+func (s *RecordRuleService) SetModelFieldsResolver(fn func(string) []string) {
+	s.modelFields = fn
 }
 
 func (s *RecordRuleService) tn(model string) string {
@@ -44,18 +55,19 @@ func (s *RecordRuleService) GetFilters(userID string, modelName string, operatio
 	}
 
 	type ruleRow struct {
-		ID           string `gorm:"column:id"`
-		DomainFilter string `gorm:"column:domain_filter"`
-		CanRead      bool   `gorm:"column:can_read"`
-		CanCreate    bool   `gorm:"column:can_create"`
-		CanWrite     bool   `gorm:"column:can_write"`
-		CanDelete    bool   `gorm:"column:can_delete"`
-		GroupNames   string `gorm:"column:group_names"`
+		ID               string `gorm:"column:id"`
+		DomainFilter     string `gorm:"column:domain_filter"`
+		DomainFilterExpr string `gorm:"column:domain_filter_expr"`
+		CanRead          bool   `gorm:"column:can_read"`
+		CanCreate        bool   `gorm:"column:can_create"`
+		CanWrite         bool   `gorm:"column:can_write"`
+		CanDelete        bool   `gorm:"column:can_delete"`
+		GroupNames       string `gorm:"column:group_names"`
 	}
 
 	var rules []ruleRow
 	if err := s.db.Table(s.tn("record_rule")).
-		Select("id, domain_filter, can_read, can_create, can_write, can_delete, group_names").
+		Select("id, domain_filter, domain_filter_expr, can_read, can_create, can_write, can_delete, group_names").
 		Where("model_name = ? AND active = ?", modelName, true).
 		Find(&rules).Error; err != nil {
 		return nil, err
@@ -96,6 +108,86 @@ func (s *RecordRuleService) GetFilters(userID string, modelName string, operatio
 	}
 
 	return result, nil
+}
+
+func (s *RecordRuleService) GetExprFilters(userID string, modelName string, operation string, ruleCtx *RecordRuleContext) ([]WhereClause, error) {
+	var superCount int64
+	if err := s.db.Table(s.tn("user")).Where("id = ? AND is_superuser = ?", userID, true).Count(&superCount).Error; err != nil {
+		return nil, nil
+	}
+	if superCount > 0 {
+		return nil, nil
+	}
+
+	groupIDs, err := s.resolveUserGroupIDs(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	type ruleRow struct {
+		ID               string `gorm:"column:id"`
+		DomainFilterExpr string `gorm:"column:domain_filter_expr"`
+		CanRead          bool   `gorm:"column:can_read"`
+		CanCreate        bool   `gorm:"column:can_create"`
+		CanWrite         bool   `gorm:"column:can_write"`
+		CanDelete        bool   `gorm:"column:can_delete"`
+		GroupNames       string `gorm:"column:group_names"`
+	}
+
+	var rules []ruleRow
+	if err := s.db.Table(s.tn("record_rule")).
+		Select("id, domain_filter_expr, can_read, can_create, can_write, can_delete, group_names").
+		Where("model_name = ? AND active = ? AND domain_filter_expr != '' AND domain_filter_expr IS NOT NULL", modelName, true).
+		Find(&rules).Error; err != nil {
+		return nil, err
+	}
+
+	if len(rules) == 0 {
+		return nil, nil
+	}
+
+	fields := s.modelFields(modelName)
+	var allClauses []WhereClause
+
+	for _, rule := range rules {
+		if !ruleAppliesToOperation(rule.CanRead, rule.CanCreate, rule.CanWrite, rule.CanDelete, operation) {
+			continue
+		}
+
+		ruleGroupIDs := s.getRuleGroupIDs(rule.ID, rule.GroupNames)
+		if len(ruleGroupIDs) > 0 && !hasIntersection(ruleGroupIDs, groupIDs) {
+			continue
+		}
+
+		clauses, err := s.evaluateExprRule(rule.DomainFilterExpr, ruleCtx, fields)
+		if err != nil {
+			log.Printf("[RECORD_RULE] expr evaluation failed for rule %s: %v (deny-all)", rule.ID, err)
+			return []WhereClause{*denyAllClause()}, nil
+		}
+		allClauses = append(allClauses, clauses...)
+	}
+
+	return allClauses, nil
+}
+
+func (s *RecordRuleService) evaluateExprRule(expression string, ruleCtx *RecordRuleContext, fields []string) ([]WhereClause, error) {
+	tree, err := parseExprForRule(expression)
+	if err != nil {
+		return nil, fmt.Errorf("parse error: %w", err)
+	}
+
+	walker := NewExprToFilters(ruleCtx, fields)
+	return walker.Convert(tree)
+}
+
+var parseExprForRule = defaultParseExprForRule
+
+func defaultParseExprForRule(expression string) (ast.Node, error) {
+	return nil, fmt.Errorf("runtime.ParseExpr not wired")
+}
+
+func SetParseExprForRule(fn func(string) (ast.Node, error)) {
+	parseExprForRule = fn
 }
 
 func (s *RecordRuleService) getRuleGroupIDs(ruleID string, legacyGroupNames string) []string {

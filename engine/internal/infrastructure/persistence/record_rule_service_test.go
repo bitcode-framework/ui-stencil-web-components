@@ -43,6 +43,7 @@ func setupRecordRuleTestDB(t *testing.T) *gorm.DB {
 		model_name TEXT,
 		group_names TEXT DEFAULT '',
 		domain_filter TEXT,
+		domain_filter_expr TEXT,
 		can_read INTEGER DEFAULT 1,
 		can_create INTEGER DEFAULT 1,
 		can_write INTEGER DEFAULT 1,

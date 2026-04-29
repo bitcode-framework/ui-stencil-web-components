@@ -428,8 +428,9 @@ type FileConfig struct {
 }
 
 type RecordRuleDefinition struct {
-	Groups []string `json:"groups"`
-	Domain [][]any  `json:"domain"`
+	Groups           []string `json:"groups"`
+	Domain           [][]any  `json:"domain"`
+	DomainFilterExpr string   `json:"domain_filter_expr,omitempty"`
 }
 
 type ModelTableConfig struct {
@@ -862,6 +863,27 @@ func extractSearchableFields(model *ModelDefinition, format string) []string {
 		return []string{resolveTitleField(model)}
 	}
 	return fields
+}
+
+var ruleExprVarRe = regexp.MustCompile(`\{\{(\w+)\.(\w+)\}\}`)
+
+func PreprocessRuleExpr(input string) string {
+	result := ruleExprVarRe.ReplaceAllStringFunc(input, func(match string) string {
+		parts := ruleExprVarRe.FindStringSubmatch(match)
+		prefix, key := parts[1], parts[2]
+		switch prefix {
+		case "session", "user":
+			if prefix == "user" && key == "id" {
+				return "ctx.user_id"
+			}
+			return "ctx." + key
+		default:
+			return match
+		}
+	})
+	result = strings.ReplaceAll(result, "{{now}}", "ctx.now")
+	result = strings.ReplaceAll(result, "{{today}}", "ctx.today")
+	return result
 }
 
 func isTextSearchable(ft FieldType) bool {
