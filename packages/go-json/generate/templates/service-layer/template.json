@@ -1,0 +1,6 @@
+{
+  "name": "service-layer",
+  "description": "Service layer pattern — separates routes from business logic functions",
+  "language": "go-json",
+  "files": []
+}

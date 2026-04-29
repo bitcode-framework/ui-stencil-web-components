@@ -1,0 +1,6 @@
+{
+  "name": "hexagonal",
+  "description": "Hexagonal architecture pattern — cmd/ + internal/core/ + adapters/",
+  "language": "go",
+  "files": []
+}

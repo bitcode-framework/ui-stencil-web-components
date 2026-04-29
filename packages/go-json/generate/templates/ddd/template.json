@@ -1,0 +1,6 @@
+{
+  "name": "ddd",
+  "description": "Domain-Driven Design pattern — cmd/ + internal/domain/ + application/ + infrastructure/",
+  "language": "go",
+  "files": []
+}
