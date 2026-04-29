@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	cg "github.com/bitcode-framework/go-json/codegen"
 	goio "github.com/bitcode-framework/go-json/io"
 	"github.com/bitcode-framework/go-json/lang"
 	"github.com/bitcode-framework/go-json/runtime"
@@ -278,13 +279,49 @@ func cmdCodegen(args []string) {
 		os.Exit(1)
 	}
 
-	_ = pkg
+	programPath := fs.Arg(0)
 
-	fmt.Fprintf(os.Stderr, "Code generation for target '%s' not yet implemented\n", *target)
-	if *output != "" {
-		_ = output
+	reg := stdlib.DefaultRegistry()
+	rt := runtime.NewRuntime(
+		runtime.WithStdlib(reg.All()),
+		runtime.WithStdlibEnv(reg.EnvVars()),
+	)
+	defer rt.Close()
+
+	compiled, err := rt.CompileFile(programPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+		os.Exit(1)
 	}
-	os.Exit(1)
+
+	var gen cg.CodeGenerator
+	switch *target {
+	case "go":
+		gen = &cg.GoGenerator{PackageName: *pkg}
+	case "js", "javascript":
+		gen = &cg.JSGenerator{}
+	case "python", "py":
+		gen = &cg.PythonGenerator{}
+	default:
+		fmt.Fprintf(os.Stderr, "Error: unsupported target '%s' (use go, js, or python)\n", *target)
+		os.Exit(1)
+	}
+
+	code, err := gen.Generate(compiled)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	if *output != "" {
+		if err := os.WriteFile(*output, []byte(code), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+			os.Exit(1)
+		}
+		fmt.Printf("Generated %s code written to %s\n", gen.Language(), *output)
+	} else {
+		fmt.Print(code)
+	}
 }
 
 func cmdMigrate(args []string) {
