@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -272,6 +273,10 @@ func deepEqual(a, b any) bool {
 	bf, bIsFloat := toFloat(b)
 	if aIsFloat && bIsFloat {
 		return math.Abs(af-bf) < 1e-9
+	}
+
+	if reflect.DeepEqual(a, b) {
+		return true
 	}
 
 	aJSON, _ := json.Marshal(a)

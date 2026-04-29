@@ -8,12 +8,14 @@ import (
 
 const (
 	maxPatternLength = 1000
-	maxInputSize     = 1024 * 1024 // 1MB
+	maxInputSize     = 1024 * 1024
+	maxCacheSize     = 1000
 )
 
 var (
-	regexCache   = make(map[string]*regexp.Regexp)
-	regexCacheMu sync.RWMutex
+	regexCache    = make(map[string]*regexp.Regexp)
+	regexCacheOrder []string
+	regexCacheMu  sync.RWMutex
 )
 
 func getCompiledRegex(pattern string) (*regexp.Regexp, error) {
@@ -34,7 +36,15 @@ func getCompiledRegex(pattern string) (*regexp.Regexp, error) {
 	}
 
 	regexCacheMu.Lock()
+	if len(regexCache) >= maxCacheSize {
+		evictCount := maxCacheSize / 2
+		for i := 0; i < evictCount && i < len(regexCacheOrder); i++ {
+			delete(regexCache, regexCacheOrder[i])
+		}
+		regexCacheOrder = regexCacheOrder[evictCount:]
+	}
 	regexCache[pattern] = re
+	regexCacheOrder = append(regexCacheOrder, pattern)
 	regexCacheMu.Unlock()
 
 	return re, nil

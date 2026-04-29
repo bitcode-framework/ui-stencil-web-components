@@ -407,15 +407,30 @@ func convertToAny(v any) any {
 	if v == nil {
 		return nil
 	}
-	data, err := json.Marshal(v)
-	if err != nil {
-		return v
+	switch val := v.(type) {
+	case string, int, int64, float64, bool:
+		return val
+	case map[string]any:
+		return val
+	case []any:
+		return val
+	case map[string]string:
+		result := make(map[string]any, len(val))
+		for k, sv := range val {
+			result[k] = sv
+		}
+		return result
+	default:
+		data, err := json.Marshal(v)
+		if err != nil {
+			return v
+		}
+		var result any
+		if err := json.Unmarshal(data, &result); err != nil {
+			return v
+		}
+		return result
 	}
-	var result any
-	if err := json.Unmarshal(data, &result); err != nil {
-		return v
-	}
-	return result
 }
 
 func mapToSearchOptions(m map[string]any) SearchOptions {

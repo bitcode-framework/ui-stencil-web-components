@@ -15,6 +15,7 @@ import (
 type HTTPModule struct {
 	security *SecurityConfig
 	config   map[string]any
+	client   *http.Client
 }
 
 // NewHTTPModule creates a new HTTP I/O module.
@@ -22,7 +23,22 @@ func NewHTTPModule(security *SecurityConfig) *HTTPModule {
 	if security == nil {
 		security = DefaultSecurityConfig()
 	}
-	return &HTTPModule{security: security}
+	timeout := time.Duration(security.HTTP.Timeout) * time.Second
+	if timeout <= 0 {
+		timeout = 30 * time.Second
+	}
+	return &HTTPModule{
+		security: security,
+		client: &http.Client{
+			Timeout: timeout,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				if len(via) >= 10 {
+					return fmt.Errorf("too many redirects (max 10)")
+				}
+				return nil
+			},
+		},
+	}
 }
 
 func (m *HTTPModule) Name() string { return "http" }
@@ -118,17 +134,7 @@ func (m *HTTPModule) doRequest(method string, params []any) (any, error) {
 		return nil, err
 	}
 
-	client := &http.Client{
-		Timeout: timeout,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 10 {
-				return fmt.Errorf("too many redirects (max 10)")
-			}
-			return nil
-		},
-	}
-
-	resp, err := client.Do(req)
+	resp, err := m.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("http.%s: %s", strings.ToLower(method), err.Error())
 	}
