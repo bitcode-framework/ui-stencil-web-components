@@ -3,10 +3,8 @@ package steps
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
-	"github.com/bitcode-framework/go-json/lang"
 	"github.com/bitcode-framework/go-json/runtime"
 	"github.com/bitcode-framework/go-json/stdlib"
 
@@ -27,11 +25,6 @@ func (r *GoJSONRunner) Run(ctx context.Context, script string, params map[string
 	scriptPath := script
 	if !filepath.IsAbs(scriptPath) && r.ScriptDir != "" {
 		scriptPath = filepath.Join(r.ScriptDir, script)
-	}
-
-	data, err := os.ReadFile(scriptPath)
-	if err != nil {
-		return nil, fmt.Errorf("go-json: cannot read script %s: %w", script, err)
 	}
 
 	reg := stdlib.DefaultRegistry()
@@ -56,19 +49,9 @@ func (r *GoJSONRunner) Run(ctx context.Context, script string, params map[string
 	}
 
 	rt := runtime.NewRuntime(opts...)
+	defer rt.Close()
 
-	program, err := lang.Parse(data)
-	if err != nil {
-		return nil, fmt.Errorf("go-json: compile error in %s: %w", script, err)
-	}
-
-	dir := filepath.Dir(scriptPath)
-	resolver := lang.NewImportResolver()
-	if err := resolver.ResolveImports(program, dir, []string{scriptPath}); err != nil {
-		return nil, fmt.Errorf("go-json: import error in %s: %w", script, err)
-	}
-
-	compiled, err := rt.Compile(data)
+	compiled, err := rt.CompileFile(scriptPath)
 	if err != nil {
 		return nil, fmt.Errorf("go-json: compile error in %s: %w", script, err)
 	}
