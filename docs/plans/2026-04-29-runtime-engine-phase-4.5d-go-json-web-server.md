@@ -1708,32 +1708,570 @@ All FS operations and path utilities have direct equivalents in target languages
 
 ---
 
-## §22. Implementation Scope
+## §22. Stdlib Additions
+
+### 22.1 `toJSON` / `fromJSON`
+
+Serialize and deserialize JSON strings — needed for web server response building, data export, and API integrations.
+
+```json
+{"let": "json_str", "expr": "toJSON(data)"}
+{"let": "parsed", "expr": "fromJSON(json_str)"}
+```
+
+| Function | Input | Returns | Description |
+|---|---|---|---|
+| `toJSON(value)` | any | string | Serialize value to JSON string |
+| `fromJSON(str)` | string | any | Parse JSON string to value |
+
+Codegen translation:
+
+| go-json | Go | JavaScript | Python |
+|---|---|---|---|
+| `toJSON(x)` | `json.Marshal(x)` | `JSON.stringify(x)` | `json.dumps(x)` |
+| `fromJSON(s)` | `json.Unmarshal(s, &v)` | `JSON.parse(s)` | `json.loads(s)` |
+
+### 22.2 `formatDate` Universal Format
+
+`formatDate` currently uses Go's reference time layout (`"2006-01-02"`). This is Go-specific and not translatable to other languages.
+
+**Solution:** Support both Go layout AND universal format strings. Auto-detect based on content:
+
+```json
+// Go format (existing — backward compatible)
+{"let": "d", "expr": "formatDate(now(), '2006-01-02 15:04:05')"}
+
+// Universal format (new)
+{"let": "d", "expr": "formatDate(now(), 'YYYY-MM-DD HH:mm:ss')"}
+```
+
+Detection: if layout contains `2006` → Go format. If contains `YYYY` → universal format.
+
+Universal format tokens:
+
+| Token | Meaning | Example |
+|---|---|---|
+| `YYYY` | 4-digit year | `2026` |
+| `YY` | 2-digit year | `26` |
+| `MM` | Month (zero-padded) | `04` |
+| `DD` | Day (zero-padded) | `29` |
+| `HH` | Hour 24h (zero-padded) | `14` |
+| `hh` | Hour 12h (zero-padded) | `02` |
+| `mm` | Minute (zero-padded) | `05` |
+| `ss` | Second (zero-padded) | `09` |
+| `A` | AM/PM | `PM` |
+| `Z` | Timezone offset | `+07:00` |
+
+Codegen translation:
+
+| go-json Universal | Go Layout | JS (dayjs) | Python (strftime) |
+|---|---|---|---|
+| `YYYY` | `2006` | `YYYY` | `%Y` |
+| `MM` | `01` | `MM` | `%m` |
+| `DD` | `02` | `DD` | `%d` |
+| `HH` | `15` | `HH` | `%H` |
+| `mm` | `04` | `mm` | `%M` |
+| `ss` | `05` | `ss` | `%S` |
+
+---
+
+## §23. Codegen Dependency Management
+
+### 23.1 The Problem
+
+Generated code requires dependencies (HTTP framework, JWT library, database driver, etc.). Without dependency files, generated code cannot run.
+
+### 23.2 Solution: Generate Complete Runnable Projects
+
+Codegen generates dependency files alongside source code:
+
+**Go:**
+```
+generated/
+├── go.mod
+├── main.go
+├── handlers.go
+├── middleware.go
+└── .env.example
+```
+
+**JavaScript:**
+```
+generated/
+├── package.json
+├── index.js
+├── routes.js
+├── middleware.js
+└── .env.example
+```
+
+**Python:**
+```
+generated/
+├── requirements.txt
+├── main.py
+├── routes.py
+├── middleware.py
+└── .env.example
+```
+
+### 23.3 Smart Dependency Detection
+
+Codegen scans the program to detect which features are used, then includes only needed dependencies:
+
+| Feature Detected | Go Dep | JS Dep | Python Dep |
+|---|---|---|---|
+| HTTP server (fiber) | `github.com/gofiber/fiber/v2` | — | — |
+| HTTP server (express) | — | `express` | — |
+| HTTP server (fastapi) | — | — | `fastapi`, `uvicorn` |
+| JWT auth | `github.com/golang-jwt/jwt/v5` | `jsonwebtoken` | `PyJWT` |
+| SQL (postgres) | `github.com/lib/pq` | `pg` | `psycopg2` |
+| SQL (mysql) | `github.com/go-sql-driver/mysql` | `mysql2` | `mysql-connector-python` |
+| SQL (sqlite) | `modernc.org/sqlite` | `better-sqlite3` | (stdlib) |
+| MongoDB | `go.mongodb.org/mongo-driver/v2` | `mongodb` | `pymongo` |
+| Redis | `github.com/redis/go-redis/v9` | `ioredis` | `redis` |
+| CORS | (framework built-in) | `cors` | (framework built-in) |
+| Template | (stdlib) | `ejs` | `jinja2` |
+| File upload | (framework built-in) | `multer` | `python-multipart` |
+| Env loading | `github.com/joho/godotenv` | `dotenv` | `python-dotenv` |
+
+### 23.4 `.env.example` Generation
+
+Auto-generated from program config:
+
+```env
+# Server
+PORT=3000
+
+# Database
+DATABASE_URL=postgres://user:password@localhost:5432/dbname
+
+# Auth
+JWT_SECRET=change-me-to-a-random-secret
+
+# Redis
+REDIS_URL=redis://localhost:6379
+```
+
+Sources: `server.port`, `server.auth.*.secret_env`, SQL `DefaultDSN`, Redis `DefaultURI`.
+
+---
+
+## §24. CLI Code Generator (`go-json generate`)
+
+### 24.1 Overview
+
+`go-json generate` scaffolds go-json programs and codegen output from templates. Three generators:
+
+| Command | Description |
+|---|---|
+| `go-json generate crud` | Generate CRUD API for a model |
+| `go-json generate auth` | Generate authentication endpoints |
+| `go-json generate project` | Generate full project scaffold |
+
+### 24.2 `go-json generate crud`
+
+**From manual field definition:**
+
+```bash
+go-json generate crud users --fields "name:string,email:string,role:string,age:int" --auth
+```
+
+**From database introspection:**
+
+```bash
+go-json generate crud --from-db --dsn "postgres://localhost/mydb" --table users --auth
+go-json generate crud --from-db --dsn-env DATABASE_URL --table users,orders,products
+go-json generate crud --from-db --dsn "postgres://..." --all
+go-json generate crud --from-db --dsn "postgres://..." --interactive
+```
+
+**Options:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `--fields` | — | Manual field definition: `"name:type,name:type"` |
+| `--from-db` | false | Introspect database for fields |
+| `--dsn` | — | Database connection string |
+| `--dsn-env` | — | Env var name containing DSN |
+| `--table` | — | Table name(s), comma-separated |
+| `--all` | false | All tables in database |
+| `--interactive` | false | Interactive table picker |
+| `--auth` | false | Add auth middleware to routes |
+| `--pattern` | `simple` | Architecture pattern (see §25) |
+| `--output` | `./` | Output directory |
+| `--dry-run` | false | Preview without writing |
+
+### 24.3 Database Introspection
+
+When `--from-db` is used, the generator connects to the database and reads metadata:
+
+| Metadata | Source | Used For |
+|---|---|---|
+| Column names | `information_schema.columns` | Field list |
+| Column types | `data_type` | Type mapping, OpenAPI schema |
+| Nullable | `is_nullable` | Required vs optional |
+| Primary key | `table_constraints` | Route params, GET/PUT/DELETE by PK |
+| Default values | `column_default` | Skip in create body, use `??` in handler |
+| Foreign keys | `referential_constraints` | Relationship endpoints, FK validation |
+| Unique constraints | `table_constraints` | Duplicate detection |
+| Max length | `character_maximum_length` | Validation rules |
+| Enum values | `pg_enum` / `SHOW COLUMNS` | OpenAPI enum, validation |
+| Table/column comments | `pg_description` / `table_comment` | OpenAPI descriptions |
+
+**Type mapping:**
+
+| DB Type (Postgres) | DB Type (MySQL) | go-json Type | OpenAPI Type |
+|---|---|---|---|
+| `integer`, `bigint` | `int`, `bigint` | `int` | `integer` |
+| `real`, `double precision` | `float`, `double` | `float` | `number` |
+| `boolean` | `tinyint(1)` | `bool` | `boolean` |
+| `varchar(n)`, `text` | `varchar(n)`, `text` | `string` | `string` |
+| `timestamp`, `timestamptz` | `datetime` | `string` | `string` (format: date-time) |
+| `date` | `date` | `string` | `string` (format: date) |
+| `json`, `jsonb` | `json` | `any` | `object` |
+| `uuid` | `char(36)` | `string` | `string` (format: uuid) |
+| `numeric`, `decimal` | `decimal` | `float` | `number` |
+| `enum` | `enum` | `string` | `string` (enum: [...]) |
+
+**Smart field detection:**
+
+| DB Metadata | Generated Behavior |
+|---|---|
+| `NOT NULL` without default | → Required field, validation in handler |
+| `NOT NULL` with default | → Optional field, `body.field ?? default` |
+| `SERIAL` / auto-increment | → Skip from create/update body |
+| `DEFAULT NOW()` | → Skip from create body (auto-generated) |
+| `VARCHAR(255)` | → Validation: `len(body.field) > 255` |
+| `REFERENCES other(id)` | → FK validation: check referenced record exists |
+| `UNIQUE` | → Duplicate check before insert |
+| `ENUM('a','b','c')` | → Validation: `contains(['a','b','c'], body.field)` |
+
+**Edge cases:**
+
+| Case | Behavior |
+|---|---|
+| Table without primary key | Warning, generate list-only endpoint |
+| Composite primary key | Route: `/api/items/:key1/:key2` |
+| JSON/JSONB columns | Type `any`, no schema validation |
+| Computed/generated columns | Skip from create/update (read-only) |
+| Views | Read-only endpoints (GET only) |
+| Junction table (2 FKs only) | Detect as many-to-many, generate relationship endpoints |
+
+**Relationship detection:**
+
+Foreign keys generate additional endpoints:
+- `GET /api/users/:id/orders` — list related records
+- `POST /api/users/:id/orders` — create with auto-set FK
+- Junction tables → `POST /api/users/:id/roles` (add), `DELETE /api/users/:id/roles/:role_id` (remove)
+
+### 24.4 `go-json generate auth`
+
+```bash
+go-json generate auth --strategy jwt --output auth.json
+```
+
+Generates auth endpoints:
+- `POST /auth/register` — create user with hashed password
+- `POST /auth/login` — validate credentials, return JWT
+- `POST /auth/refresh` — refresh token
+- `GET /auth/me` — get current user profile
+- `POST /auth/change-password` — change password
+- SQL migration for `users` table
+
+### 24.5 `go-json generate project`
+
+```bash
+go-json generate project my-api --db postgres --auth jwt --framework fiber
+```
+
+Generates full project scaffold:
+
+```
+my-api/
+├── api.json              ← main program (server config, routes, imports)
+├── functions/
+│   ├── auth.json         ← auth handlers
+│   └── health.json       ← health check
+├── templates/            ← empty, ready for SSR
+├── public/               ← empty, ready for static files
+├── migrations/
+│   └── 001_initial.sql   ← users table
+├── tests/
+│   └── auth_test.json    ← test cases
+├── .env.example
+└── README.md
+```
+
+### 24.6 `--interactive` Mode
+
+```
+$ go-json generate crud --from-db --dsn "postgres://..." --interactive
+
+Connecting to postgres://localhost/mydb...
+Found 8 tables:
+
+  [x] users (12 columns, 3 FKs)
+  [x] orders (8 columns, 2 FKs)
+  [ ] migrations (3 columns)
+  [x] products (9 columns, 1 FK)
+  [x] categories (4 columns)
+
+Selected: users, orders, products, categories
+Generate with auth? [Y/n]: Y
+Architecture pattern? [simple]: service-layer
+Output directory [./api/]: ./api/
+
+Generating...
+  ✓ api/users.json (5 routes, 5 handlers)
+  ✓ api/orders.json (5 routes + 2 relationship routes)
+  ✓ api/products.json (5 routes)
+  ✓ api/categories.json (5 routes)
+  ✓ api/api.json (main server config)
+  ✓ api/.env.example
+
+Done! Run: go-json serve api/api.json --dev
+```
+
+---
+
+## §25. Architecture Patterns + Custom Templates
+
+### 25.1 Two Levels of Patterns
+
+**Level 1: go-json program structure** (how JSON files are organized):
+
+| Pattern | Structure | Best For |
+|---|---|---|
+| `simple` | Single JSON file, all functions inline | Prototypes, small APIs |
+| `service-layer` | Handlers → services → queries in separate files | Medium apps |
+| `modular` | Per-module directories with handlers/service/queries | Large apps |
+
+**Level 2: Codegen output structure** (how generated Go/JS/Python code is organized):
+
+| Pattern | Structure | Best For |
+|---|---|---|
+| `simple` | Flat files: main.go, handlers.go | Small services |
+| `service-layer` | handlers/ + services/ + repositories/ | Medium apps |
+| `ddd` | cmd/ + internal/domain/ + application/ + infrastructure/ | Enterprise, complex domain |
+| `hexagonal` | cmd/ + internal/core/ (ports+services) + adapters/ (inbound+outbound) | High testability needs |
+
+### 25.2 Using Patterns
+
+```bash
+# go-json program pattern (affects JSON structure)
+go-json generate crud --from-db --dsn "..." --table users --pattern service-layer
+
+# Codegen output pattern (affects generated code structure)
+go-json codegen api.json --target go --framework fiber --pattern ddd
+```
+
+### 25.3 Pattern: Simple (Default)
+
+**go-json:**
+```
+api.json          ← everything in one file
+```
+
+**Codegen Go output:**
+```
+generated/
+├── main.go
+├── handlers.go
+├── go.mod
+└── .env.example
+```
+
+### 25.4 Pattern: Service Layer
+
+**go-json:**
+```
+api.json
+functions/
+├── handlers/users.json     ← parse request, call service, format response
+├── services/users.json     ← business logic, validation, orchestration
+└── queries/users.json      ← pure database calls
+```
+
+**Codegen Go output:**
+```
+generated/
+├── main.go
+├── handlers/users.go
+├── services/users.go
+├── repositories/users.go
+├── models/users.go
+├── go.mod
+└── .env.example
+```
+
+### 25.5 Pattern: DDD (Codegen Only)
+
+**Codegen Go output:**
+```
+generated/
+├── cmd/api/main.go
+├── internal/
+│   ├── domain/user/
+│   │   ├── entity.go
+│   │   ├── repository.go      (interface)
+│   │   └── service.go
+│   ├── application/user/
+│   │   ├── create_user.go     (use case)
+│   │   ├── list_users.go
+│   │   └── dto.go
+│   └── infrastructure/
+│       ├── persistence/postgres/user_repo.go
+│       └── http/handlers/user_handler.go
+├── go.mod
+└── .env.example
+```
+
+### 25.6 Pattern: Hexagonal (Codegen Only)
+
+**Codegen Go output:**
+```
+generated/
+├── cmd/api/main.go
+├── internal/
+│   ├── core/
+│   │   ├── domain/user.go
+│   │   ├── ports/
+│   │   │   ├── inbound.go     (use case interfaces)
+│   │   │   └── outbound.go    (repository interfaces)
+│   │   └── services/user_service.go
+│   └── adapters/
+│       ├── inbound/http/handler.go
+│       └── outbound/postgres/user_repo.go
+├── go.mod
+└── .env.example
+```
+
+### 25.7 Custom Templates
+
+Users can export, modify, and reuse templates:
+
+```bash
+# Export built-in pattern as template
+go-json generate --export-pattern ddd --output ./my-templates/ddd/
+
+# Use custom template
+go-json generate crud --from-db --dsn "..." --table users --pattern ./my-templates/ddd/
+```
+
+**Template structure:**
+
+```
+my-templates/ddd/
+├── template.json                                    ← metadata
+├── cmd/api/main.go.tmpl
+├── internal/domain/{{.Model}}/entity.go.tmpl
+├── internal/domain/{{.Model}}/repository.go.tmpl
+├── internal/domain/{{.Model}}/service.go.tmpl
+├── internal/application/{{.Model}}/create.go.tmpl
+├── internal/application/{{.Model}}/dto.go.tmpl
+├── internal/infrastructure/persistence/{{.Driver}}/{{.Model}}_repo.go.tmpl
+├── internal/infrastructure/http/handlers/{{.Model}}_handler.go.tmpl
+├── go.mod.tmpl
+└── .env.example.tmpl
+```
+
+**`template.json`:**
+
+```json
+{
+  "name": "ddd",
+  "description": "Domain-Driven Design pattern for Go",
+  "language": "go",
+  "files": [
+    {"template": "cmd/api/main.go.tmpl", "output": "cmd/api/main.go", "once": true},
+    {"template": "internal/domain/{{.model}}/entity.go.tmpl", "per_model": true},
+    {"template": "internal/domain/{{.model}}/repository.go.tmpl", "per_model": true}
+  ]
+}
+```
+
+**Template variables available:**
+
+| Variable | Type | Description |
+|---|---|---|
+| `{{.Model}}` | string | PascalCase: `User`, `OrderItem` |
+| `{{.model}}` | string | camelCase: `user`, `orderItem` |
+| `{{.table}}` | string | snake_case: `users`, `order_items` |
+| `{{.Fields}}` | []Field | All columns with metadata |
+| `{{.PrimaryKey}}` | Field | Primary key column |
+| `{{.ForeignKeys}}` | []FK | Foreign key relationships |
+| `{{.RequiredFields}}` | []Field | NOT NULL without default |
+| `{{.OptionalFields}}` | []Field | Nullable or has default |
+| `{{.AutoFields}}` | []Field | Auto-generated (id, timestamps) |
+| `{{.FilterableFields}}` | []Field | Candidates for query filters |
+| `{{.UniqueFields}}` | []Field | Unique constraint columns |
+| `{{.Driver}}` | string | `postgres`, `mysql`, `sqlite` |
+| `{{.Framework}}` | string | `fiber`, `echo`, `express`, `fastapi` |
+| `{{.HasAuth}}` | bool | Auth enabled |
+| `{{.AuthStrategy}}` | string | `jwt`, `apikey`, `basic` |
+| `{{.Port}}` | int | Server port |
+
+**Community templates (future):**
+
+```bash
+go-json template install github.com/user/go-json-clean-arch
+go-json template list
+go-json generate crud --pattern clean-arch
+```
+
+---
+
+## §26. Implementation Scope
 
 ### Package Structure
 
 ```
 packages/go-json/
-├── server/              NEW — web server runtime
-│   ├── server.go        Server orchestrator (parse config, setup routes, start)
-│   ├── router.go        Route parsing and registration
-│   ├── handler.go       Request→Execute→Response bridge
-│   ├── middleware.go    Built-in middleware implementations
-│   ├── jwt.go           JWT sign/verify/decode/refresh
-│   ├── template.go      Template engine wrapper
-│   ├── static.go        Static file serving
-│   ├── config.go        Server config parsing
-│   └── adapters/        Framework adapters
-│       ├── adapter.go   ServerAdapter interface
-│       ├── fiber.go     Fiber adapter (default)
-│       ├── nethttp.go   net/http adapter
-│       ├── echo.go      Echo adapter
-│       ├── gin.go       Gin adapter
-│       └── chi.go       Chi adapter
+├── server/                  NEW — web server runtime
+│   ├── server.go            Server orchestrator
+│   ├── router.go            Route parsing and registration
+│   ├── handler.go           Request→Execute→Response bridge
+│   ├── middleware.go         Built-in middleware implementations
+│   ├── auth.go              Plugable auth strategies
+│   ├── jwt.go               JWT sign/verify/decode/refresh
+│   ├── template.go          Template engine wrapper
+│   ├── static.go            Static file serving
+│   ├── config.go            Server config parsing
+│   ├── openapi.go           OpenAPI spec generator + Swagger UI
+│   └── adapters/            Framework adapters
+│       ├── adapter.go       ServerAdapter interface
+│       ├── fiber.go         Fiber adapter (default)
+│       ├── nethttp.go       net/http adapter
+│       ├── echo.go          Echo adapter
+│       ├── gin.go           Gin adapter
+│       └── chi.go           Chi adapter
+├── generate/                NEW — code generators / scaffolding
+│   ├── generate.go          CLI generate command dispatcher
+│   ├── crud.go              CRUD generator (manual + from-db)
+│   ├── auth.go              Auth scaffold generator
+│   ├── project.go           Project scaffold generator
+│   ├── introspect.go        Database introspection (information_schema)
+│   ├── introspect_pg.go     PostgreSQL-specific introspection
+│   ├── introspect_mysql.go  MySQL-specific introspection
+│   ├── introspect_sqlite.go SQLite-specific introspection (PRAGMA)
+│   ├── typemap.go           DB type → go-json type → OpenAPI type mapping
+│   └── templates/           Built-in pattern templates
+│       ├── simple/          Simple pattern (default)
+│       ├── service-layer/   Service layer pattern
+│       ├── ddd/             DDD pattern (codegen only)
+│       └── hexagonal/       Hexagonal pattern (codegen only)
 ├── cmd/go-json/
-│   └── main.go          Add "serve" command
+│   └── main.go              Add "serve", "generate", "openapi" commands
+├── stdlib/
+│   ├── path.go              NEW — basename, dirname, extname, joinpath
+│   └── json.go              NEW — toJSON, fromJSON
+├── io/
+│   ├── sql_params.go        NEW — unified query parameter translation
+│   └── ...                  (existing + fs.stat/copy/move/glob)
 ├── codegen/
 │   ├── server.go            Server codegen interface + registry
+│   ├── deps.go              NEW — dependency detection + go.mod/package.json generation
 │   ├── server_go_fiber.go   Go + Fiber codegen (default)
 │   ├── server_go_nethttp.go Go + net/http codegen
 │   ├── server_go_echo.go    Go + Echo codegen

@@ -57,13 +57,25 @@ Batch 10: SQL Query Params      │
   Task 34-35 (translator + integration)
                                 │
 Batch 11: FS Enhancement        │
-  Task 36 (fs.stat/copy/move/glob) ──► Task 37 (path stdlib)
+  Task 36-37 (fs enhancements + path stdlib)
                                 │
-Batch 12: Tests                 │
-  Task 38-45 (all test suites)
+Batch 12: Stdlib Additions      │
+  Task 38-39 (toJSON/fromJSON + formatDate universal)
                                 │
-Batch 13: Docs                  │
-  Task 46 (AGENTS.md + docs)
+Batch 13: Codegen Deps          │
+  Task 40 (dependency detection + file generation)
+                                │
+Batch 14: CRUD Generator        │
+  Task 41 (introspection) ──► Task 42 (CRUD gen) ──► Task 43-45 (auth, project, CLI)
+                                │
+Batch 15: Patterns + Templates  │
+  Task 46 (engine) ──► Task 47 (DDD/hex) ──► Task 48 (export/custom)
+                                │
+Batch 16: Tests                 │
+  Task 49-57 (all test suites)
+                                │
+Batch 17: Docs                  │
+  Task 58 (AGENTS.md + docs)
 ```
 
 ---
@@ -864,9 +876,233 @@ go-json openapi api.json  # stdout
 
 ---
 
-## Batch 12: Tests
+## Batch 12: Stdlib Additions
 
-### Task 38: Server Config Tests
+### Task 38: `toJSON` / `fromJSON`
+
+**Files:**
+- Create: `packages/go-json/stdlib/json.go`
+- Modify: `packages/go-json/stdlib/registry.go`
+- Test: `packages/go-json/stdlib/json_test.go`
+
+**Step 1:** Implement `toJSON(value)` → JSON string and `fromJSON(str)` → parsed value.
+
+**Step 2:** Register in `DefaultRegistry()`.
+
+**Step 3:** Write tests — map, array, nested, nil, invalid JSON string.
+
+**Step 4:** Commit: `feat(go-json): toJSON/fromJSON stdlib functions`
+
+---
+
+### Task 39: `formatDate` Universal Format Support
+
+**Files:**
+- Modify: `packages/go-json/stdlib/datetime.go`
+- Test: `packages/go-json/stdlib/datetime_test.go`
+
+**Step 1:** Add universal format detection and translation in `formatDate`:
+- If layout contains `2006` → Go format (existing behavior)
+- If layout contains `YYYY` → universal format, translate to Go layout before formatting
+- Translation map: `YYYY→2006`, `MM→01`, `DD→02`, `HH→15`, `mm→04`, `ss→05`
+
+**Step 2:** Write tests — Go format still works, universal format works, mixed detection.
+
+**Step 3:** Commit: `feat(go-json): formatDate universal format support (YYYY-MM-DD)`
+
+---
+
+## Batch 13: Codegen Dependency Management
+
+### Task 40: Dependency Detection + File Generation
+
+**Files:**
+- Create: `packages/go-json/codegen/deps.go`
+- Test: `packages/go-json/codegen/deps_test.go`
+
+**Step 1:** Implement feature detection — scan program for I/O module usage, auth, template, etc.
+
+**Step 2:** Implement dependency file generators:
+- `generateGoMod(features)` → `go.mod` content
+- `generatePackageJSON(features)` → `package.json` content
+- `generateRequirementsTxt(features)` → `requirements.txt` content
+- `generateEnvExample(program)` → `.env.example` content
+
+**Step 3:** Integrate into codegen pipeline — dependency files generated alongside source files.
+
+**Step 4:** Write tests — feature detection, correct deps per language/framework.
+
+**Step 5:** Commit: `feat(go-json): codegen dependency management — go.mod, package.json, requirements.txt`
+
+---
+
+## Batch 14: CRUD Generator
+
+### Task 41: Database Introspection Engine
+
+**Files:**
+- Create: `packages/go-json/generate/introspect.go`
+- Create: `packages/go-json/generate/introspect_pg.go`
+- Create: `packages/go-json/generate/introspect_mysql.go`
+- Create: `packages/go-json/generate/introspect_sqlite.go`
+- Create: `packages/go-json/generate/typemap.go`
+- Test: `packages/go-json/generate/introspect_test.go`
+
+**Step 1:** Define `TableInfo` struct:
+
+```go
+type TableInfo struct {
+    Name        string
+    Columns     []ColumnInfo
+    PrimaryKey  []string
+    ForeignKeys []ForeignKey
+    Uniques     [][]string
+    Comment     string
+}
+
+type ColumnInfo struct {
+    Name         string
+    DBType       string
+    GoJSONType   string
+    OpenAPIType  string
+    Nullable     bool
+    HasDefault   bool
+    DefaultValue string
+    MaxLength    int
+    IsAutoIncr   bool
+    IsGenerated  bool
+    EnumValues   []string
+    Comment      string
+}
+
+type ForeignKey struct {
+    Columns    []string
+    RefTable   string
+    RefColumns []string
+}
+```
+
+**Step 2:** Implement per-driver introspection using `information_schema` (Postgres/MySQL/SQL Server) and `PRAGMA` (SQLite).
+
+**Step 3:** Implement type mapping: DB type → go-json type → OpenAPI type.
+
+**Step 4:** Write tests with SQLite in-memory database.
+
+**Step 5:** Commit: `feat(go-json): database introspection engine with type mapping`
+
+---
+
+### Task 42: CRUD Generator Core
+
+**Files:**
+- Create: `packages/go-json/generate/crud.go`
+- Create: `packages/go-json/generate/generate.go`
+- Test: `packages/go-json/generate/crud_test.go`
+
+**Step 1:** Implement CRUD generation from `TableInfo`:
+- Generate routes (list, create, get, update, delete)
+- Generate handler functions with validation (required, max length, enum, FK check)
+- Generate OpenAPI annotations from column metadata
+- Generate filter query params from nullable columns
+- Detect relationships from FKs → generate relationship endpoints
+- Support `--auth` flag → add auth middleware to routes
+
+**Step 2:** Implement `--fields` manual mode (parse `"name:type,name:type"` → `TableInfo`).
+
+**Step 3:** Implement `--from-db` mode (connect → introspect → generate).
+
+**Step 4:** Write tests — manual fields, introspected fields, auth flag, relationships.
+
+**Step 5:** Commit: `feat(go-json): CRUD generator with introspection and relationship detection`
+
+---
+
+### Task 43: Auth Generator
+
+**Files:**
+- Create: `packages/go-json/generate/auth.go`
+- Test: `packages/go-json/generate/auth_test.go`
+
+**Step 1:** Generate auth endpoints: register, login, refresh, me, change-password. Generate users table migration SQL.
+
+**Step 2:** Commit: `feat(go-json): auth scaffold generator`
+
+---
+
+### Task 44: Project Scaffold Generator
+
+**Files:**
+- Create: `packages/go-json/generate/project.go`
+
+**Step 1:** Generate full project structure: api.json, functions/, templates/, public/, migrations/, tests/, .env.example, README.md.
+
+**Step 2:** Commit: `feat(go-json): project scaffold generator`
+
+---
+
+### Task 45: `go-json generate` CLI Command
+
+**Files:**
+- Modify: `packages/go-json/cmd/go-json/main.go`
+
+**Step 1:** Add `generate` command with subcommands: `crud`, `auth`, `project`. Wire to generator functions. Support all flags: `--from-db`, `--dsn`, `--table`, `--all`, `--interactive`, `--auth`, `--pattern`, `--output`, `--dry-run`.
+
+**Step 2:** Commit: `feat(go-json): go-json generate CLI command`
+
+---
+
+## Batch 15: Architecture Patterns + Custom Templates
+
+### Task 46: Pattern Template Engine
+
+**Files:**
+- Create: `packages/go-json/generate/pattern.go`
+- Create: `packages/go-json/generate/templates/simple/template.json`
+- Create: `packages/go-json/generate/templates/service-layer/template.json`
+
+**Step 1:** Implement template engine:
+- Load `template.json` metadata
+- Process Go `text/template` files with model variables
+- Support `once` (generated once) and `per_model` (generated per table) files
+- Support `{{.Model}}`, `{{.Fields}}`, `{{.PrimaryKey}}`, etc. variables
+
+**Step 2:** Create `simple` and `service-layer` built-in templates for go-json program generation.
+
+**Step 3:** Commit: `feat(go-json): pattern template engine with simple and service-layer patterns`
+
+---
+
+### Task 47: DDD + Hexagonal Codegen Patterns
+
+**Files:**
+- Create: `packages/go-json/generate/templates/ddd/template.json` + `.tmpl` files
+- Create: `packages/go-json/generate/templates/hexagonal/template.json` + `.tmpl` files
+
+**Step 1:** Create DDD template (cmd/ + internal/domain/ + application/ + infrastructure/).
+
+**Step 2:** Create Hexagonal template (cmd/ + internal/core/ + adapters/).
+
+**Step 3:** Commit: `feat(go-json): DDD and hexagonal architecture codegen patterns`
+
+---
+
+### Task 48: Template Export + Custom Template Support
+
+**Files:**
+- Modify: `packages/go-json/generate/pattern.go`
+- Modify: `packages/go-json/cmd/go-json/main.go`
+
+**Step 1:** Implement `--export-pattern <name> --output <dir>` — copy built-in template to user directory.
+
+**Step 2:** Implement `--pattern <path>` — load custom template from directory (detect by path vs name).
+
+**Step 3:** Commit: `feat(go-json): custom template export and usage`
+
+---
+
+## Batch 16: Tests
+
+### Task 49: Server Config Tests
 
 **Files:**
 - Create: `packages/go-json/server/config_test.go`
@@ -877,7 +1113,7 @@ Tests: default config, validation, parsing from JSON, invalid config errors, aut
 
 ---
 
-### Task 39: Route Parsing Tests
+### Task 50: Route Parsing Tests
 
 **Files:**
 - Create: `packages/go-json/server/router_test.go`
@@ -888,7 +1124,7 @@ Tests: basic routes, groups, nested groups, middleware merging, duplicate detect
 
 ---
 
-### Task 40: Handler Bridge Tests
+### Task 51: Handler Bridge Tests
 
 **Files:**
 - Create: `packages/go-json/server/handler_test.go`
@@ -899,7 +1135,7 @@ Tests: request object construction, file upload handling, response conversion (J
 
 ---
 
-### Task 41: Middleware + Auth Tests
+### Task 52: Middleware + Auth Tests
 
 **Files:**
 - Create: `packages/go-json/server/middleware_test.go`
@@ -911,7 +1147,7 @@ Tests: chain execution order, short-circuit, built-in middleware, custom middlew
 
 ---
 
-### Task 42: Template + Static Tests
+### Task 53: Template + Static Tests
 
 **Files:**
 - Create: `packages/go-json/server/template_test.go`
@@ -923,7 +1159,7 @@ Tests: template rendering, layouts, partials, custom functions, static file serv
 
 ---
 
-### Task 43: OpenAPI Tests
+### Task 54: OpenAPI Tests
 
 **Files:**
 - Create: `packages/go-json/server/openapi_test.go`
@@ -934,39 +1170,57 @@ Tests: spec generation from routes, security scheme mapping, api annotation pars
 
 ---
 
-### Task 44: SQL Parameter Translation Tests
+### Task 55: SQL Parameter Translation Tests
 
 Already covered in Task 34 (`packages/go-json/io/sql_params_test.go`).
 
 ---
 
-### Task 45: Server Codegen Tests
+### Task 56: Server Codegen Tests
 
 **Files:**
 - Create: `packages/go-json/codegen/server_test.go`
 
-Tests: Go+Fiber output, Go+net/http output, JS+Express output, Python+FastAPI output, framework selection logic, default framework per language.
+Tests: Go+Fiber output, Go+net/http output, JS+Express output, Python+FastAPI output, framework selection logic, default framework per language, dependency file generation.
 
 **Commit:** `test(go-json): server codegen tests for all language×framework combinations`
 
 ---
 
-## Batch 13: Documentation
+### Task 57: Generator Tests
 
-### Task 46: Update Documentation
+**Files:**
+- Create: `packages/go-json/generate/crud_test.go` (expand)
+- Create: `packages/go-json/generate/auth_test.go` (expand)
+- Create: `packages/go-json/generate/pattern_test.go`
+
+Tests: CRUD from manual fields, CRUD from introspection, auth scaffold, project scaffold, pattern template rendering, custom template loading, DDD/hexagonal output structure.
+
+**Commit:** `test(go-json): generator and pattern template tests`
+
+---
+
+## Batch 17: Documentation
+
+### Task 58: Update Documentation
 
 **Files:**
 - Modify: `packages/go-json/AGENTS.md`
 
 **Step 1:** Update with:
-- New `server/` package in structure
-- `go-json serve` and `go-json openapi` commands
+- New `server/` and `generate/` packages in structure
+- `go-json serve`, `go-json generate`, `go-json openapi` commands
 - Server mode detection
 - Framework adapter pattern
 - Plugable auth system (Bearer, API Key, Basic, Custom)
 - OpenAPI/Swagger support
 - SQL unified query parameters
-- Codegen framework selection
+- Codegen framework selection + dependency management
+- CRUD generator with database introspection
+- Architecture patterns (simple, service-layer, DDD, hexagonal)
+- Custom templates
+- `toJSON`/`fromJSON`, `formatDate` universal format
+- FS enhancements (stat, copy, move, glob) + path utilities
 
 **Step 2:** Commit and push: `docs(go-json): update AGENTS.md for Phase 4.5d web server`
 
@@ -987,6 +1241,10 @@ Tests: Go+Fiber output, Go+net/http output, JS+Express output, Python+FastAPI ou
 | 9: OpenAPI/Swagger | 31-33 | Spec generator, Swagger UI, CLI command |
 | 10: SQL Query Params | 34-35 | Unified `?`/`:name` translation across drivers |
 | 11: FS Enhancement | 36-37 | fs.stat/copy/move/glob, path stdlib (basename/dirname/extname/joinpath) |
-| 12: Tests | 38-45 | Config, routing, handler, auth, middleware, template, OpenAPI, codegen tests |
-| 13: Docs | 46 | AGENTS.md update |
-| **Total** | **46 tasks** | |
+| 12: Stdlib Additions | 38-39 | toJSON/fromJSON, formatDate universal format |
+| 13: Codegen Deps | 40 | Dependency detection, go.mod/package.json/requirements.txt/.env.example |
+| 14: CRUD Generator | 41-45 | DB introspection, CRUD gen, auth gen, project scaffold, CLI command |
+| 15: Patterns + Templates | 46-48 | Pattern engine, DDD/hexagonal templates, export/custom support |
+| 16: Tests | 49-57 | All test suites including generators and patterns |
+| 17: Docs | 58 | AGENTS.md update |
+| **Total** | **58 tasks** | |
