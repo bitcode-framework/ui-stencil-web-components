@@ -3,8 +3,10 @@ package io
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // FSModule provides file system functions for go-json programs.
@@ -34,6 +36,10 @@ func (m *FSModule) Functions() map[string]any {
 		"list":   m.fsList,
 		"mkdir":  m.fsMkdir,
 		"remove": m.fsRemove,
+		"stat":   m.fsStat,
+		"copy":   m.fsCopy,
+		"move":   m.fsMove,
+		"glob":   m.fsGlob,
 	}
 }
 
@@ -284,4 +290,132 @@ func (m *FSModule) fsRemove(params ...any) (any, error) {
 	}
 
 	return nil, nil
+}
+
+func (m *FSModule) fsStat(params ...any) (any, error) {
+	if len(params) < 1 {
+		return nil, fmt.Errorf("fs.stat: path is required")
+	}
+	path, ok := params[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("fs.stat: path must be a string")
+	}
+
+	if err := m.security.ValidateFilePath(path, false); err != nil {
+		return nil, err
+	}
+
+	absPath, _ := filepath.Abs(path)
+	info, err := os.Stat(absPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("fs.stat: file not found: %s", path)
+		}
+		return nil, fmt.Errorf("fs.stat: %s", err.Error())
+	}
+
+	return map[string]any{
+		"name":        info.Name(),
+		"size":        info.Size(),
+		"is_dir":      info.IsDir(),
+		"is_file":     !info.IsDir(),
+		"ext":         filepath.Ext(info.Name()),
+		"modified":    info.ModTime().Format(time.RFC3339),
+		"permissions": info.Mode().String(),
+	}, nil
+}
+
+func (m *FSModule) fsCopy(params ...any) (any, error) {
+	if len(params) < 2 {
+		return nil, fmt.Errorf("fs.copy: src and dst are required")
+	}
+	src, ok := params[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("fs.copy: src must be a string")
+	}
+	dst, ok := params[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("fs.copy: dst must be a string")
+	}
+
+	if err := m.security.ValidateFilePath(src, false); err != nil {
+		return nil, err
+	}
+	if err := m.security.ValidateFilePath(dst, true); err != nil {
+		return nil, err
+	}
+
+	absSrc, _ := filepath.Abs(src)
+	absDst, _ := filepath.Abs(dst)
+
+	srcFile, err := os.Open(absSrc)
+	if err != nil {
+		return nil, fmt.Errorf("fs.copy: %s", err.Error())
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(absDst)
+	if err != nil {
+		return nil, fmt.Errorf("fs.copy: %s", err.Error())
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return nil, fmt.Errorf("fs.copy: %s", err.Error())
+	}
+
+	return nil, nil
+}
+
+func (m *FSModule) fsMove(params ...any) (any, error) {
+	if len(params) < 2 {
+		return nil, fmt.Errorf("fs.move: src and dst are required")
+	}
+	src, ok := params[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("fs.move: src must be a string")
+	}
+	dst, ok := params[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("fs.move: dst must be a string")
+	}
+
+	if err := m.security.ValidateFilePath(src, true); err != nil {
+		return nil, err
+	}
+	if err := m.security.ValidateFilePath(dst, true); err != nil {
+		return nil, err
+	}
+
+	absSrc, _ := filepath.Abs(src)
+	absDst, _ := filepath.Abs(dst)
+
+	if err := os.Rename(absSrc, absDst); err != nil {
+		return nil, fmt.Errorf("fs.move: %s", err.Error())
+	}
+
+	return nil, nil
+}
+
+func (m *FSModule) fsGlob(params ...any) (any, error) {
+	if len(params) < 1 {
+		return nil, fmt.Errorf("fs.glob: pattern is required")
+	}
+	pattern, ok := params[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("fs.glob: pattern must be a string")
+	}
+
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("fs.glob: %s", err.Error())
+	}
+
+	result := make([]any, len(matches))
+	for i, m := range matches {
+		result[i] = filepath.ToSlash(m)
+	}
+
+	return result, nil
 }
