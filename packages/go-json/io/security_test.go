@@ -227,3 +227,181 @@ func TestMatchHost(t *testing.T) {
 		}
 	}
 }
+
+func TestIsPathBlocked(t *testing.T) {
+	tests := []struct {
+		path    string
+		blocked []string
+		want    bool
+	}{
+		{"/etc/passwd", []string{"/etc/"}, true},
+		{"/tmp/test.txt", []string{"/etc/"}, false},
+		{"/etc", []string{"/etc/"}, true},
+	}
+
+	for _, tt := range tests {
+		got := isPathBlocked(tt.path, tt.blocked)
+		if got != tt.want {
+			t.Errorf("isPathBlocked(%q, %v) = %v, want %v", tt.path, tt.blocked, got, tt.want)
+		}
+	}
+}
+
+func TestSQLValidateQuery_BlockedKeywords(t *testing.T) {
+	m := NewSQLModule(DefaultSecurityConfig())
+
+	tests := []struct {
+		query   string
+		blocked bool
+	}{
+		{"SELECT * FROM users", false},
+		{"INSERT INTO users (name) VALUES (?)", false},
+		{"DROP TABLE users", true},
+		{"TRUNCATE TABLE users", true},
+		{"ALTER TABLE users ADD COLUMN age INT", true},
+	}
+
+	for _, tt := range tests {
+		err := m.validateQuery(tt.query)
+		if tt.blocked && err == nil {
+			t.Errorf("expected query to be blocked: %s", tt.query)
+		}
+		if !tt.blocked && err != nil {
+			t.Errorf("expected query to be allowed: %s, got: %s", tt.query, err.Error())
+		}
+	}
+}
+
+func TestSQLValidateQuery_MaxLength(t *testing.T) {
+	sec := DefaultSecurityConfig()
+	sec.SQL.MaxQueryLength = 50
+	m := NewSQLModule(sec)
+
+	shortQuery := "SELECT * FROM users"
+	if err := m.validateQuery(shortQuery); err != nil {
+		t.Errorf("short query should pass: %s", err.Error())
+	}
+
+	longQuery := "SELECT * FROM users WHERE name = 'very long query that exceeds the limit'"
+	if err := m.validateQuery(longQuery); err == nil {
+		t.Error("long query should be blocked")
+	}
+}
+
+func TestDetectDriverFromDSN(t *testing.T) {
+	tests := []struct {
+		dsn    string
+		driver string
+	}{
+		{"postgres://localhost/db", "postgres"},
+		{"postgresql://localhost/db", "postgres"},
+		{"mysql://localhost/db", "mysql"},
+		{"sqlserver://localhost/db", "sqlserver"},
+		{"oracle://localhost/db", "oracle"},
+		{"sqlite3://test.db", "sqlite3"},
+		{"sqlite://test.db", "sqlite3"},
+		{"file:test.db", "sqlite3"},
+		{"test.db", "sqlite3"},
+	}
+
+	for _, tt := range tests {
+		got := detectDriverFromDSN(tt.dsn)
+		if got != tt.driver {
+			t.Errorf("detectDriverFromDSN(%q) = %q, want %q", tt.dsn, got, tt.driver)
+		}
+	}
+}
+
+func TestMongoValidateOperation_BlockedOps(t *testing.T) {
+	m := NewMongoModule(DefaultSecurityConfig())
+
+	filter := map[string]any{
+		"$where": "this.age > 18",
+	}
+	if err := m.validateOperation(filter); err == nil {
+		t.Error("$where should be blocked")
+	}
+
+	safeFilter := map[string]any{
+		"age": map[string]any{"$gt": 18},
+	}
+	if err := m.validateOperation(safeFilter); err != nil {
+		t.Errorf("safe filter should pass: %s", err.Error())
+	}
+}
+
+func TestRedisValidateKey_MaxLength(t *testing.T) {
+	sec := DefaultSecurityConfig()
+	sec.Redis.MaxKeyLength = 10
+	m := NewRedisModule(sec)
+
+	if err := m.validateKey("short"); err != nil {
+		t.Errorf("short key should pass: %s", err.Error())
+	}
+
+	if err := m.validateKey("this-is-a-very-long-key"); err == nil {
+		t.Error("long key should be blocked")
+	}
+}
+
+func TestRedisValidateCommand_Blocked(t *testing.T) {
+	m := NewRedisModule(DefaultSecurityConfig())
+
+	if err := m.validateCommand("GET"); err != nil {
+		t.Errorf("GET should be allowed: %s", err.Error())
+	}
+
+	if err := m.validateCommand("FLUSHALL"); err == nil {
+		t.Error("FLUSHALL should be blocked")
+	}
+
+	if err := m.validateCommand("CONFIG"); err == nil {
+		t.Error("CONFIG should be blocked")
+	}
+}
+
+func TestRedisPrefixKey(t *testing.T) {
+	sec := DefaultSecurityConfig()
+	sec.Redis.KeyPrefix = "tenant1:"
+	m := NewRedisModule(sec)
+
+	if got := m.prefixKey("user:1"); got != "tenant1:user:1" {
+		t.Errorf("expected 'tenant1:user:1', got '%s'", got)
+	}
+
+	m2 := NewRedisModule(DefaultSecurityConfig())
+	if got := m2.prefixKey("user:1"); got != "user:1" {
+		t.Errorf("expected 'user:1' without prefix, got '%s'", got)
+	}
+}
+
+func TestRedisAutoSerialize(t *testing.T) {
+	m := NewRedisModule(DefaultSecurityConfig())
+
+	s, err := m.autoSerialize("hello")
+	if err != nil || s != "hello" {
+		t.Errorf("string should pass through: %s, %v", s, err)
+	}
+
+	s, err = m.autoSerialize(map[string]any{"key": "value"})
+	if err != nil {
+		t.Errorf("map should serialize: %v", err)
+	}
+	if s != `{"key":"value"}` {
+		t.Errorf("expected JSON, got: %s", s)
+	}
+}
+
+func TestRedisAutoDeserialize(t *testing.T) {
+	m := NewRedisModule(DefaultSecurityConfig())
+
+	result := m.autoDeserialize(`{"key":"value"}`)
+	if m, ok := result.(map[string]any); !ok || m["key"] != "value" {
+		t.Errorf("expected map, got: %v", result)
+	}
+
+	result = m.autoDeserialize("plain string")
+	if result != "plain string" {
+		t.Errorf("expected plain string, got: %v", result)
+	}
+}
