@@ -14,27 +14,11 @@ func BuildGoJSONExtension(bc *Context) gojsonrt.Extension {
 	return gojsonrt.Extension{
 		Name: "bitcode",
 		Functions: map[string]any{
-			"model":      func(name string) any { return buildModelProxy(bc, name, false) },
-			"db.query":   buildDBQuery(bc),
-			"db.execute": buildDBExecute(bc),
-
-			"http.get":    buildHTTPFunc(bc, "GET"),
-			"http.post":   buildHTTPFunc(bc, "POST"),
-			"http.put":    buildHTTPFunc(bc, "PUT"),
-			"http.patch":  buildHTTPFunc(bc, "PATCH"),
-			"http.delete": buildHTTPFunc(bc, "DELETE"),
-
-			"cache.get": func(key string) (any, error) { return bc.Cache().Get(key) },
-			"cache.set": buildCacheSet(bc),
-			"cache.del": func(key string) (any, error) { return nil, bc.Cache().Del(key) },
-
-			"fs.read":   func(path string) (any, error) { return bc.FS().Read(path) },
-			"fs.write":  buildFSWrite(bc),
-			"fs.exists": func(path string) (any, error) { return bc.FS().Exists(path) },
-			"fs.list":   buildFSList(bc),
-			"fs.mkdir":  func(path string) (any, error) { return nil, bc.FS().Mkdir(path) },
-			"fs.remove": func(path string) (any, error) { return nil, bc.FS().Remove(path) },
-
+			"model":   func(name string) any { return buildModelProxy(bc, name, false) },
+			"db":      buildDBNamespace(bc),
+			"http":    buildHTTPNamespace(bc),
+			"cache":   buildCacheNamespace(bc),
+			"fs":      buildFSNamespace(bc),
 			"env":     func(key string) (any, error) { return bc.Env(key) },
 			"config":  func(key string) any { return bc.Config(key) },
 			"session": buildSessionFunc(bc),
@@ -42,37 +26,94 @@ func BuildGoJSONExtension(bc *Context) gojsonrt.Extension {
 			"emit":    buildEmitFunc(bc),
 			"call":    buildCallFunc(bc),
 			"exec":    buildExecFunc(bc),
-
-			"email.send":      func(opts map[string]any) (any, error) { return nil, bc.Email().Send(mapToEmailOptions(opts)) },
-			"notify.send":     func(opts map[string]any) (any, error) { return nil, bc.Notify().Send(mapToNotifyOptions(opts)) },
-			"notify.broadcast": buildNotifyBroadcast(bc),
-
-			"storage.upload":   func(opts map[string]any) (any, error) { r, e := bc.Storage().Upload(mapToUploadOptions(opts)); return convertToAny(r), e },
-			"storage.url":      func(id string) (any, error) { return bc.Storage().URL(id) },
-			"storage.download": func(id string) (any, error) { return bc.Storage().Download(id) },
-			"storage.delete":   func(id string) (any, error) { return nil, bc.Storage().Delete(id) },
-
-			"t": func(key string) any { return bc.T(key) },
-
-			"security.permissions": func(model string) (any, error) { r, e := bc.Security().Permissions(model); return convertToAny(r), e },
-			"security.hasGroup":    func(group string) (any, error) { return bc.Security().HasGroup(group) },
-			"security.groups":      buildSecurityGroups(bc),
-
-			"audit.log": func(opts map[string]any) (any, error) { return nil, bc.Audit().Log(mapToAuditOptions(opts)) },
-
-			"crypto.encrypt": func(plaintext string) (any, error) { return bc.Crypto().Encrypt(plaintext) },
-			"crypto.decrypt": func(ciphertext string) (any, error) { return bc.Crypto().Decrypt(ciphertext) },
-			"crypto.hash":    func(value string) (any, error) { return bc.Crypto().Hash(value) },
-			"crypto.verify":  func(value, hash string) (any, error) { return bc.Crypto().Verify(value, hash) },
-
-			"execution.current": func() any { return convertToAny(bc.Execution().Current()) },
-			"execution.search":  func(opts map[string]any) (any, error) { r, e := bc.Execution().Search(mapToExecutionSearchOptions(opts)); return convertToAny(r), e },
-			"execution.get":     func(id string) (any, error) { r, e := bc.Execution().Get(id); return convertToAny(r), e },
-			"execution.retry":   func(id string) (any, error) { r, e := bc.Execution().Retry(id); return convertToAny(r), e },
-			"execution.cancel":  func(id string) (any, error) { return nil, bc.Execution().Cancel(id) },
-
-			"tx": func(fn func() error) (any, error) { return nil, bc.Tx(func(tx *Context) error { return fn() }) },
+			"email":   map[string]any{"send": func(opts map[string]any) (any, error) { return nil, bc.Email().Send(mapToEmailOptions(opts)) }},
+			"notify":  buildNotifyNamespace(bc),
+			"storage": buildStorageNamespace(bc),
+			"t":       func(key string) any { return bc.T(key) },
+			"security": buildSecurityNamespace(bc),
+			"audit":   map[string]any{"log": func(opts map[string]any) (any, error) { return nil, bc.Audit().Log(mapToAuditOptions(opts)) }},
+			"crypto":  buildCryptoNamespace(bc),
+			"execution": buildExecutionNamespace(bc),
 		},
+	}
+}
+
+func buildDBNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"query":   buildDBQuery(bc),
+		"execute": buildDBExecute(bc),
+	}
+}
+
+func buildHTTPNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"get":    buildHTTPFunc(bc, "GET"),
+		"post":   buildHTTPFunc(bc, "POST"),
+		"put":    buildHTTPFunc(bc, "PUT"),
+		"patch":  buildHTTPFunc(bc, "PATCH"),
+		"delete": buildHTTPFunc(bc, "DELETE"),
+	}
+}
+
+func buildCacheNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"get": func(key string) (any, error) { return bc.Cache().Get(key) },
+		"set": buildCacheSet(bc),
+		"del": func(key string) (any, error) { return nil, bc.Cache().Del(key) },
+	}
+}
+
+func buildFSNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"read":   func(path string) (any, error) { return bc.FS().Read(path) },
+		"write":  buildFSWrite(bc),
+		"exists": func(path string) (any, error) { return bc.FS().Exists(path) },
+		"list":   buildFSList(bc),
+		"mkdir":  func(path string) (any, error) { return nil, bc.FS().Mkdir(path) },
+		"remove": func(path string) (any, error) { return nil, bc.FS().Remove(path) },
+	}
+}
+
+func buildNotifyNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"send":      func(opts map[string]any) (any, error) { return nil, bc.Notify().Send(mapToNotifyOptions(opts)) },
+		"broadcast": buildNotifyBroadcast(bc),
+	}
+}
+
+func buildStorageNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"upload":   func(opts map[string]any) (any, error) { r, e := bc.Storage().Upload(mapToUploadOptions(opts)); return convertToAny(r), e },
+		"url":      func(id string) (any, error) { return bc.Storage().URL(id) },
+		"download": func(id string) (any, error) { return bc.Storage().Download(id) },
+		"delete":   func(id string) (any, error) { return nil, bc.Storage().Delete(id) },
+	}
+}
+
+func buildSecurityNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"permissions": func(model string) (any, error) { r, e := bc.Security().Permissions(model); return convertToAny(r), e },
+		"hasGroup":    func(group string) (any, error) { return bc.Security().HasGroup(group) },
+		"groups":      buildSecurityGroups(bc),
+	}
+}
+
+func buildCryptoNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"encrypt": func(plaintext string) (any, error) { return bc.Crypto().Encrypt(plaintext) },
+		"decrypt": func(ciphertext string) (any, error) { return bc.Crypto().Decrypt(ciphertext) },
+		"hash":    func(value string) (any, error) { return bc.Crypto().Hash(value) },
+		"verify":  func(value, hash string) (any, error) { return bc.Crypto().Verify(value, hash) },
+	}
+}
+
+func buildExecutionNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"current": func() any { return convertToAny(bc.Execution().Current()) },
+		"search":  func(opts map[string]any) (any, error) { r, e := bc.Execution().Search(mapToExecutionSearchOptions(opts)); return convertToAny(r), e },
+		"get":     func(id string) (any, error) { r, e := bc.Execution().Get(id); return convertToAny(r), e },
+		"retry":   func(id string) (any, error) { r, e := bc.Execution().Retry(id); return convertToAny(r), e },
+		"cancel":  func(id string) (any, error) { return nil, bc.Execution().Cancel(id) },
 	}
 }
 
