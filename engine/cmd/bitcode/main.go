@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -475,8 +476,8 @@ func moduleCmd() *cobra.Command {
 
 	installDepsCmd := &cobra.Command{
 		Use:   "install-deps [module-name]",
-		Short: "Install npm dependencies for a module",
-		Long:  "Runs npm install in the module directory. Use --all to install for all modules with package.json.",
+		Short: "Install dependencies for a module (npm + pip)",
+		Long:  "Installs npm packages (package.json) and pip packages (requirements.txt with venv). Use --all for all modules.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			moduleDir := envOrDefault("MODULE_DIR", "modules")
@@ -551,26 +552,162 @@ func moduleCmd() *cobra.Command {
 		},
 	})
 
+	cmd.AddCommand(&cobra.Command{
+		Use:   "recreate-venv [module-name]",
+		Short: "Delete and recreate Python venv for a module",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			moduleDir := envOrDefault("MODULE_DIR", "modules")
+			modDir := filepath.Join(moduleDir, args[0])
+			venvDir := filepath.Join(modDir, ".venv")
+			reqTxt := filepath.Join(modDir, "requirements.txt")
+
+			if _, err := os.Stat(modDir); os.IsNotExist(err) {
+				return fmt.Errorf("module %q not found at %s", args[0], modDir)
+			}
+
+			if _, err := os.Stat(venvDir); err == nil {
+				fmt.Printf("Removing existing venv at %s...\n", venvDir)
+				if err := os.RemoveAll(venvDir); err != nil {
+					return fmt.Errorf("failed to remove venv: %w", err)
+				}
+			}
+
+			pythonCmd := findPythonCommand()
+			fmt.Printf("Creating venv with %s...\n", pythonCmd)
+			createCmd := exec.Command(pythonCmd, "-m", "venv", venvDir)
+			createCmd.Stdout = os.Stdout
+			createCmd.Stderr = os.Stderr
+			if err := createCmd.Run(); err != nil {
+				return fmt.Errorf("venv creation failed: %w", err)
+			}
+
+			if _, err := os.Stat(reqTxt); err == nil {
+				pipBin := venvPipPath(venvDir)
+				pipCmd := exec.Command(pipBin, "install", "-r", reqTxt)
+				pipCmd.Dir = modDir
+				pipCmd.Stdout = os.Stdout
+				pipCmd.Stderr = os.Stderr
+				if err := pipCmd.Run(); err != nil {
+					return fmt.Errorf("pip install failed: %w", err)
+				}
+			}
+
+			fmt.Printf("venv recreated for module %s\n", args[0])
+			return nil
+		},
+	})
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "freeze [module-name]",
+		Short: "Freeze pip packages to requirements.txt",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			moduleDir := envOrDefault("MODULE_DIR", "modules")
+			modDir := filepath.Join(moduleDir, args[0])
+			venvDir := filepath.Join(modDir, ".venv")
+
+			if _, err := os.Stat(venvDir); os.IsNotExist(err) {
+				return fmt.Errorf("no .venv found in module %q — run install-deps first", args[0])
+			}
+
+			pipBin := venvPipPath(venvDir)
+			out, err := exec.Command(pipBin, "freeze").Output()
+			if err != nil {
+				return fmt.Errorf("pip freeze failed: %w", err)
+			}
+
+			reqTxt := filepath.Join(modDir, "requirements.txt")
+			if err := os.WriteFile(reqTxt, out, 0644); err != nil {
+				return fmt.Errorf("failed to write requirements.txt: %w", err)
+			}
+
+			fmt.Printf("Frozen packages written to %s\n", reqTxt)
+			return nil
+		},
+	})
+
 	return cmd
 }
 
 func installModuleDeps(moduleDir, moduleName string) error {
 	modDir := filepath.Join(moduleDir, moduleName)
+	installed := false
+
 	pkgJSON := filepath.Join(modDir, "package.json")
-	if _, err := os.Stat(pkgJSON); os.IsNotExist(err) {
-		fmt.Printf("[WARN] No package.json found in %s — skipping\n", modDir)
-		return nil
+	if _, err := os.Stat(pkgJSON); err == nil {
+		fmt.Printf("[npm] Installing dependencies for module %s...\n", moduleName)
+		npmCmd := exec.Command("npm", "install")
+		npmCmd.Dir = modDir
+		npmCmd.Stdout = os.Stdout
+		npmCmd.Stderr = os.Stderr
+		if err := npmCmd.Run(); err != nil {
+			return fmt.Errorf("npm install failed in %s: %w", modDir, err)
+		}
+		installed = true
 	}
-	fmt.Printf("Installing dependencies for module %s...\n", moduleName)
-	npmCmd := exec.Command("npm", "install")
-	npmCmd.Dir = modDir
-	npmCmd.Stdout = os.Stdout
-	npmCmd.Stderr = os.Stderr
-	if err := npmCmd.Run(); err != nil {
-		return fmt.Errorf("npm install failed in %s: %w", modDir, err)
+
+	reqTxt := filepath.Join(modDir, "requirements.txt")
+	if _, err := os.Stat(reqTxt); err == nil {
+		if err := installPythonDeps(modDir, moduleName); err != nil {
+			return err
+		}
+		installed = true
 	}
-	fmt.Printf("Dependencies installed for %s\n", moduleName)
+
+	if !installed {
+		fmt.Printf("[WARN] No package.json or requirements.txt found in %s — skipping\n", modDir)
+	}
 	return nil
+}
+
+func installPythonDeps(modDir, moduleName string) error {
+	venvDir := filepath.Join(modDir, ".venv")
+	if _, err := os.Stat(venvDir); os.IsNotExist(err) {
+		fmt.Printf("[pip] Creating venv for module %s...\n", moduleName)
+		pythonCmd := findPythonCommand()
+		venvCmd := exec.Command(pythonCmd, "-m", "venv", venvDir)
+		venvCmd.Stdout = os.Stdout
+		venvCmd.Stderr = os.Stderr
+		if err := venvCmd.Run(); err != nil {
+			return fmt.Errorf("venv creation failed in %s: %w", modDir, err)
+		}
+	}
+
+	fmt.Printf("[pip] Installing requirements for module %s...\n", moduleName)
+	pipBin := venvPipPath(venvDir)
+	pipCmd := exec.Command(pipBin, "install", "-r", filepath.Join(modDir, "requirements.txt"))
+	pipCmd.Dir = modDir
+	pipCmd.Stdout = os.Stdout
+	pipCmd.Stderr = os.Stderr
+	if err := pipCmd.Run(); err != nil {
+		return fmt.Errorf("pip install failed in %s: %w", modDir, err)
+	}
+	fmt.Printf("[pip] Dependencies installed for %s\n", moduleName)
+	return nil
+}
+
+func findPythonCommand() string {
+	for _, cmd := range []string{"python3", "python"} {
+		if _, err := exec.LookPath(cmd); err == nil {
+			return cmd
+		}
+	}
+	return "python3"
+}
+
+func venvPipPath(venvDir string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(venvDir, "Scripts", "pip.exe")
+	}
+	return filepath.Join(venvDir, "bin", "pip")
+}
+
+func venvPythonPath(venvDir string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(venvDir, "Scripts", "python.exe")
+	}
+	return filepath.Join(venvDir, "bin", "python3")
 }
 
 func installAllModuleDeps(moduleDir string) error {
@@ -583,8 +720,10 @@ func installAllModuleDeps(moduleDir string) error {
 		if !entry.IsDir() {
 			continue
 		}
-		pkgJSON := filepath.Join(moduleDir, entry.Name(), "package.json")
-		if _, err := os.Stat(pkgJSON); os.IsNotExist(err) {
+		modPath := filepath.Join(moduleDir, entry.Name())
+		hasPkg := fileExists(filepath.Join(modPath, "package.json"))
+		hasReq := fileExists(filepath.Join(modPath, "requirements.txt"))
+		if !hasPkg && !hasReq {
 			continue
 		}
 		if err := installModuleDeps(moduleDir, entry.Name()); err != nil {
@@ -594,11 +733,16 @@ func installAllModuleDeps(moduleDir string) error {
 		installed++
 	}
 	if installed == 0 {
-		fmt.Println("No modules with package.json found")
+		fmt.Println("No modules with package.json or requirements.txt found")
 	} else {
 		fmt.Printf("Installed dependencies for %d module(s)\n", installed)
 	}
 	return nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 func userCmd() *cobra.Command {
