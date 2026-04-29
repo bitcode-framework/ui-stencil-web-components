@@ -11,11 +11,33 @@ import (
 // SecurityConfig controls which I/O operations are permitted.
 // Two-layer security: program must import the module AND runtime must enable it.
 type SecurityConfig struct {
-	EnabledModules []string           `json:"enabled_modules"`
-	HTTP           HTTPSecurityConfig `json:"http"`
-	FS             FSSecurityConfig   `json:"fs"`
-	SQL            SQLSecurityConfig  `json:"sql"`
-	Exec           ExecSecurityConfig `json:"exec"`
+	EnabledModules []string             `json:"enabled_modules"`
+	HTTP           HTTPSecurityConfig   `json:"http"`
+	FS             FSSecurityConfig     `json:"fs"`
+	SQL            SQLSecurityConfig    `json:"sql"`
+	Exec           ExecSecurityConfig   `json:"exec"`
+	Mongo          MongoSecurityConfig  `json:"mongo"`
+	Redis          RedisSecurityConfig  `json:"redis"`
+}
+
+// MongoSecurityConfig controls MongoDB module security.
+type MongoSecurityConfig struct {
+	DefaultURI        string   `json:"default_uri"`
+	AllowedDatabases  []string `json:"allowed_databases"`
+	MaxDocumentSize   int64    `json:"max_document_size"`
+	MaxResults        int      `json:"max_results"`
+	MaxPools          int      `json:"max_pools"`
+	BlockedOperations []string `json:"blocked_operations"`
+}
+
+// RedisSecurityConfig controls Redis module security.
+type RedisSecurityConfig struct {
+	DefaultURI      string   `json:"default_uri"`
+	AllowedCommands []string `json:"allowed_commands"`
+	BlockedCommands []string `json:"blocked_commands"`
+	MaxKeyLength    int      `json:"max_key_length"`
+	MaxValueSize    int64    `json:"max_value_size"`
+	KeyPrefix       string   `json:"key_prefix"`
 }
 
 // HTTPSecurityConfig controls HTTP module security.

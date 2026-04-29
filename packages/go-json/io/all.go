@@ -10,6 +10,8 @@ func All(security *SecurityConfig) []IOModule {
 		NewFSModule(security),
 		NewSQLModule(security),
 		NewExecModule(security),
+		NewMongoModule(security),
+		NewRedisModule(security),
 	}
 }
 
