@@ -3,6 +3,7 @@ package stdlib
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/expr-lang/expr"
 )
@@ -126,4 +127,39 @@ func RegisterStrings(r *Registry) {
 		return re.MatchString(s), nil
 	}))
 
+	r.Register(expr.Function("contains", func(params ...any) (any, error) {
+		s, ok := params[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("contains: first argument must be a string")
+		}
+		substr, ok := params[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("contains: second argument must be a string")
+		}
+		return strings.Contains(s, substr), nil
+	}, new(func(string, string) bool)))
+
+	r.Register(expr.Function("startsWith", func(params ...any) (any, error) {
+		s, ok := params[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("startsWith: first argument must be a string")
+		}
+		prefix, ok := params[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("startsWith: second argument must be a string")
+		}
+		return strings.HasPrefix(s, prefix), nil
+	}, new(func(string, string) bool)))
+
+	r.Register(expr.Function("endsWith", func(params ...any) (any, error) {
+		s, ok := params[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("endsWith: first argument must be a string")
+		}
+		suffix, ok := params[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("endsWith: second argument must be a string")
+		}
+		return strings.HasSuffix(s, suffix), nil
+	}, new(func(string, string) bool)))
 }

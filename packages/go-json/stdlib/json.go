@@ -7,37 +7,24 @@ import (
 	"github.com/expr-lang/expr"
 )
 
-// RegisterJSON registers toJSON and fromJSON stdlib functions.
+// RegisterJSON registers JSON stdlib functions.
+//
+// NOTE: toJSON and fromJSON are already provided by expr-lang as built-in
+// functions (since v1.16+). The built-in toJSON uses json.MarshalIndent
+// (pretty-printed), while toCompactJSON uses json.Marshal (compact).
+// fromJSON is NOT re-registered here — use the expr-lang built-in.
 func RegisterJSON(r *Registry) {
-	r.Register(expr.Function("toJSON",
+	r.Register(expr.Function("toCompactJSON",
 		func(params ...any) (any, error) {
 			if len(params) < 1 {
 				return "null", nil
 			}
 			b, err := json.Marshal(params[0])
 			if err != nil {
-				return nil, fmt.Errorf("toJSON: %w", err)
+				return nil, fmt.Errorf("toCompactJSON: %w", err)
 			}
 			return string(b), nil
 		},
 		new(func(any) string),
-	))
-
-	r.Register(expr.Function("fromJSON",
-		func(params ...any) (any, error) {
-			if len(params) < 1 {
-				return nil, fmt.Errorf("fromJSON: string argument required")
-			}
-			s, ok := params[0].(string)
-			if !ok {
-				return nil, fmt.Errorf("fromJSON: argument must be a string")
-			}
-			var result any
-			if err := json.Unmarshal([]byte(s), &result); err != nil {
-				return nil, fmt.Errorf("fromJSON: %w", err)
-			}
-			return result, nil
-		},
-		new(func(string) any),
 	))
 }

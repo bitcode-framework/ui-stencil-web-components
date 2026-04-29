@@ -307,7 +307,7 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `randomInt(min, max)` | `int, int → int` | Random integer in range [min, max) | `randomInt(1, 100)` |
 | `randomFloat(min, max)` | `float, float → float` | Random float in range [min, max) | `randomFloat(0.0, 1.0)` |
 
-### String (5 functions)
+### String (8 functions)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -315,7 +315,10 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `padRight(s, length, char)` | `string, int, string → string` | Right-pad string | `padRight("hi", 5, ".")` → `"hi..."` |
 | `substring(s, start, end?)` | `string, int, int? → string` | Extract substring | `substring("hello", 1, 3)` → `"el"` |
 | `format(template, args...)` | `string, ...any → string` | Template formatting | `format("Hello, %s!", "Alice")` → `"Hello, Alice!"` |
-| `matches(s, pattern)` | `string, string → bool` | Regex match | `matches("hello123", "^[a-z]+\\d+$")` → `true` |
+| `matches(s, pattern)` | `string, string → bool` | Regex match (function alias for operator) | `matches("hello123", "^[a-z]+\\d+$")` → `true` |
+| `contains(s, substr)` | `string, string → bool` | Substring check (function alias for operator) | `contains("hello world", "world")` → `true` |
+| `startsWith(s, prefix)` | `string, string → bool` | Prefix check (function alias for operator) | `startsWith("hello", "hel")` → `true` |
+| `endsWith(s, suffix)` | `string, string → bool` | Suffix check (function alias for operator) | `endsWith("hello", "llo")` → `true` |
 
 ### Array (5 functions)
 
@@ -332,7 +335,7 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
 | `has(obj, key)` | `map, string → bool` | Check if key exists | `has(config, "debug")` → `true` |
-| `get(obj, path)` | `map, string → any` | Get by dot-path (nil-safe) | `get(user, "address.city")` → `"Jakarta"` |
+| `getIn(obj, path, sep?)` | `any, string, string? → any` | Deep nested traversal (nil-safe). Supports dot path and array index. Default separator `"."` | `getIn(user, "address.city")` → `"Jakarta"`, `getIn(data, "users[0].name")` → `"Alice"` |
 | `merge(a, b)` | `map, map → map` | Shallow merge (b overrides a) | `merge(defaults, overrides)` |
 | `pick(obj, keys)` | `map, []string → map` | Pick subset of keys | `pick(user, ["name", "email"])` |
 | `omit(obj, keys)` | `map, []string → map` | Remove specified keys | `omit(user, ["password", "secret"])` |
@@ -413,12 +416,13 @@ Compiled regexes are cached (LRU, max 1000 patterns). ReDoS prevention: max patt
 | `isabs(path)` | `string → bool` | Is absolute path | `isabs("/home")` → `true` |
 | `pathsep()` | `→ string` | OS path separator | `pathsep()` → `"/"` or `"\\"` |
 
-### JSON (2 functions)
+### JSON (1 function)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
-| `toJSON(value)` | `any → string` | Serialize to JSON string | `toJSON({"a": 1})` → `'{"a":1}'` |
-| `fromJSON(s)` | `string → any` | Parse JSON string | `fromJSON('{"a":1}')` → `{"a": 1}` |
+| `toCompactJSON(value)` | `any → string` | Serialize to compact JSON string (no indentation) | `toCompactJSON({"a": 1})` → `'{"a":1}'` |
+
+`toJSON` and `fromJSON` are provided by expr-lang as built-in functions. `toJSON` produces pretty-printed output; use `toCompactJSON` when compact output is needed.
 
 ---
 

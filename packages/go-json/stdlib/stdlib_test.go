@@ -34,10 +34,10 @@ func TestMaps_Has(t *testing.T) {
 	}
 }
 
-func TestMaps_Get_DotPath(t *testing.T) {
-	fn := findFunc(DefaultRegistry(), "get")
+func TestMaps_GetIn_DotPath(t *testing.T) {
+	fn := findFunc(DefaultRegistry(), "getIn")
 	if fn == nil {
-		t.Fatal("get function not registered")
+		t.Fatal("getIn function not registered")
 	}
 
 	m := map[string]any{
@@ -50,7 +50,7 @@ func TestMaps_Get_DotPath(t *testing.T) {
 
 	result, err := fn(m, "a.b.c")
 	if err != nil {
-		t.Fatalf("get error: %v", err)
+		t.Fatalf("getIn error: %v", err)
 	}
 	if result != 42 {
 		t.Errorf("expected 42, got %v", result)
@@ -58,10 +58,71 @@ func TestMaps_Get_DotPath(t *testing.T) {
 
 	result, err = fn(m, "a.b.missing")
 	if err != nil {
-		t.Fatalf("get error: %v", err)
+		t.Fatalf("getIn error: %v", err)
 	}
 	if result != nil {
 		t.Errorf("expected nil, got %v", result)
+	}
+}
+
+func TestMaps_GetIn_ArrayIndex(t *testing.T) {
+	fn := findFunc(DefaultRegistry(), "getIn")
+	if fn == nil {
+		t.Fatal("getIn function not registered")
+	}
+
+	m := map[string]any{
+		"users": []any{
+			map[string]any{"name": "Alice", "age": 30},
+			map[string]any{"name": "Bob", "age": 25},
+		},
+	}
+
+	result, err := fn(m, "users[0].name")
+	if err != nil {
+		t.Fatalf("getIn error: %v", err)
+	}
+	if result != "Alice" {
+		t.Errorf("expected Alice, got %v", result)
+	}
+
+	result, err = fn(m, "users[1].age")
+	if err != nil {
+		t.Fatalf("getIn error: %v", err)
+	}
+	if result != 25 {
+		t.Errorf("expected 25, got %v", result)
+	}
+
+	result, err = fn(m, "users[5].name")
+	if err != nil {
+		t.Fatalf("getIn error: %v", err)
+	}
+	if result != nil {
+		t.Errorf("expected nil for out-of-range, got %v", result)
+	}
+}
+
+func TestMaps_GetIn_CustomSeparator(t *testing.T) {
+	fn := findFunc(DefaultRegistry(), "getIn")
+	if fn == nil {
+		t.Fatal("getIn function not registered")
+	}
+
+	m := map[string]any{
+		"a": map[string]any{
+			"b": map[string]any{
+				"c": 99,
+			},
+		},
+	}
+
+	result, err := fn(m, "a->b->c", "->")
+	if err != nil {
+		t.Fatalf("getIn error: %v", err)
+	}
+	if result != 99 {
+		t.Errorf("expected 99, got %v", result)
 	}
 }
 
@@ -255,23 +316,20 @@ func findFunc(r *Registry, name string) func(...any) (any, error) {
 			_, exists := m[key]
 			return exists, nil
 		}
-	case "get":
+	case "getIn":
 		return func(args ...any) (any, error) {
-			m := args[0].(map[string]any)
+			if len(args) < 2 {
+				return nil, fmt.Errorf("getIn: requires at least 2 arguments")
+			}
 			path := args[1].(string)
-			parts := strings.Split(path, ".")
-			var current any = m
-			for _, part := range parts {
-				cm, ok := current.(map[string]any)
-				if !ok {
-					return nil, nil
-				}
-				current = cm[part]
-				if current == nil {
-					return nil, nil
+			sep := "."
+			if len(args) > 2 {
+				if s, ok := args[2].(string); ok && s != "" {
+					sep = s
 				}
 			}
-			return current, nil
+			tokens := parsePath(path, sep)
+			return getIn(args[0], tokens), nil
 		}
 	case "merge":
 		return func(args ...any) (any, error) {
