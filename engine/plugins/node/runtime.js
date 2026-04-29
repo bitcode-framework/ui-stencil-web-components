@@ -14,9 +14,9 @@ function sendToGo(message) {
 }
 
 function serializeParams(params) {
-  return JSON.parse(JSON.stringify(params, (key, value) => {
-    if (Buffer.isBuffer(value)) {
-      return { _type: 'binary', encoding: 'base64', data: value.toString('base64') };
+  return JSON.parse(JSON.stringify(params, function(key, value) {
+    if (Buffer.isBuffer(this[key])) {
+      return { _type: 'binary', encoding: 'base64', data: this[key].toString('base64') };
     }
     return value;
   }));
