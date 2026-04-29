@@ -216,30 +216,20 @@ func executeTestCase(rt *runtime.Runtime, dir string, tf testFile, tc testCase) 
 		return nil, fmt.Errorf("import alias '%s' not found", alias)
 	}
 
-	fullPath := filepath.Join(dir, importPath)
-	if !strings.HasSuffix(fullPath, ".json") {
-		fullPath += ".json"
-	}
-
-	compiled, err := rt.CompileFile(fullPath)
-	if err != nil {
-		return nil, fmt.Errorf("compile error: %s", err.Error())
-	}
-
-	fn, ok := compiled.Functions[funcName]
-	if !ok {
-		return nil, fmt.Errorf("function '%s' not found in %s", funcName, importPath)
-	}
-
-	input := make(map[string]any)
-	for _, param := range fn.Params {
-		if val, ok := tc.With[param.Name]; ok {
-			input[param.Name] = val
-		}
-	}
-
 	wrapperJSON := buildTestWrapper(importPath, funcName, tc.With)
-	result, err := rt.ExecuteJSON([]byte(wrapperJSON), nil)
+
+	tmpFile := filepath.Join(dir, fmt.Sprintf("_test_wrapper_%d.json", time.Now().UnixNano()))
+	if err := os.WriteFile(tmpFile, []byte(wrapperJSON), 0644); err != nil {
+		return nil, fmt.Errorf("cannot write test wrapper: %s", err.Error())
+	}
+	defer os.Remove(tmpFile)
+
+	compiled, err := rt.CompileFile(tmpFile)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := rt.Execute(compiled, nil)
 	if err != nil {
 		return nil, err
 	}
