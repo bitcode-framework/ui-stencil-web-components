@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bitcode-framework/bitcode/internal/compiler/parser"
+	"github.com/bitcode-framework/go-json/runtime"
 	"gorm.io/gorm"
 )
 
@@ -52,12 +53,9 @@ func (h *Hydrator) HydrateRecord(ctx context.Context, modelDef *parser.ModelDefi
 			continue
 		}
 
-		evalCtx := &EvalContext{
-			Record:           record,
-			ChildCollections: childCollections,
-		}
+		env := buildComputedFieldEnv(record, childCollections)
 
-		val, err := Evaluate(expr, evalCtx)
+		val, err := runtime.EvalExpr(expr, env)
 		if err != nil {
 			continue
 		}
@@ -91,6 +89,23 @@ func (h *Hydrator) HydrateRecords(ctx context.Context, modelDef *parser.ModelDef
 	}
 
 	return nil
+}
+
+func buildComputedFieldEnv(record map[string]any, childCollections map[string][]map[string]any) map[string]any {
+	env := make(map[string]any, len(record)+5)
+	for k, v := range record {
+		env[k] = v
+	}
+
+	aggFuncs := []string{"sum", "count", "avg", "min", "max"}
+	for _, fn := range aggFuncs {
+		fnName := fn
+		env[fnName] = func(arg any) float64 {
+			return resolveAggregateOrBuiltin(fnName, arg, childCollections)
+		}
+	}
+
+	return env
 }
 
 func (h *Hydrator) loadChildren(ctx context.Context, childModel string, inverseField string, parentRecord map[string]any, parentModelDef *parser.ModelDefinition) ([]map[string]any, error) {
@@ -127,10 +142,7 @@ func (h *Hydrator) loadChildren(ctx context.Context, childModel string, inverseF
 			}
 			if hasChildComputed {
 				for i := range results {
-					evalCtx := &EvalContext{
-						Record:           results[i],
-						ChildCollections: make(map[string][]map[string]any),
-					}
+					childEnv := buildComputedFieldEnv(results[i], make(map[string][]map[string]any))
 					for fn, fd := range childDef.Fields {
 						expr := fd.Computed
 						if expr == "" {
@@ -139,11 +151,12 @@ func (h *Hydrator) loadChildren(ctx context.Context, childModel string, inverseF
 						if expr == "" {
 							continue
 						}
-						val, err := Evaluate(expr, evalCtx)
+						val, err := runtime.EvalExpr(expr, childEnv)
 						if err != nil {
 							continue
 						}
 						results[i][fn] = val
+						childEnv[fn] = val
 					}
 				}
 			}

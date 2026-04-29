@@ -504,6 +504,8 @@ func (w *ExprToFilters) walkNode(node ast.Node) *FilterNode {
             return w.extractComparison(n)
         case "in", "not in":
             return w.extractInClause(n)
+        case "contains", "startsWith", "endsWith":
+            return w.extractLikeClause(n) // BinaryNode operators → SQL LIKE
         default:
             w.errors = append(w.errors, fmt.Sprintf("unsupported operator: %s", n.Operator))
             return nil
@@ -539,8 +541,8 @@ The `FilterNode` tree maps directly to the existing `Query` builder's `WhereClau
 
 | Operator | Reason | Action |
 |----------|--------|--------|
-| `matches` | expr-lang `matches` uses Go regex; no safe SQL equivalent. ReDoS risk on DB. | **Rejected** — use `==` with `LIKE` patterns via `contains()` or `startsWith()` instead |
-| `contains`, `startsWith`, `endsWith` | These are expr-lang string functions, not operators | Allowed as `CallNode` whitelist — converted to SQL `LIKE` patterns |
+| `matches` | expr-lang `matches` uses Go regex; no safe SQL equivalent. ReDoS risk on DB. | **Rejected** — use `contains` or `startsWith` operators instead |
+| `contains`, `startsWith`, `endsWith` | These are expr-lang **operators** (BinaryNode), not functions (CallNode). Syntax: `field contains "value"`, `field startsWith "prefix"`, `field endsWith "suffix"` | **Allowed** — converted to SQL `LIKE` patterns (`%value%`, `value%`, `%value`) |
 | `**`, `%`, `+`, `-`, `*`, `/` | Arithmetic — not meaningful for WHERE filters | **Rejected** in record rules |
 
 ### 6.6 Security Validations
@@ -549,7 +551,7 @@ The `FilterNode` tree maps directly to the existing `Query` builder's `WhereClau
 |-------|------|------|
 | **Field name validation** | AST walk | Left side of comparison must be a known model field via `IsSafeFieldName()` |
 | **Context access whitelist** | AST walk | Only `ctx.*` members allowed; no `sql.*`, `http.*`, `exec.*` |
-| **No function calls** | AST walk | Reject `CallNode` (except whitelisted: `len`, `contains`) |
+| **No function calls** | AST walk | Reject `CallNode` (except whitelisted: `len`). Note: `contains`/`startsWith`/`endsWith` are BinaryNode operators, not CallNode — they are handled in the operator switch. |
 | **No tautology** | AST walk | Reject expressions with no field reference (e.g., `1 == 1`) |
 | **Empty array check** | Value resolution | `ctx.department_ids == []` → deny all (fail-closed) |
 | **Nil context check** | Value resolution | `ctx.user_id == nil` → deny all (fail-closed) |

@@ -548,11 +548,12 @@ go-json functions come in two calling styles:
 **Flat functions** — called directly by name. Used for general-purpose utilities:
 
 ```
-upper("hello")                    // → "HELLO"
-len(items)                        // → 5
-contains("hello world", "world")  // → true
-clamp(value, 0, 100)              // → bounded value
-filter(users, .active)            // → active users only
+upper("hello")                          // → "HELLO"
+len(items)                              // → 5
+"hello world" contains "world"          // → true (operator style)
+strContains("hello world", "world")     // → true (function style)
+clamp(value, 0, 100)                    // → bounded value
+filter(users, .active)                  // → active users only
 ```
 
 **Namespaced functions** — called with a dot-prefix. Used for domain-specific groups:
@@ -576,12 +577,12 @@ sql.query("SELECT * FROM users WHERE id = ?", [42])
 
 | Criteria | Flat | Namespaced |
 |----------|------|-----------|
-| General-purpose, everyone uses it | `len()`, `upper()`, `contains()` | — |
+| General-purpose, everyone uses it | `len()`, `upper()`, `strContains()` | — |
 | Domain-specific, grouped by concern | — | `crypto.*`, `regex.*` |
 | Collision risk (name too generic alone) | — | `crypto.sha256` (not just `sha256`) |
 | Side effects / I/O | — | `http.*`, `fs.*`, `sql.*` |
 
-For example, `contains("abc", "b")` is flat because it's a universal utility with no collision risk. But `sha256("hello")` is namespaced as `crypto.sha256("hello")` because "sha256" alone is too specific and could collide with user variables.
+For example, `strContains("abc", "b")` is flat because it's a universal utility with no collision risk. Note: `contains` is an expr-lang operator keyword, so the function alias uses the `str` prefix. But `sha256("hello")` is namespaced as `crypto.sha256("hello")` because "sha256" alone is too specific and could collide with user variables.
 
 ### How Namespaces Work
 

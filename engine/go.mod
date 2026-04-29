@@ -15,7 +15,7 @@ require (
 	github.com/fastschema/qjs v0.0.6
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gofiber/contrib/websocket v1.3.4
-	github.com/gofiber/fiber/v2 v2.52.12
+	github.com/gofiber/fiber/v2 v2.52.13
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/graphql-go/graphql v0.8.1

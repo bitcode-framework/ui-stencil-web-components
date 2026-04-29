@@ -111,54 +111,54 @@ func RegisterStrings(r *Registry) {
 		return fmt.Sprintf(template, args...), nil
 	}))
 
-	r.Register(expr.Function("matches", func(params ...any) (any, error) {
+	r.Register(expr.Function("strMatches", func(params ...any) (any, error) {
 		s, ok := params[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("matches: first argument must be a string")
+			return nil, fmt.Errorf("strMatches: first argument must be a string")
 		}
 		pattern, ok := params[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("matches: second argument must be a string")
+			return nil, fmt.Errorf("strMatches: second argument must be a string")
 		}
 		re, err := regexp.Compile(pattern)
 		if err != nil {
-			return nil, fmt.Errorf("matches: invalid regex pattern: %s", err.Error())
+			return nil, fmt.Errorf("strMatches: invalid regex pattern: %s", err.Error())
 		}
 		return re.MatchString(s), nil
 	}))
 
-	r.Register(expr.Function("contains", func(params ...any) (any, error) {
+	r.Register(expr.Function("strContains", func(params ...any) (any, error) {
 		s, ok := params[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("contains: first argument must be a string")
+			return nil, fmt.Errorf("strContains: first argument must be a string")
 		}
 		substr, ok := params[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("contains: second argument must be a string")
+			return nil, fmt.Errorf("strContains: second argument must be a string")
 		}
 		return strings.Contains(s, substr), nil
 	}, new(func(string, string) bool)))
 
-	r.Register(expr.Function("startsWith", func(params ...any) (any, error) {
+	r.Register(expr.Function("strStartsWith", func(params ...any) (any, error) {
 		s, ok := params[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("startsWith: first argument must be a string")
+			return nil, fmt.Errorf("strStartsWith: first argument must be a string")
 		}
 		prefix, ok := params[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("startsWith: second argument must be a string")
+			return nil, fmt.Errorf("strStartsWith: second argument must be a string")
 		}
 		return strings.HasPrefix(s, prefix), nil
 	}, new(func(string, string) bool)))
 
-	r.Register(expr.Function("endsWith", func(params ...any) (any, error) {
+	r.Register(expr.Function("strEndsWith", func(params ...any) (any, error) {
 		s, ok := params[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("endsWith: first argument must be a string")
+			return nil, fmt.Errorf("strEndsWith: first argument must be a string")
 		}
 		suffix, ok := params[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("endsWith: second argument must be a string")
+			return nil, fmt.Errorf("strEndsWith: second argument must be a string")
 		}
 		return strings.HasSuffix(s, suffix), nil
 	}, new(func(string, string) bool)))

@@ -245,15 +245,15 @@ Task 13 (docs) — after all
    - `extractInClause()` — handle `in` / `not in` operators
    - `resolveFieldName()` — extract `IdentifierNode.Value`, validate against model fields
    - `resolveValue()` — resolve `MemberNode` (ctx.user_id → concrete value), `IntegerNode`, `StringNode`, `BoolNode`, `ArrayNode`
-4. Implement `CallNode` → SQL LIKE conversion for whitelisted functions:
-   - `contains(field, "value")` → `WHERE field LIKE '%value%'`
-   - `startsWith(field, "value")` → `WHERE field LIKE 'value%'`
-   - `endsWith(field, "value")` → `WHERE field LIKE '%value'`
-   - Reject all other `CallNode` types (security: no arbitrary function calls in record rules)
+4. Handle `contains`/`startsWith`/`endsWith` BinaryNode operators → SQL LIKE conversion:
+   - `field contains "value"` → `WHERE field LIKE '%value%'` (BinaryNode with operator `"contains"`)
+   - `field startsWith "value"` → `WHERE field LIKE 'value%'` (BinaryNode with operator `"startsWith"`)
+   - `field endsWith "value"` → `WHERE field LIKE '%value'` (BinaryNode with operator `"endsWith"`)
+   - Note: these are expr-lang **operators** (BinaryNode), not functions (CallNode)
 5. Implement security validations per design doc §6.6:
    - Field name validation via `IsSafeFieldName()`
    - Context access whitelist (only `ctx.*`)
-   - Reject `CallNode` (except whitelist: `len`, `contains`, `startsWith`, `endsWith`)
+   - Reject `CallNode` (except whitelist: `len`). Note: `contains`/`startsWith`/`endsWith` are BinaryNode operators, handled in step 4.
    - Tautology detection (no field reference → error)
    - Empty array → deny-all filter
    - Nil context value → deny-all filter

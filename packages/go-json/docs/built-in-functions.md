@@ -21,11 +21,12 @@ go-json functions use two calling styles: **flat** (no namespace) and **namespac
 Most functions are called directly by name:
 
 ```
-upper("hello")              // → "HELLO"
-len(items)                  // → 5
-contains("hello", "ell")    // → true
-abs(-42)                    // → 42
-clamp(value, 0, 100)        // → bounded value
+upper("hello")                    // → "HELLO"
+len(items)                        // → 5
+"hello" contains "ell"            // → true (operator style)
+strContains("hello", "ell")       // → true (function style)
+abs(-42)                          // → 42
+clamp(value, 0, 100)              // → bounded value
 ```
 
 These are **general-purpose utilities** that every program might use. They come from two sources:
@@ -81,28 +82,33 @@ This is **native expr-lang behavior**, not a go-json hack. Any map-of-functions 
 
 | Style | When | Examples |
 |-------|------|---------|
-| **Flat** | General-purpose utility, no collision risk, everyone uses it | `len()`, `upper()`, `contains()`, `abs()`, `clamp()` |
+| **Flat** | General-purpose utility, no collision risk, everyone uses it | `len()`, `upper()`, `abs()`, `clamp()`, `strContains()` |
 | **Namespaced** | Domain-specific, collision risk, or grouped by concern | `crypto.*`, `regex.*` |
 | **Import-namespaced** | I/O modules, extensions, imported libraries | `http.*`, `fs.*`, `sql.*`, `ext:*` |
 
 ### Design Rationale
 
-**Why `contains()` is flat but `crypto.sha256()` is namespaced:**
+**Why `strContains()` has a `str` prefix:**
 
-`contains` is a general-purpose function — you use it on strings, arrays, and maps. There's no other `contains` that does something different. Making it flat (`contains("abc", "b")`) is natural and readable.
+`contains`, `startsWith`, `endsWith`, and `matches` are **reserved operator keywords** in expr-lang. They work as infix operators (`"abc" contains "b"`) but cannot be called as functions (`contains("abc", "b")` → parse error). go-json provides function-call aliases with a `str` prefix: `strContains()`, `strStartsWith()`, `strEndsWith()`, `strMatches()`. Both styles work:
+
+```
+"hello" contains "ell"          // operator style (expr-lang built-in)
+strContains("hello", "ell")     // function style (go-json stdlib)
+```
+
+**Why `crypto.*` is namespaced:**
 
 `sha256` is domain-specific — it only makes sense in a cryptographic context. Namespacing it under `crypto.sha256()` provides:
 - **Discoverability** — seeing `crypto.` tells you "this is crypto-related"
 - **Collision avoidance** — `sha256` alone could conflict with a user variable
 - **Grouping** — `crypto.sha256`, `crypto.md5`, `crypto.uuid`, `crypto.hmac` clearly belong together
 
-**Why `regex.*` is namespaced but `matches()` is flat:**
+**Why `regex.*` is namespaced:**
 
-`matches` is a simple boolean check — `"hello" matches "^h"`. It's an expr-lang operator used inline in conditions. It's flat because it reads naturally in expressions.
+`regex.findAll()` and `regex.replace()` are specialized operations that return complex results. They're namespaced under `regex.*` to group them with `regex.match()` and signal "this is regex-specific".
 
-`regex.findAll()` and `regex.replace()` are more specialized operations that return complex results. They're namespaced under `regex.*` to group them with `regex.match()` and signal "this is regex-specific".
-
-Note that `matches()` (flat, expr-lang operator) and `regex.match()` (namespaced, go-json stdlib) do the same thing — both test if a string matches a pattern. The flat version exists for expression readability; the namespaced version exists for consistency within the regex module.
+Note that `"hello" matches "^h"` (operator, expr-lang) and `regex.match("hello", "^h")` (namespaced, go-json stdlib) and `strMatches("hello", "^h")` (flat function, go-json stdlib) all do the same thing — three ways to match a regex.
 
 ### The Complete Namespace Map
 
@@ -198,9 +204,9 @@ These functions are provided by the [expr-lang/expr](https://github.com/expr-lan
 | `hasSuffix(s, suffix)` | `string, string → bool` | Ends with (function) | `hasSuffix("hello", "lo")` → `true` |
 | `indexOf(s, sub)` | `string, string → int` | First index (-1 if not found) | `indexOf("hello", "ll")` → `2` |
 | `lastIndexOf(s, sub)` | `string, string → int` | Last index (-1 if not found) | `lastIndexOf("abcabc", "abc")` → `3` |
-| `contains` | operator | Substring check | `"hello" contains "ell"` → `true`. Also: `contains("hello", "ell")` (function alias, Layer 2) |
-| `startsWith` | operator | Prefix check | `"hello" startsWith "hel"` → `true`. Also: `startsWith("hello", "hel")` (function alias, Layer 2) |
-| `endsWith` | operator | Suffix check | `"hello" endsWith "llo"` → `true`. Also: `endsWith("hello", "llo")` (function alias, Layer 2) |
+| `contains` | operator | Substring check | `"hello" contains "ell"` → `true`. Function alias: `strContains("hello", "ell")` |
+| `startsWith` | operator | Prefix check | `"hello" startsWith "hel"` → `true`. Function alias: `strStartsWith("hello", "hel")` |
+| `endsWith` | operator | Suffix check | `"hello" endsWith "llo"` → `true`. Function alias: `strEndsWith("hello", "llo")` |
 | `matches` | operator | Regex match | `"hello" matches "^h"` → `true`. Also: `matches("hello", "^h")` (function alias, Layer 2) |
 
 ### Array (expr-lang)
@@ -344,10 +350,10 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `padRight(s, length, char)` | `string, int, string → string` | Right-pad string | `padRight("hi", 5, ".")` → `"hi..."` |
 | `substring(s, start, end?)` | `string, int, int? → string` | Extract substring | `substring("hello", 1, 3)` → `"el"` |
 | `format(template, args...)` | `string, ...any → string` | Template formatting | `format("Hello, %s!", "Alice")` → `"Hello, Alice!"` |
-| `matches(s, pattern)` | `string, string → bool` | Regex match (function alias for operator) | `matches("hello123", "^[a-z]+\\d+$")` → `true` |
-| `contains(s, substr)` | `string, string → bool` | Substring check (function alias for operator) | `contains("hello world", "world")` → `true` |
-| `startsWith(s, prefix)` | `string, string → bool` | Prefix check (function alias for operator) | `startsWith("hello", "hel")` → `true` |
-| `endsWith(s, suffix)` | `string, string → bool` | Suffix check (function alias for operator) | `endsWith("hello", "llo")` → `true` |
+| `strMatches(s, pattern)` | `string, string → bool` | Regex match (function alias for `matches` operator) | `strMatches("hello123", "^[a-z]+\\d+$")` → `true` |
+| `strContains(s, substr)` | `string, string → bool` | Substring check (function alias for `contains` operator) | `strContains("hello world", "world")` → `true` |
+| `strStartsWith(s, prefix)` | `string, string → bool` | Prefix check (function alias for `startsWith` operator) | `strStartsWith("hello", "hel")` → `true` |
+| `strEndsWith(s, suffix)` | `string, string → bool` | Suffix check (function alias for `endsWith` operator) | `strEndsWith("hello", "llo")` → `true` |
 
 ### Array (5 functions)
 

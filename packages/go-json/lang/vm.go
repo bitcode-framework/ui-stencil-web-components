@@ -1877,6 +1877,7 @@ var builtinNames = map[string]bool{
 	"min": true, "max": true, "sum": true,
 	"upper": true, "lower": true, "trim": true, "split": true, "join": true,
 	"replace": true, "contains": true, "hasPrefix": true, "hasSuffix": true,
+	"strContains": true, "strStartsWith": true, "strEndsWith": true, "strMatches": true,
 	"int": true, "float": true, "string": true, "type": true,
 	"toJSON": true, "fromJSON": true, "toBase64": true, "fromBase64": true,
 	"now": true, "date": true, "duration": true,
