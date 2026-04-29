@@ -373,8 +373,10 @@ func cmdMigrate(args []string) {
 }
 
 func migrateProgram(source, from, to string) (string, []string) {
-	var changes []string
-	result := source
+	var raw any
+	if err := json.Unmarshal([]byte(source), &raw); err != nil {
+		return source, nil
+	}
 
 	renames := map[string]string{
 		"unique":     "uniq",
@@ -382,12 +384,37 @@ func migrateProgram(source, from, to string) (string, []string) {
 		"endsWith":   "hasSuffix",
 	}
 
-	for old, new := range renames {
-		if strings.Contains(result, old) {
-			result = strings.ReplaceAll(result, `"`+old+`"`, `"`+new+`"`)
-			changes = append(changes, fmt.Sprintf("renamed '%s' → '%s'", old, new))
-		}
+	var changes []string
+	migrated := migrateValue(raw, renames, &changes)
+
+	out, err := json.MarshalIndent(migrated, "", "  ")
+	if err != nil {
+		return source, nil
 	}
 
-	return result, changes
+	return string(out), changes
+}
+
+func migrateValue(v any, renames map[string]string, changes *[]string) any {
+	switch val := v.(type) {
+	case map[string]any:
+		result := make(map[string]any, len(val))
+		for k, child := range val {
+			newKey := k
+			if renamed, ok := renames[k]; ok {
+				newKey = renamed
+				*changes = append(*changes, fmt.Sprintf("renamed key '%s' → '%s'", k, renamed))
+			}
+			result[newKey] = migrateValue(child, renames, changes)
+		}
+		return result
+	case []any:
+		result := make([]any, len(val))
+		for i, item := range val {
+			result[i] = migrateValue(item, renames, changes)
+		}
+		return result
+	default:
+		return v
+	}
 }
