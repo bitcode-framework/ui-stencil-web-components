@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -13,12 +14,14 @@ type SQLModule struct {
 	security *SecurityConfig
 	config   map[string]any
 
-	// Hosted mode: connection provided by host via WithSQLConnection.
 	hostedDB *sql.DB
+
+	pools   map[string]*sql.DB
+	poolsMu sync.Mutex
 
 	mu sync.Mutex
 	tx *sql.Tx
-	sp int // savepoint counter for nested transactions
+	sp int
 }
 
 // NewSQLModule creates a new SQL I/O module in standalone mode.
@@ -26,7 +29,10 @@ func NewSQLModule(security *SecurityConfig) *SQLModule {
 	if security == nil {
 		security = DefaultSecurityConfig()
 	}
-	return &SQLModule{security: security}
+	return &SQLModule{
+		security: security,
+		pools:    make(map[string]*sql.DB),
+	}
 }
 
 // NewSQLModuleHosted creates a new SQL I/O module in hosted mode with a pre-configured connection.
@@ -39,6 +45,40 @@ func NewSQLModuleHosted(security *SecurityConfig, db *sql.DB) *SQLModule {
 func (m *SQLModule) Name() string { return "sql" }
 
 func (m *SQLModule) SetConfig(cfg map[string]any) { m.config = cfg }
+
+// Close closes all pooled connections and rolls back any active transaction.
+func (m *SQLModule) Close() error {
+	m.mu.Lock()
+	if m.tx != nil {
+		m.tx.Rollback()
+		m.tx = nil
+		m.sp = 0
+	}
+	m.mu.Unlock()
+
+	m.poolsMu.Lock()
+	defer m.poolsMu.Unlock()
+
+	var firstErr error
+	for dsn, db := range m.pools {
+		if err := db.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
+		delete(m.pools, dsn)
+	}
+	return firstErr
+}
+
+// Cleanup rolls back any uncommitted transaction without closing pools.
+func (m *SQLModule) Cleanup() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.tx != nil {
+		m.tx.Rollback()
+		m.tx = nil
+		m.sp = 0
+	}
+}
 
 func (m *SQLModule) Functions() map[string]any {
 	return map[string]any{
@@ -302,7 +342,25 @@ func (m *SQLModule) getDB(dsn string) (*sql.DB, error) {
 	}
 
 	if dsn == "" {
-		return nil, fmt.Errorf("sql: DSN is required in standalone mode")
+		dsn = m.security.SQL.DefaultDSN
+	}
+	if dsn == "" {
+		return nil, fmt.Errorf("sql: DSN is required — set DefaultDSN in config or pass dsn parameter")
+	}
+
+	m.poolsMu.Lock()
+	defer m.poolsMu.Unlock()
+
+	if db, ok := m.pools[dsn]; ok {
+		return db, nil
+	}
+
+	maxPools := m.security.SQL.MaxPools
+	if maxPools <= 0 {
+		maxPools = 5
+	}
+	if len(m.pools) >= maxPools {
+		return nil, fmt.Errorf("sql: max pool limit reached (%d)", maxPools)
 	}
 
 	driver := detectDriverFromDSN(dsn)
@@ -315,23 +373,34 @@ func (m *SQLModule) getDB(dsn string) (*sql.DB, error) {
 		return nil, fmt.Errorf("sql: cannot open database: %s", err.Error())
 	}
 
+	maxPoolSize := m.security.SQL.MaxPoolSize
+	if maxPoolSize <= 0 {
+		maxPoolSize = 10
+	}
+	db.SetMaxOpenConns(maxPoolSize)
+	db.SetMaxIdleConns(maxPoolSize / 2)
+	db.SetConnMaxIdleTime(5 * time.Minute)
+	db.SetConnMaxLifetime(30 * time.Minute)
+
+	m.pools[dsn] = db
 	return db, nil
 }
 
 func detectDriverFromDSN(dsn string) string {
-	if len(dsn) > 11 && dsn[:11] == "postgres://" {
+	switch {
+	case strings.HasPrefix(dsn, "postgres://"), strings.HasPrefix(dsn, "postgresql://"):
 		return "postgres"
-	}
-	if len(dsn) > 8 && dsn[:8] == "mysql://" {
+	case strings.HasPrefix(dsn, "mysql://"):
 		return "mysql"
-	}
-	if len(dsn) > 10 && dsn[:10] == "sqlite3://" {
+	case strings.HasPrefix(dsn, "sqlserver://"):
+		return "sqlserver"
+	case strings.HasPrefix(dsn, "oracle://"):
+		return "oracle"
+	case strings.HasPrefix(dsn, "sqlite3://"), strings.HasPrefix(dsn, "sqlite://"), strings.HasPrefix(dsn, "file:"):
+		return "sqlite3"
+	default:
 		return "sqlite3"
 	}
-	if len(dsn) > 5 && dsn[:5] == "file:" {
-		return "sqlite3"
-	}
-	return "sqlite3"
 }
 
 func convertSQLValue(v any) any {

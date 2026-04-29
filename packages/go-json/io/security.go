@@ -36,9 +36,14 @@ type FSSecurityConfig struct {
 
 // SQLSecurityConfig controls SQL module security.
 type SQLSecurityConfig struct {
-	AllowedDrivers []string `json:"allowed_drivers"`
-	MaxQueryTime   int      `json:"max_query_time"`
-	MaxRows        int      `json:"max_rows"`
+	AllowedDrivers  []string `json:"allowed_drivers"`
+	MaxQueryTime    int      `json:"max_query_time"`
+	MaxRows         int      `json:"max_rows"`
+	DefaultDSN      string   `json:"default_dsn"`
+	MaxPoolSize     int      `json:"max_pool_size"`
+	MaxPools        int      `json:"max_pools"`
+	BlockedKeywords []string `json:"blocked_keywords"`
+	MaxQueryLength  int      `json:"max_query_length"`
 }
 
 // ExecSecurityConfig controls command execution security.
