@@ -473,7 +473,132 @@ func moduleCmd() *cobra.Command {
 		},
 	})
 
+	installDepsCmd := &cobra.Command{
+		Use:   "install-deps [module-name]",
+		Short: "Install npm dependencies for a module",
+		Long:  "Runs npm install in the module directory. Use --all to install for all modules with package.json.",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			moduleDir := envOrDefault("MODULE_DIR", "modules")
+			all, _ := cmd.Flags().GetBool("all")
+
+			if all {
+				return installAllModuleDeps(moduleDir)
+			}
+			if len(args) == 0 {
+				return fmt.Errorf("specify a module name or use --all")
+			}
+			return installModuleDeps(moduleDir, args[0])
+		},
+	}
+	installDepsCmd.Flags().Bool("all", false, "Install deps for all modules with package.json")
+	cmd.AddCommand(installDepsCmd)
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "add-package [module] [package...]",
+		Short: "Add npm package to a module",
+		Args:  cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			moduleDir := envOrDefault("MODULE_DIR", "modules")
+			modDir := filepath.Join(moduleDir, args[0])
+			if _, err := os.Stat(modDir); os.IsNotExist(err) {
+				return fmt.Errorf("module %q not found at %s", args[0], modDir)
+			}
+			pkgJSON := filepath.Join(modDir, "package.json")
+			if _, err := os.Stat(pkgJSON); os.IsNotExist(err) {
+				initCmd := exec.Command("npm", "init", "-y")
+				initCmd.Dir = modDir
+				initCmd.Stdout = os.Stdout
+				initCmd.Stderr = os.Stderr
+				if err := initCmd.Run(); err != nil {
+					return fmt.Errorf("npm init failed: %w", err)
+				}
+			}
+			npmArgs := append([]string{"install", "--save"}, args[1:]...)
+			npmCmd := exec.Command("npm", npmArgs...)
+			npmCmd.Dir = modDir
+			npmCmd.Stdout = os.Stdout
+			npmCmd.Stderr = os.Stderr
+			if err := npmCmd.Run(); err != nil {
+				return fmt.Errorf("npm install failed: %w", err)
+			}
+			fmt.Printf("Packages installed in %s\n", modDir)
+			return nil
+		},
+	})
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "remove-package [module] [package...]",
+		Short: "Remove npm package from a module",
+		Args:  cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			moduleDir := envOrDefault("MODULE_DIR", "modules")
+			modDir := filepath.Join(moduleDir, args[0])
+			pkgJSON := filepath.Join(modDir, "package.json")
+			if _, err := os.Stat(pkgJSON); os.IsNotExist(err) {
+				return fmt.Errorf("no package.json in module %q", args[0])
+			}
+			npmArgs := append([]string{"uninstall", "--save"}, args[1:]...)
+			npmCmd := exec.Command("npm", npmArgs...)
+			npmCmd.Dir = modDir
+			npmCmd.Stdout = os.Stdout
+			npmCmd.Stderr = os.Stderr
+			if err := npmCmd.Run(); err != nil {
+				return fmt.Errorf("npm uninstall failed: %w", err)
+			}
+			fmt.Printf("Packages removed from %s\n", modDir)
+			return nil
+		},
+	})
+
 	return cmd
+}
+
+func installModuleDeps(moduleDir, moduleName string) error {
+	modDir := filepath.Join(moduleDir, moduleName)
+	pkgJSON := filepath.Join(modDir, "package.json")
+	if _, err := os.Stat(pkgJSON); os.IsNotExist(err) {
+		fmt.Printf("[WARN] No package.json found in %s — skipping\n", modDir)
+		return nil
+	}
+	fmt.Printf("Installing dependencies for module %s...\n", moduleName)
+	npmCmd := exec.Command("npm", "install")
+	npmCmd.Dir = modDir
+	npmCmd.Stdout = os.Stdout
+	npmCmd.Stderr = os.Stderr
+	if err := npmCmd.Run(); err != nil {
+		return fmt.Errorf("npm install failed in %s: %w", modDir, err)
+	}
+	fmt.Printf("Dependencies installed for %s\n", moduleName)
+	return nil
+}
+
+func installAllModuleDeps(moduleDir string) error {
+	entries, err := os.ReadDir(moduleDir)
+	if err != nil {
+		return fmt.Errorf("cannot read module directory %s: %w", moduleDir, err)
+	}
+	installed := 0
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		pkgJSON := filepath.Join(moduleDir, entry.Name(), "package.json")
+		if _, err := os.Stat(pkgJSON); os.IsNotExist(err) {
+			continue
+		}
+		if err := installModuleDeps(moduleDir, entry.Name()); err != nil {
+			log.Printf("[WARN] %v", err)
+			continue
+		}
+		installed++
+	}
+	if installed == 0 {
+		fmt.Println("No modules with package.json found")
+	} else {
+		fmt.Printf("Installed dependencies for %d module(s)\n", installed)
+	}
+	return nil
 }
 
 func userCmd() *cobra.Command {
