@@ -69,6 +69,8 @@ func (g *PythonGenerator) generateStep(b *strings.Builder, node lang.Node, level
 	case *lang.LetNode:
 		if n.Call != "" {
 			b.WriteString(fmt.Sprintf("%s%s = %s(%s)\n", pyIndent(level), n.Name, n.Call, formatPyArgs(n.CallWith)))
+		} else if n.New != "" {
+			b.WriteString(fmt.Sprintf("%s%s = %s(%s)\n", pyIndent(level), n.Name, n.New, formatPyNewArgs(n.NewWith)))
 		} else if n.HasExpr {
 			b.WriteString(fmt.Sprintf("%s%s = %s\n", pyIndent(level), n.Name, transformExpr(n.Expr, "python")))
 		} else if n.HasValue {
@@ -115,7 +117,9 @@ func (g *PythonGenerator) generateStep(b *strings.Builder, node lang.Node, level
 		g.generateSteps(b, n.Steps, level+1)
 
 	case *lang.ReturnNode:
-		if n.HasExpr {
+		if n.HasNew {
+			b.WriteString(fmt.Sprintf("%sreturn %s(%s)\n", pyIndent(level), n.New, formatPyNewArgs(n.NewWith)))
+		} else if n.HasExpr {
 			b.WriteString(fmt.Sprintf("%sreturn %s\n", pyIndent(level), transformExpr(n.Expr, "python")))
 		} else if n.HasValue {
 			b.WriteString(fmt.Sprintf("%sreturn %s\n", pyIndent(level), formatPyValue(n.Value)))
@@ -166,6 +170,17 @@ func (g *PythonGenerator) generateStep(b *strings.Builder, node lang.Node, level
 
 func pyIndent(level int) string {
 	return strings.Repeat("    ", level)
+}
+
+func formatPyNewArgs(with map[string]any) string {
+	if len(with) == 0 {
+		return ""
+	}
+	args := make([]string, 0, len(with))
+	for k, v := range with {
+		args = append(args, fmt.Sprintf("%s=%s", k, formatPyValue(v)))
+	}
+	return strings.Join(args, ", ")
 }
 
 func formatPyArgs(with map[string]string) string {

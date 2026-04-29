@@ -17,10 +17,6 @@ func indent(level int) string {
 	return strings.Repeat("\t", level)
 }
 
-func indentSpaces(level int, spaces int) string {
-	return strings.Repeat(strings.Repeat(" ", spaces), level)
-}
-
 func commentFromMeta(meta *lang.NodeMeta) string {
 	if meta.Comment != "" {
 		return meta.Comment
@@ -30,30 +26,6 @@ func commentFromMeta(meta *lang.NodeMeta) string {
 	}
 	return ""
 }
-
-func stepsToNodes(steps []lang.Node) []lang.Node {
-	return steps
-}
-
-// NodeType constants matching the design doc §4.3.
-const (
-	NodeProgram    = "program"
-	NodeLet        = "let"
-	NodeSet        = "set"
-	NodeIf         = "if"
-	NodeSwitch     = "switch"
-	NodeForIn      = "for"
-	NodeWhile      = "while"
-	NodeBreak      = "break"
-	NodeContinue   = "continue"
-	NodeReturn     = "return"
-	NodeCall       = "call"
-	NodeTry        = "try"
-	NodeError      = "error"
-	NodeLog        = "log"
-	NodeParallel   = "parallel"
-	NodeComment    = "comment"
-)
 
 func transformExpr(expr string, lang string) string {
 	if lang == "go" {

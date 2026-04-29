@@ -68,6 +68,8 @@ func (g *GoGenerator) generateStep(b *strings.Builder, node lang.Node, level int
 	case *lang.LetNode:
 		if n.Call != "" {
 			b.WriteString(fmt.Sprintf("%s%s := %s(%s)\n", indent(level), n.Name, n.Call, formatGoArgs(n.CallWith)))
+		} else if n.New != "" {
+			b.WriteString(fmt.Sprintf("%s%s := %s{%s}\n", indent(level), n.Name, n.New, formatGoNewArgs(n.NewWith)))
 		} else if n.HasExpr {
 			b.WriteString(fmt.Sprintf("%s%s := %s\n", indent(level), n.Name, n.Expr))
 		} else if n.HasValue {
@@ -126,7 +128,9 @@ func (g *GoGenerator) generateStep(b *strings.Builder, node lang.Node, level int
 		b.WriteString(fmt.Sprintf("%s}\n", indent(level)))
 
 	case *lang.ReturnNode:
-		if n.HasExpr {
+		if n.HasNew {
+			b.WriteString(fmt.Sprintf("%sreturn %s{%s}\n", indent(level), n.New, formatGoNewArgs(n.NewWith)))
+		} else if n.HasExpr {
 			b.WriteString(fmt.Sprintf("%sreturn %s\n", indent(level), n.Expr))
 		} else if n.HasValue {
 			b.WriteString(fmt.Sprintf("%sreturn %s\n", indent(level), formatValue(n.Value)))
@@ -184,6 +188,17 @@ func (g *GoGenerator) generateStep(b *strings.Builder, node lang.Node, level int
 			b.WriteString(fmt.Sprintf("%s// %s\n", indent(level), comment))
 		}
 	}
+}
+
+func formatGoNewArgs(with map[string]any) string {
+	if len(with) == 0 {
+		return ""
+	}
+	args := make([]string, 0, len(with))
+	for k, v := range with {
+		args = append(args, fmt.Sprintf("%s: %s", k, formatValue(v)))
+	}
+	return strings.Join(args, ", ")
 }
 
 func formatGoArgs(with map[string]string) string {
