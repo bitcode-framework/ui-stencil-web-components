@@ -467,14 +467,16 @@ Step 1 → Python **background** pool (step-level override).
 | **1.5** | Multi-Tenancy Architecture | Phase 1 | ✅ Done | shared_table strategy, auto tenant_id column, tenant_scoped per model, conditional filtering |
 | **4** | Embedded Runtime: goja + quickjs | Phase 1 | ✅ Done | goja (ES6+) + QuickJS (ES2023), 20 bridge namespaces, shared executor, compilation cache |
 | **5** | Embedded Runtime: yaegi | Phase 1 | ✅ Done | `runtime: "go"` — yaegi interpreter, 20 bridge namespaces, goroutines, context-based timeout, stdlib filter, bridges/ loader, 18 tests |
-| **4.5a** | go-json Core Language | Phase 1 | 🔲 Draft | Standalone JSON programming language — expr-lang, let/set, if/switch/loop, functions, recursion, try/catch, 60 stdlib functions, resource limits |
-| **4.5b** | go-json Modularity | Phase 4.5a | 🔲 Draft | Struct/methods, import system, parallel execution, 30 extended stdlib, nullable types |
-| **4.5c** | go-json I/O + Integration | Phase 4.5b | 🔲 Draft | HTTP/FS/SQL/exec I/O, bitcode bridge integration, scripts/*.json, AST export, CLI runner |
+| **4.5a** | go-json Core Language | Phase 1 | ✅ Design Approved | Standalone JSON/JSONC programming language — expr-lang abstraction layer, let/set, if/switch/loop, functions, recursion, try/catch, ~28 Layer 2 stdlib functions (68 from expr-lang built-in), resource limits, debugging hooks, program reuse |
+| **4.5b** | go-json Modularity | Phase 4.5a | ✅ Design Approved | Struct/methods (mutable + frozen), import system (alias = namespace), parallel execution (3 error modes), ~15 Layer 2 stdlib, nullable types |
+| **4.5c** | go-json I/O + Integration | Phase 4.5b | ✅ Done | HTTP/FS/SQL/exec I/O (explicit import), bitcode bridge integration, scripts/*.json, AST export, CLI runner, test framework, migration tool, regex stdlib, code generation (Go/JS/Python) |
+| **4.5c-fix** | go-json I/O Fixes + Extensions | Phase 4.5c | ✅ Done | 25 bug/gap fixes, MongoDB module, Redis module, multi-driver SQL, connection pooling, two-layer security enforcement |
+| **4.5d** | go-json Web Server | Phase 4.5c-fix | 📋 Planned | Built-in web server (`go-json serve`), declarative routing, plugable framework adapters (Fiber default), plugable auth (JWT/API key/Basic/Custom), middleware, template engine, static files, OpenAPI/Swagger, unified SQL query params, FS enhancements, CRUD generator with DB introspection, architecture patterns (simple/service-layer/DDD/hexagonal), custom templates, codegen dependency management |
 | **2** | Fix Node.js Child Process | Phase 1, 1.5 | 🔲 Pending | 6 TS scripts in samples/erp work with real bridge |
 | **3** | Fix Python Child Process | Phase 1, 1.5 | 🔲 Pending | 6 PY scripts in samples/erp work with real bridge |
 | **6B** | Polymorphic Relations | Phase 6A | 🔲 Pending | morph_to, morph_one, morph_many, morph_to_many, morph_by_many |
 | **6C** | Engine Enhancements | Phase 6A, Phase 1 | 🔲 Pending | Array-backed models (Sushi-style), view modifiers, metadata API, eager loading fixes |
-| **7** | Module "setting" | Phase 4.5c + all others | 🔲 Pending | Admin panel as JSON module, go-json as process engine, 5+ runtimes stress test |
+| **7** | Module "setting" | Phase 4.5d + all others | 🔲 Pending | Admin panel as JSON module, go-json web server as process engine, 5+ runtimes stress test |
 
 ### Dependency Graph
 
@@ -491,14 +493,22 @@ Phase 1 (Bridge API Design)
        │                            │
        ├──► Phase 4.5b (Modularity) │
        │    │                       │
-       │    └──► Phase 4.5c (I/O) ──┘
-       │                            │
+       │    └──► Phase 4.5c (I/O)   │
+       │         │                  │
+       │         ├──► Phase 4.5c-fix (Fixes + MongoDB/Redis)
+       │         │    │             │
+       │         │    └──► Phase 4.5d (Web Server)
+       │         │         │        │
+       │         │         │  Includes: serve, generate, openapi commands
+       │         │         │  Includes: plugable auth, OpenAPI, CRUD generator
+       │         │         │  Includes: architecture patterns, custom templates
+       │         │         │        │
 Phase 6A (Schema Compat) ──────────┤ (independent, can start anytime)
                                     │
                                     ├──► Phase 6B (Polymorphic Relations)
                                     ├──► Phase 6C (Engine Enhancements)
                                     └──► Phase 7 (Module "setting")
-                                         requires Phase 4.5c
+                                         requires Phase 4.5d
 ```
 
 Phase 1.5 must complete before Phase 2-3 (runtime implementations need correct tenant behavior).
@@ -506,7 +516,9 @@ Phase 4-5 can start after Phase 1 (embedded runtimes don't depend on tenant DB c
 Phase 6A is independent — parser/migration level, no runtime dependency.
 Phase 6B depends on Phase 6A (new field types needed for morph columns).
 Phase 6C depends on Phase 6A (display_field, title_field format, etc.).
-Phase 7 needs all phases complete — it uses all 4+ runtimes as stress test.
+Phase 4.5c-fix depends on Phase 4.5c (fixes bugs and adds MongoDB/Redis/multi-driver SQL).
+Phase 4.5d depends on Phase 4.5c-fix (web server needs working I/O modules).
+Phase 7 needs Phase 4.5d complete — it uses go-json web server as the process engine for module "setting".
 
 ---
 
@@ -529,6 +541,17 @@ Phase 7 needs all phases complete — it uses all 4+ runtimes as stress test.
 | Phase 2 | `2026-07-14-runtime-engine-phase-2-fix-nodejs.md` |
 | Phase 3 | `2026-07-14-runtime-engine-phase-3-fix-python.md` |
 | Phase 4 | `2026-07-14-runtime-engine-phase-4-embedded-js.md` |
+| Phase 4.5 (Master) | `2026-07-14-runtime-engine-phase-4.5-go-json-master.md` |
+| Phase 4.5a (Design) | `2026-07-14-runtime-engine-phase-4.5a-go-json-core-language.md` |
+| Phase 4.5a (Plan) | `2026-07-14-runtime-engine-phase-4.5a-go-json-core-language-plan.md` |
+| Phase 4.5b (Design) | `2026-07-14-runtime-engine-phase-4.5b-go-json-modularity.md` |
+| Phase 4.5b (Plan) | `2026-07-14-runtime-engine-phase-4.5b-go-json-modularity-plan.md` |
+| Phase 4.5c (Design) | `2026-07-14-runtime-engine-phase-4.5c-go-json-io-integration.md` |
+| Phase 4.5c (Plan) | `2026-07-14-runtime-engine-phase-4.5c-go-json-io-integration-plan.md` |
+| Phase 4.5c-fix (Plan) | `2026-04-29-runtime-engine-phase-4.5c-fixes-and-extensions-plan.md` |
+| Phase 4.5d (Design) | `2026-04-29-runtime-engine-phase-4.5d-go-json-web-server.md` |
+| Phase 4.5d (Plan) | `2026-04-29-runtime-engine-phase-4.5d-go-json-web-server-plan.md` |
+| Phase 4.5 (Decisions) | `2026-04-28-go-json-brainstorming-design.md` |
 | Phase 5 | `2026-07-14-runtime-engine-phase-5-yaegi.md` |
 | Phase 6A | `2026-07-14-runtime-engine-phase-6a-schema-compatibility.md` |
 | Phase 6B | `2026-07-14-runtime-engine-phase-6b-polymorphic-relations.md` |
