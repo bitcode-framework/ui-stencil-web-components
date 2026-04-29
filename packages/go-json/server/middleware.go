@@ -16,10 +16,11 @@ import (
 
 // MiddlewareRegistry holds built-in and custom middleware resolvers.
 type MiddlewareRegistry struct {
-	builtin map[string]adapters.MiddlewareFunc
-	config  *lang.ServerConfig
-	rt      *runtime.Runtime
+	builtin  map[string]adapters.MiddlewareFunc
+	config   *lang.ServerConfig
+	rt       *runtime.Runtime
 	compiled *lang.CompiledProgram
+	auth     *AuthRegistry
 }
 
 // NewMiddlewareRegistry creates a registry with built-in middleware.
@@ -50,6 +51,8 @@ func NewMiddlewareRegistry(cfg *lang.ServerConfig, rt *runtime.Runtime, compiled
 		mr.builtin["jwt"] = JWTMiddleware(cfg.JWT)
 	}
 
+	mr.auth = NewAuthRegistry(cfg.Auth, cfg.JWT, rt, compiled)
+
 	return mr
 }
 
@@ -58,6 +61,10 @@ func NewMiddlewareRegistry(cfg *lang.ServerConfig, rt *runtime.Runtime, compiled
 func (mr *MiddlewareRegistry) Resolve(name string) (adapters.MiddlewareFunc, error) {
 	if mw, ok := mr.builtin[name]; ok {
 		return mw, nil
+	}
+
+	if name == "auth" || strings.HasPrefix(name, "auth:") {
+		return mr.auth.Middleware(name)
 	}
 
 	if mr.compiled != nil {
