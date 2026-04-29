@@ -1573,28 +1573,7 @@ func toStringMap(m map[string]any) map[string]string {
 	return result
 }
 
-// toExprMap converts JSON values to expression strings.
-// string → kept as expression, number/bool → literal expression, null → "nil"
-func toExprMap(m map[string]any) map[string]string {
-	result := make(map[string]string, len(m))
-	for k, v := range m {
-		switch val := v.(type) {
-		case string:
-			result[k] = val
-		case nil:
-			result[k] = "nil"
-		case bool:
-			if val {
-				result[k] = "true"
-			} else {
-				result[k] = "false"
-			}
-		default:
-			result[k] = fmt.Sprintf("%v", v)
-		}
-	}
-	return result
-}
+
 
 func toInt(v any) (int, bool) {
 	switch n := v.(type) {

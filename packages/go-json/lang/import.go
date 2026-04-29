@@ -2,6 +2,7 @@ package lang
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -65,8 +66,15 @@ func (ir *ImportResolver) resolvePath(importPath, basePath string) string {
 	if strings.HasSuffix(importPath, ".json") || strings.HasSuffix(importPath, ".jsonc") {
 		return filepath.Join(basePath, importPath)
 	}
-	jsonPath := filepath.Join(basePath, importPath+".json")
-	return jsonPath
+	full := filepath.Join(basePath, importPath)
+	if _, err := os.Stat(full); err == nil {
+		return full
+	}
+	jsonPath := full + ".json"
+	if _, err := os.Stat(jsonPath); err == nil {
+		return jsonPath
+	}
+	return full + ".jsonc"
 }
 
 func (ir *ImportResolver) isInStack(path string, stack []string) bool {

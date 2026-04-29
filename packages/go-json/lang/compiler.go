@@ -92,8 +92,14 @@ func Compile(program *Program, engine ExprEngine, engineLimits ResolvedLimits) (
 		}
 	}
 
-	// Validate frozen struct methods don't mutate self.
 	for _, cs := range cp.Structs {
+		if cs.Methods != nil {
+			for methodName, cm := range cs.Methods {
+				if err := validateNoSelfReassign(cm.Steps, cs.Name, methodName); err != nil {
+					return nil, err
+				}
+			}
+		}
 		if cs.Frozen && cs.Methods != nil {
 			for methodName, cm := range cs.Methods {
 				if err := validateNoSelfMutation(cm.Steps, cs.Name, methodName); err != nil {
@@ -270,6 +276,50 @@ func validateNoSelfMutationStep(node Node, structName, methodName string) error 
 	case *ParallelNode:
 		for _, steps := range n.Branches {
 			if err := validateNoSelfMutation(steps, structName, methodName); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func validateNoSelfReassign(steps []Node, structName, methodName string) error {
+	for _, step := range steps {
+		if sn, ok := step.(*SetNode); ok && sn.Target == "self" {
+			return CompileError("SELF_REASSIGN",
+				fmt.Sprintf("method '%s.%s' cannot reassign self", structName, methodName), sn.StepIndex)
+		}
+		switch n := step.(type) {
+		case *IfNode:
+			if err := validateNoSelfReassign(n.Then, structName, methodName); err != nil {
+				return err
+			}
+			for _, elif := range n.Elif {
+				if err := validateNoSelfReassign(elif.Then, structName, methodName); err != nil {
+					return err
+				}
+			}
+			if err := validateNoSelfReassign(n.Else, structName, methodName); err != nil {
+				return err
+			}
+		case *ForNode:
+			if err := validateNoSelfReassign(n.Steps, structName, methodName); err != nil {
+				return err
+			}
+		case *WhileNode:
+			if err := validateNoSelfReassign(n.Steps, structName, methodName); err != nil {
+				return err
+			}
+		case *TryNode:
+			if err := validateNoSelfReassign(n.Try, structName, methodName); err != nil {
+				return err
+			}
+			if n.Catch != nil {
+				if err := validateNoSelfReassign(n.Catch.Steps, structName, methodName); err != nil {
+					return err
+				}
+			}
+			if err := validateNoSelfReassign(n.Finally, structName, methodName); err != nil {
 				return err
 			}
 		}

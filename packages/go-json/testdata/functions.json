@@ -24,8 +24,8 @@
     }
   },
   "steps": [
-    {"let": "sum", "call": "add", "with": {"a": "3", "b": "4"}},
+    {"let": "total", "call": "add", "with": {"a": "3", "b": "4"}},
     {"let": "fact", "call": "factorial", "with": {"n": "5"}},
-    {"return": "{'sum': sum, 'fact': fact}"}
+    {"return": "{'total': total, 'fact': fact}"}
   ]
 }

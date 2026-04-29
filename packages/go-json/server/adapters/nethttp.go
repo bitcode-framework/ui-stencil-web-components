@@ -31,16 +31,18 @@ func NewNetHTTPAdapter() ServerAdapter {
 }
 
 func (a *NetHTTPAdapter) RegisterRoute(reg RouteRegistration) {
-	pattern := fmt.Sprintf("%s %s", strings.ToUpper(reg.Method), reg.Path)
-	a.mux.HandleFunc(pattern, a.wrapHandler(reg.Handler, reg.Middleware))
+	converted, paramNames := convertColonToNetHTTP(reg.Path)
+	pattern := fmt.Sprintf("%s %s", strings.ToUpper(reg.Method), converted)
+	a.mux.HandleFunc(pattern, a.wrapHandlerWithParams(reg.Handler, reg.Middleware, paramNames))
 }
 
 func (a *NetHTTPAdapter) RegisterGroup(prefix string, middleware []MiddlewareFunc, routes []RouteRegistration) {
 	for _, route := range routes {
 		fullPath := strings.TrimRight(prefix, "/") + route.Path
+		converted, paramNames := convertColonToNetHTTP(fullPath)
 		merged := append(middleware, route.Middleware...)
-		pattern := fmt.Sprintf("%s %s", strings.ToUpper(route.Method), fullPath)
-		a.mux.HandleFunc(pattern, a.wrapHandler(route.Handler, merged))
+		pattern := fmt.Sprintf("%s %s", strings.ToUpper(route.Method), converted)
+		a.mux.HandleFunc(pattern, a.wrapHandlerWithParams(route.Handler, merged, paramNames))
 	}
 }
 
@@ -76,9 +78,9 @@ func (a *NetHTTPAdapter) Shutdown(ctx context.Context) error {
 	return a.server.Shutdown(ctx)
 }
 
-func (a *NetHTTPAdapter) wrapHandler(handler HandlerFunc, middleware []MiddlewareFunc) http.HandlerFunc {
+func (a *NetHTTPAdapter) wrapHandlerWithParams(handler HandlerFunc, middleware []MiddlewareFunc, paramNames []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		reqCtx := netHTTPToRequestContext(r)
+		reqCtx := netHTTPToRequestContext(r, paramNames)
 
 		var resp *Response
 		if len(middleware) == 0 {
@@ -95,7 +97,7 @@ func (a *NetHTTPAdapter) wrapHandler(handler HandlerFunc, middleware []Middlewar
 	}
 }
 
-func netHTTPToRequestContext(r *http.Request) *RequestContext {
+func netHTTPToRequestContext(r *http.Request, paramNames []string) *RequestContext {
 	query := make(map[string]string)
 	for k, v := range r.URL.Query() {
 		if len(v) > 0 {
@@ -115,8 +117,12 @@ func netHTTPToRequestContext(r *http.Request) *RequestContext {
 		cookies[c.Name] = c.Value
 	}
 
-	// net/http path params require Go 1.22+ {name} patterns; extracted at registration time
 	params := make(map[string]string)
+	for _, name := range paramNames {
+		if val := r.PathValue(name); val != "" {
+			params[name] = val
+		}
+	}
 
 	var body any
 	contentType := r.Header.Get("Content-Type")
@@ -191,10 +197,29 @@ func writeHTTPResponse(w http.ResponseWriter, resp *Response) {
 	}
 
 	if resp.Body != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(status)
-		json.NewEncoder(w).Encode(resp.Body)
+		if htmlStr, ok := resp.Body.(string); ok && strings.HasPrefix(resp.Headers["Content-Type"], "text/html") {
+			w.WriteHeader(status)
+			w.Write([]byte(htmlStr))
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(status)
+			json.NewEncoder(w).Encode(resp.Body)
+		}
 	} else {
 		w.WriteHeader(status)
 	}
+}
+
+// convertColonToNetHTTP converts :param to {param} and returns param names.
+func convertColonToNetHTTP(path string) (string, []string) {
+	parts := strings.Split(path, "/")
+	var paramNames []string
+	for i, part := range parts {
+		if strings.HasPrefix(part, ":") {
+			name := part[1:]
+			parts[i] = "{" + name + "}"
+			paramNames = append(paramNames, name)
+		}
+	}
+	return strings.Join(parts, "/"), paramNames
 }

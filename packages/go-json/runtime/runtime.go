@@ -159,6 +159,13 @@ func (r *Runtime) IODisabled() bool {
 	return r.ioDisabled
 }
 
+// AddStdlibEnv adds environment variables to the runtime after construction.
+func (r *Runtime) AddStdlibEnv(vars map[string]any) {
+	for k, v := range vars {
+		r.stdlibEnv[k] = v
+	}
+}
+
 // Compile parses and compiles a go-json program (no import resolution).
 func (r *Runtime) Compile(input []byte) (*lang.CompiledProgram, error) {
 	return r.compileWithBasePath(input, "")

@@ -91,19 +91,11 @@ func NewServer(programPath string, rt *runtime.Runtime, opts ...ServerOption) (*
 		opt(s)
 	}
 
-	s.middleware = NewMiddlewareRegistry(cfg, rt, compiled)
-
 	if cfg.JWT != nil {
-		jwtFuncs := JWTFunctions(cfg.JWT)
-		s.runtime = runtime.NewRuntime(
-			runtime.WithStdlibEnv(map[string]any{"jwt": jwtFuncs}),
-		)
-		s.compiled, err = s.runtime.CompileFile(programPath)
-		if err != nil {
-			return nil, fmt.Errorf("recompile with JWT functions: %w", err)
-		}
-		s.middleware = NewMiddlewareRegistry(cfg, s.runtime, s.compiled)
+		rt.AddStdlibEnv(map[string]any{"jwt": JWTFunctions(cfg.JWT)})
 	}
+
+	s.middleware = NewMiddlewareRegistry(cfg, rt, compiled)
 
 	if cfg.Templates != "" {
 		te, err := NewTemplateEngine(cfg.Templates, s.devMode)
@@ -187,6 +179,11 @@ func (s *Server) registerRoutes() error {
 	}
 
 	s.registerHealthEndpoint()
+
+	if s.docsEnabled {
+		RegisterDocsEndpoints(s.adapter, s.compiled)
+		log.Printf("[go-json] Swagger UI enabled at /docs")
+	}
 
 	staticCfg := ResolveStaticConfig(s.config)
 	if staticCfg != nil {

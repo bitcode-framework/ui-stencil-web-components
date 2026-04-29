@@ -887,6 +887,333 @@ func (vm *VM) callFunction(name string, withExprs map[string]string, stepIndex i
 	return retVal, nil
 }
 
+func (vm *VM) callFunctionUnified(name string, namedWith map[string]string, positionalWith []string, literalArgs []any, stepIndex int) (any, error) {
+	if len(namedWith) > 0 {
+		return vm.callFunction(name, namedWith, stepIndex)
+	}
+
+	fn, ok := vm.program.Functions[name]
+	if !ok {
+		funcNames := make([]string, 0, len(vm.program.Functions))
+		for n := range vm.program.Functions {
+			funcNames = append(funcNames, n)
+		}
+		gjErr := RuntimeError("FUNC_NOT_FOUND",
+			fmt.Sprintf("function '%s' not defined", name), stepIndex)
+		if suggestions := SuggestSimilar(name, funcNames, 3, 3); len(suggestions) > 0 {
+			gjErr.WithSuggestions(suggestions...)
+		}
+		return nil, gjErr
+	}
+
+	vm.depth++
+	defer func() { vm.depth-- }()
+
+	if vm.depth > vm.limits.MaxDepth {
+		return nil, LimitError("DEPTH_LIMIT",
+			fmt.Sprintf("call depth limit (%d) exceeded at function '%s'", vm.limits.MaxDepth, name),
+			stepIndex).WithStack(vm.callStack)
+	}
+
+	vm.callStack = append(vm.callStack, StackFrame{Function: name, Step: stepIndex})
+	defer func() { vm.callStack = vm.callStack[:len(vm.callStack)-1] }()
+
+	if vm.debugger != nil {
+		args := make(map[string]any)
+		if positionalWith != nil {
+			for i, expr := range positionalWith {
+				if i < len(fn.Params) {
+					args[fn.Params[i].Name] = expr
+				}
+			}
+		} else if literalArgs != nil {
+			for i, val := range literalArgs {
+				if i < len(fn.Params) {
+					args[fn.Params[i].Name] = val
+				}
+			}
+		}
+		vm.debugger.OnFunctionCall(name, args)
+	}
+
+	funcScope := vm.scope.IsolatedChild("func:" + name)
+
+	if len(positionalWith) > 0 {
+		for i, param := range fn.Params {
+			if i < len(positionalWith) {
+				val, err := vm.evalExpr(positionalWith[i], stepIndex)
+				if err != nil {
+					return nil, err
+				}
+				funcScope.Declare(param.Name, val, param.Type)
+			} else if param.HasDefault {
+				funcScope.Declare(param.Name, param.Default, param.Type)
+			} else {
+				funcScope.Declare(param.Name, nil, param.Type)
+			}
+		}
+	} else if len(literalArgs) > 0 {
+		for i, param := range fn.Params {
+			if i < len(literalArgs) {
+				funcScope.Declare(param.Name, literalArgs[i], param.Type)
+			} else if param.HasDefault {
+				funcScope.Declare(param.Name, param.Default, param.Type)
+			} else {
+				funcScope.Declare(param.Name, nil, param.Type)
+			}
+		}
+	} else {
+		for _, param := range fn.Params {
+			if param.HasDefault {
+				funcScope.Declare(param.Name, param.Default, param.Type)
+			} else {
+				funcScope.Declare(param.Name, nil, param.Type)
+			}
+		}
+	}
+
+	for fname, ffn := range vm.program.Functions {
+		wrapped := vm.wrapFunction(ffn)
+		funcScope.Declare(fname, wrapped, "func")
+	}
+
+	result, err := vm.withScope(funcScope, func() (any, error) {
+		return vm.executeSteps(fn.Steps)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var retVal any
+	if rv, ok := result.(returnValue); ok {
+		retVal = rv.value
+	}
+
+	if vm.debugger != nil {
+		vm.debugger.OnFunctionReturn(name, retVal)
+	}
+
+	return retVal, nil
+}
+
+func (vm *VM) callMethodOrNamespace(objectName, memberPath string,
+	withExprs map[string]string, withArgs []string, args []any, stepIndex int,
+) (any, error) {
+	objVal, _, found := vm.scope.Get(objectName)
+	if !found {
+		// Fallback: check inside input map (for I/O modules and extensions injected by runtime).
+		if inputVal, _, inputFound := vm.scope.Get("input"); inputFound {
+			if inputMap, ok := inputVal.(map[string]any); ok {
+				if nsVal, exists := inputMap[objectName]; exists {
+					objVal = nsVal
+					found = true
+				}
+			}
+		}
+	}
+	if !found {
+		return nil, RuntimeError("VAR_NOT_FOUND",
+			fmt.Sprintf("variable '%s' not defined", objectName), stepIndex)
+	}
+
+	obj, ok := objVal.(map[string]any)
+	if !ok {
+		return nil, RuntimeError("NOT_CALLABLE",
+			fmt.Sprintf("cannot call method on %T — expected struct or namespace. "+
+				"Did you shadow an I/O module import?", objVal), stepIndex)
+	}
+
+	typeName, _ := obj["_type"].(string)
+	if typeName != "" {
+		return vm.callMethod(objectName, memberPath, withExprs, stepIndex)
+	}
+
+	if withExprs != nil && len(withExprs) > 0 {
+		return nil, RuntimeError("NAMED_WITH_NAMESPACE",
+			fmt.Sprintf("cannot use named 'with' for namespace function '%s.%s' — "+
+				"use array 'with' for expression args or 'args' for literal values",
+				objectName, memberPath), stepIndex)
+	}
+
+	return vm.callNamespaceFunction(obj, objectName, memberPath, withArgs, args, stepIndex)
+}
+
+func (vm *VM) callNamespaceFunction(namespace map[string]any, nsName, funcPath string,
+	withArgs []string, args []any, stepIndex int,
+) (any, error) {
+	current := namespace
+	parts := strings.Split(funcPath, ".")
+
+	for i := 0; i < len(parts)-1; i++ {
+		next, exists := current[parts[i]]
+		if !exists {
+			return nil, RuntimeError("NAMESPACE_NOT_FOUND",
+				fmt.Sprintf("'%s' not found in namespace '%s'", parts[i], nsName), stepIndex)
+		}
+		nextMap, ok := next.(map[string]any)
+		if !ok {
+			return nil, RuntimeError("NOT_NAMESPACE",
+				fmt.Sprintf("'%s.%s' is not a namespace (type: %T)", nsName, parts[i], next), stepIndex)
+		}
+		current = nextMap
+	}
+
+	funcName := parts[len(parts)-1]
+	fnVal, exists := current[funcName]
+	if !exists {
+		names := make([]string, 0, len(current))
+		for k := range current {
+			names = append(names, k)
+		}
+		gjErr := RuntimeError("FUNC_NOT_FOUND",
+			fmt.Sprintf("function '%s' not found in namespace '%s'", funcName, nsName), stepIndex)
+		if suggestions := SuggestSimilar(funcName, names, 3, 3); len(suggestions) > 0 {
+			gjErr.WithSuggestions(suggestions...)
+		}
+		return nil, gjErr
+	}
+
+	var callArgs []any
+	if args != nil {
+		callArgs = args
+	} else if withArgs != nil {
+		callArgs = make([]any, len(withArgs))
+		for i, expr := range withArgs {
+			val, err := vm.evalExpr(expr, stepIndex)
+			if err != nil {
+				return nil, err
+			}
+			callArgs[i] = val
+		}
+	}
+
+	vm.depth++
+	defer func() { vm.depth-- }()
+	if vm.depth > vm.limits.MaxDepth {
+		return nil, LimitError("DEPTH_LIMIT",
+			fmt.Sprintf("call depth limit (%d) exceeded at '%s.%s'", vm.limits.MaxDepth, nsName, funcPath),
+			stepIndex)
+	}
+
+	fullName := nsName + "." + funcPath
+	vm.callStack = append(vm.callStack, StackFrame{Function: fullName, Step: stepIndex})
+	defer func() { vm.callStack = vm.callStack[:len(vm.callStack)-1] }()
+
+	if vm.debugger != nil {
+		debugArgs := make(map[string]any)
+		for i, a := range callArgs {
+			debugArgs[fmt.Sprintf("arg%d", i)] = a
+		}
+		vm.debugger.OnFunctionCall(fullName, debugArgs)
+	}
+
+	callable, ok := fnVal.(func(...any) (any, error))
+	if !ok {
+		return nil, RuntimeError("NOT_CALLABLE",
+			fmt.Sprintf("'%s' is not a function (type: %T)", fullName, fnVal), stepIndex)
+	}
+
+	var result any
+	var callErr error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				callErr = RuntimeError("PANIC",
+					fmt.Sprintf("panic in namespace function '%s': %v", fullName, r), stepIndex)
+			}
+		}()
+		result, callErr = callable(callArgs...)
+	}()
+
+	if vm.debugger != nil {
+		vm.debugger.OnFunctionReturn(fullName, result)
+	}
+
+	return result, callErr
+}
+
+// callMethodUnified calls a struct method with positional with or literal args.
+func (vm *VM) callMethodUnified(objectName, methodName string, positionalWith []string, literalArgs []any, stepIndex int) (any, error) {
+	objVal, _, _ := vm.scope.Get(objectName)
+	obj := objVal.(map[string]any)
+	typeName := obj["_type"].(string)
+	cs := vm.program.Structs[typeName]
+	cm := cs.Methods[methodName]
+
+	vm.depth++
+	defer func() { vm.depth-- }()
+
+	if vm.depth > vm.limits.MaxDepth {
+		return nil, LimitError("DEPTH_LIMIT",
+			fmt.Sprintf("call depth limit (%d) exceeded at method '%s.%s'", vm.limits.MaxDepth, typeName, methodName),
+			stepIndex)
+	}
+
+	vm.callStack = append(vm.callStack, StackFrame{Function: typeName + "." + methodName, Step: stepIndex})
+	defer func() { vm.callStack = vm.callStack[:len(vm.callStack)-1] }()
+
+	methodScope := vm.scope.IsolatedChild("method:" + typeName + "." + methodName)
+	methodScope.Declare("self", obj, typeName)
+
+	if len(positionalWith) > 0 {
+		for i, param := range cm.Params {
+			if i < len(positionalWith) {
+				val, err := vm.evalExpr(positionalWith[i], stepIndex)
+				if err != nil {
+					return nil, err
+				}
+				methodScope.Declare(param.Name, val, param.Type)
+			} else if param.HasDefault {
+				methodScope.Declare(param.Name, param.Default, param.Type)
+			} else {
+				methodScope.Declare(param.Name, nil, param.Type)
+			}
+		}
+	} else if len(literalArgs) > 0 {
+		for i, param := range cm.Params {
+			if i < len(literalArgs) {
+				methodScope.Declare(param.Name, literalArgs[i], param.Type)
+			} else if param.HasDefault {
+				methodScope.Declare(param.Name, param.Default, param.Type)
+			} else {
+				methodScope.Declare(param.Name, nil, param.Type)
+			}
+		}
+	} else {
+		for _, param := range cm.Params {
+			if param.HasDefault {
+				methodScope.Declare(param.Name, param.Default, param.Type)
+			} else {
+				methodScope.Declare(param.Name, nil, param.Type)
+			}
+		}
+	}
+
+	for fname, ffn := range vm.program.Functions {
+		wrapped := vm.wrapFunction(ffn)
+		methodScope.Declare(fname, wrapped, "func")
+	}
+
+	result, err := vm.withScope(methodScope, func() (any, error) {
+		return vm.executeSteps(cm.Steps)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	selfVal, _, _ := methodScope.Get("self")
+	if selfMap, ok := selfVal.(map[string]any); ok {
+		for k, v := range selfMap {
+			obj[k] = v
+		}
+	}
+
+	if rv, ok := result.(returnValue); ok {
+		return rv.value, nil
+	}
+	return obj, nil
+}
+
 // wrapFunction wraps a CompiledFunc as a Go func for expr-lang expression-level calls.
 // Positional params: createUser('Alice', 30) → name='Alice', age=30
 func (vm *VM) wrapFunction(fn *CompiledFunc) func(...any) (any, error) {
@@ -1017,7 +1344,6 @@ func (vm *VM) executeParallel(n *ParallelNode) (any, error) {
 			switch onError {
 			case "cancel_all":
 				cancel()
-				// Drain remaining goroutines to prevent leak.
 				for collected < branchCount {
 					extra := <-resultCh
 					collected++
@@ -1047,6 +1373,16 @@ func (vm *VM) executeParallel(n *ParallelNode) (any, error) {
 			}
 		} else {
 			results[br.name] = br.value
+
+			// join:"any" — first successful result wins, cancel remaining.
+			if join == "any" {
+				cancel()
+				for collected < branchCount {
+					<-resultCh
+					collected++
+				}
+				break
+			}
 		}
 	}
 
@@ -1224,7 +1560,6 @@ func (vm *VM) callMethod(objectName, methodName string, withExprs map[string]str
 		return nil, err
 	}
 
-	// Write back self mutations to the original object.
 	selfVal, _, _ := methodScope.Get("self")
 	if selfMap, ok := selfVal.(map[string]any); ok {
 		for k, v := range selfMap {
@@ -1235,290 +1570,8 @@ func (vm *VM) callMethod(objectName, methodName string, withExprs map[string]str
 	if rv, ok := result.(returnValue); ok {
 		return rv.value, nil
 	}
-	return nil, nil
-}
-
-func (vm *VM) callMethodOrNamespace(objectName, memberPath string,
-	withExprs map[string]string, withArgs []string, args []any, stepIndex int,
-) (any, error) {
-	objVal, _, found := vm.scope.Get(objectName)
-	if !found {
-		if inputVal, _, inputFound := vm.scope.Get("input"); inputFound {
-			if inputMap, ok := inputVal.(map[string]any); ok {
-				if nsVal, exists := inputMap[objectName]; exists {
-					objVal = nsVal
-					found = true
-				}
-			}
-		}
-	}
-	if !found {
-		return nil, RuntimeError("VAR_NOT_FOUND",
-			fmt.Sprintf("variable '%s' not defined", objectName), stepIndex)
-	}
-
-	obj, ok := objVal.(map[string]any)
-	if !ok {
-		return nil, RuntimeError("NOT_CALLABLE",
-			fmt.Sprintf("cannot call method on %T — expected struct or namespace. "+
-				"Did you shadow an I/O module import?", objVal), stepIndex)
-	}
-
-	typeName, _ := obj["_type"].(string)
-	if typeName != "" {
-		return vm.callMethod(objectName, memberPath, withExprs, stepIndex)
-	}
-
-	if withExprs != nil && len(withExprs) > 0 {
-		return nil, RuntimeError("NAMED_WITH_NAMESPACE",
-			fmt.Sprintf("cannot use named 'with' for namespace function '%s.%s' — "+
-				"use array 'with' for expression args or 'args' for literal values",
-				objectName, memberPath), stepIndex)
-	}
-
-	return vm.callNamespaceFunction(obj, objectName, memberPath, withArgs, args, stepIndex)
-}
-
-func (vm *VM) callNamespaceFunction(namespace map[string]any, nsName, funcPath string,
-	withArgs []string, args []any, stepIndex int,
-) (any, error) {
-	current := namespace
-	parts := strings.Split(funcPath, ".")
-
-	for i := 0; i < len(parts)-1; i++ {
-		next, exists := current[parts[i]]
-		if !exists {
-			return nil, RuntimeError("NAMESPACE_NOT_FOUND",
-				fmt.Sprintf("'%s' not found in namespace '%s'", parts[i], nsName), stepIndex)
-		}
-		nextMap, ok := next.(map[string]any)
-		if !ok {
-			return nil, RuntimeError("NOT_NAMESPACE",
-				fmt.Sprintf("'%s.%s' is not a namespace (type: %T)", nsName, parts[i], next), stepIndex)
-		}
-		current = nextMap
-	}
-
-	funcName := parts[len(parts)-1]
-	fnVal, exists := current[funcName]
-	if !exists {
-		names := make([]string, 0, len(current))
-		for k := range current {
-			names = append(names, k)
-		}
-		gjErr := RuntimeError("FUNC_NOT_FOUND",
-			fmt.Sprintf("function '%s' not found in namespace '%s'", funcName, nsName), stepIndex)
-		if suggestions := SuggestSimilar(funcName, names, 3, 3); len(suggestions) > 0 {
-			gjErr.WithSuggestions(suggestions...)
-		}
-		return nil, gjErr
-	}
-
-	var callArgs []any
-	if args != nil {
-		callArgs = args
-	} else if withArgs != nil {
-		callArgs = make([]any, len(withArgs))
-		for i, expr := range withArgs {
-			val, err := vm.evalExpr(expr, stepIndex)
-			if err != nil {
-				return nil, err
-			}
-			callArgs[i] = val
-		}
-	}
-
-	vm.depth++
-	defer func() { vm.depth-- }()
-	if vm.depth > vm.limits.MaxDepth {
-		return nil, LimitError("DEPTH_LIMIT",
-			fmt.Sprintf("call depth limit (%d) exceeded at '%s.%s'", vm.limits.MaxDepth, nsName, funcPath),
-			stepIndex)
-	}
-
-	fullName := nsName + "." + funcPath
-	vm.callStack = append(vm.callStack, StackFrame{Function: fullName, Step: stepIndex})
-	defer func() { vm.callStack = vm.callStack[:len(vm.callStack)-1] }()
-
-	if vm.debugger != nil {
-		vm.debugger.OnFunctionCall(fullName, map[string]any{"args": callArgs})
-	}
-
-	var result any
-	var err error
-
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				err = RuntimeError("NATIVE_CALL_ERROR",
-					fmt.Sprintf("panic in '%s': %v", fullName, r), stepIndex).
-					WithStack(vm.callStack)
-			}
-		}()
-
-		fn, ok := fnVal.(func(...any) (any, error))
-		if !ok {
-			err = RuntimeError("NOT_CALLABLE",
-				fmt.Sprintf("'%s' is not a callable function (type: %T)", fullName, fnVal), stepIndex)
-			return
-		}
-		result, err = fn(callArgs...)
-	}()
-
-	if err != nil {
-		if _, ok := err.(*GoJSONError); !ok {
-			err = RuntimeError("NATIVE_CALL_ERROR", err.Error(), stepIndex).
-				WithStack(vm.callStack)
-		}
-		return nil, err
-	}
-
-	if vm.debugger != nil {
-		vm.debugger.OnFunctionReturn(fullName, result)
-	}
-
-	return result, nil
-}
-
-func (vm *VM) callFunctionUnified(name string,
-	withExprs map[string]string, withArgs []string, args []any, stepIndex int,
-) (any, error) {
-	fn, ok := vm.program.Functions[name]
-	if ok {
-		return vm.callFunctionWithModes(fn, name, withExprs, withArgs, args, stepIndex)
-	}
-
-	fnVal, _, found := vm.scope.Get(name)
-	if found {
-		if nsFn, ok := fnVal.(func(...any) (any, error)); ok {
-			var callArgs []any
-			if args != nil {
-				callArgs = args
-			} else if withArgs != nil {
-				callArgs = make([]any, len(withArgs))
-				for i, expr := range withArgs {
-					val, err := vm.evalExpr(expr, stepIndex)
-					if err != nil {
-						return nil, err
-					}
-					callArgs[i] = val
-				}
-			}
-			return nsFn(callArgs...)
-		}
-	}
-
-	funcNames := make([]string, 0, len(vm.program.Functions))
-	for n := range vm.program.Functions {
-		funcNames = append(funcNames, n)
-	}
-	gjErr := RuntimeError("FUNC_NOT_FOUND",
-		fmt.Sprintf("function '%s' not defined", name), stepIndex)
-	if suggestions := SuggestSimilar(name, funcNames, 3, 3); len(suggestions) > 0 {
-		gjErr.WithSuggestions(suggestions...)
-	}
-	return nil, gjErr
-}
-
-func (vm *VM) callFunctionWithModes(fn *CompiledFunc, name string,
-	withExprs map[string]string, withArgs []string, args []any, stepIndex int,
-) (any, error) {
-	vm.depth++
-	defer func() { vm.depth-- }()
-
-	if vm.depth > vm.limits.MaxDepth {
-		return nil, LimitError("DEPTH_LIMIT",
-			fmt.Sprintf("call depth limit (%d) exceeded at function '%s'", vm.limits.MaxDepth, name),
-			stepIndex).WithStack(vm.callStack)
-	}
-
-	vm.callStack = append(vm.callStack, StackFrame{Function: name, Step: stepIndex})
-	defer func() { vm.callStack = vm.callStack[:len(vm.callStack)-1] }()
-
-	if vm.debugger != nil {
-		dbgArgs := make(map[string]any)
-		if withExprs != nil {
-			for k, v := range withExprs {
-				dbgArgs[k] = v
-			}
-		}
-		vm.debugger.OnFunctionCall(name, dbgArgs)
-	}
-
-	funcScope := vm.scope.IsolatedChild("func:" + name)
-
-	if args != nil {
-		for i, param := range fn.Params {
-			if i < len(args) {
-				funcScope.Declare(param.Name, args[i], param.Type)
-			} else if param.HasDefault {
-				funcScope.Declare(param.Name, param.Default, param.Type)
-			} else {
-				funcScope.Declare(param.Name, nil, param.Type)
-			}
-		}
-	} else if withArgs != nil {
-		for i, param := range fn.Params {
-			if i < len(withArgs) {
-				val, err := vm.evalExpr(withArgs[i], stepIndex)
-				if err != nil {
-					return nil, err
-				}
-				funcScope.Declare(param.Name, val, param.Type)
-			} else if param.HasDefault {
-				funcScope.Declare(param.Name, param.Default, param.Type)
-			} else {
-				funcScope.Declare(param.Name, nil, param.Type)
-			}
-		}
-	} else if withExprs != nil {
-		for _, param := range fn.Params {
-			if expr, ok := withExprs[param.Name]; ok {
-				val, err := vm.evalExpr(expr, stepIndex)
-				if err != nil {
-					return nil, err
-				}
-				funcScope.Declare(param.Name, val, param.Type)
-				continue
-			}
-			if param.HasDefault {
-				funcScope.Declare(param.Name, param.Default, param.Type)
-			} else {
-				funcScope.Declare(param.Name, nil, param.Type)
-			}
-		}
-	} else {
-		for _, param := range fn.Params {
-			if param.HasDefault {
-				funcScope.Declare(param.Name, param.Default, param.Type)
-			} else {
-				funcScope.Declare(param.Name, nil, param.Type)
-			}
-		}
-	}
-
-	for fname, ffn := range vm.program.Functions {
-		wrapped := vm.wrapFunction(ffn)
-		funcScope.Declare(fname, wrapped, "func")
-	}
-
-	result, err := vm.withScope(funcScope, func() (any, error) {
-		return vm.executeSteps(fn.Steps)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var retVal any
-	if rv, ok := result.(returnValue); ok {
-		retVal = rv.value
-	}
-
-	if vm.debugger != nil {
-		vm.debugger.OnFunctionReturn(name, retVal)
-	}
-
-	return retVal, nil
+	// Methods without explicit return implicitly return self for chaining.
+	return obj, nil
 }
 
 // wrapMethod wraps a CompiledMethod as a Go func for expr-lang expression-level calls.
@@ -1570,7 +1623,7 @@ func (vm *VM) wrapMethod(obj map[string]any, typeName string, cm *CompiledMethod
 		if rv, ok := result.(returnValue); ok {
 			return rv.value, nil
 		}
-		return nil, nil
+		return obj, nil
 	}
 }
 

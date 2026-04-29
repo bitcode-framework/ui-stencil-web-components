@@ -1,7 +1,9 @@
 package server
 
 import (
+	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -246,9 +248,46 @@ func requestIDMiddleware() adapters.MiddlewareFunc {
 }
 
 func compressMiddleware() adapters.MiddlewareFunc {
-	_ = gzip.DefaultCompression
 	return func(ctx *adapters.RequestContext, next func() *adapters.Response) *adapters.Response {
-		return next()
+		resp := next()
+		if resp == nil {
+			return resp
+		}
+
+		acceptEncoding := ctx.Headers["Accept-Encoding"]
+		if acceptEncoding == "" {
+			acceptEncoding = ctx.Headers["accept-encoding"]
+		}
+		if !strings.Contains(acceptEncoding, "gzip") {
+			return resp
+		}
+
+		if resp.Body == nil || resp.Redirect != "" {
+			return resp
+		}
+
+		bodyBytes, err := json.Marshal(resp.Body)
+		if err != nil || len(bodyBytes) < 1024 {
+			return resp
+		}
+
+		var buf bytes.Buffer
+		gz, err := gzip.NewWriterLevel(&buf, gzip.DefaultCompression)
+		if err != nil {
+			return resp
+		}
+		if _, err := gz.Write(bodyBytes); err != nil {
+			return resp
+		}
+		gz.Close()
+
+		if resp.Headers == nil {
+			resp.Headers = make(map[string]string)
+		}
+		resp.Headers["Content-Encoding"] = "gzip"
+		resp.Headers["Vary"] = "Accept-Encoding"
+
+		return resp
 	}
 }
 
