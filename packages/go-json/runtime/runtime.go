@@ -291,6 +291,66 @@ func (r *Runtime) Execute(program *lang.CompiledProgram, input map[string]any) (
 	return vm.Execute(input)
 }
 
+// ExecuteFunction calls a specific function from a compiled program with named arguments.
+// Used by the server handler bridge to invoke route handler functions.
+func (r *Runtime) ExecuteFunction(program *lang.CompiledProgram, funcName string, args map[string]any) (any, error) {
+	fn, ok := program.Functions[funcName]
+	if !ok {
+		return nil, fmt.Errorf("function %q not found in program", funcName)
+	}
+
+	var vmOpts []lang.VMOption
+	vmOpts = append(vmOpts, lang.WithContext(r.ctx))
+	if r.logger != nil {
+		vmOpts = append(vmOpts, lang.WithLogger(r.logger))
+	}
+	if r.debugger != nil {
+		vmOpts = append(vmOpts, lang.WithDebugger(r.debugger))
+	}
+	if r.traceEnabled {
+		vmOpts = append(vmOpts, lang.WithTrace(true))
+	}
+
+	input := make(map[string]any)
+	if r.session != nil {
+		input["session"] = r.session.ToMap()
+	}
+
+	if program.AST != nil && program.AST.RequestedModules != nil {
+		for alias, imp := range program.AST.RequestedModules {
+			switch imp.PathType {
+			case "io":
+				moduleName := strings.TrimPrefix(imp.Path, "io:")
+				if r.ioDisabled {
+					return nil, fmt.Errorf("I/O module '%s' requested but I/O is disabled", moduleName)
+				}
+				mod := r.ioRegistry.GetModule(moduleName)
+				if mod == nil {
+					return nil, fmt.Errorf("I/O module '%s' not registered (imported as '%s')", moduleName, alias)
+				}
+				input[alias] = mod.Functions()
+			case "ext":
+				extName := strings.TrimPrefix(imp.Path, "ext:")
+				ext := r.extensions.get(extName)
+				if ext == nil {
+					return nil, fmt.Errorf("extension '%s' not registered (imported as '%s')", extName, alias)
+				}
+				input[alias] = ext.Functions
+			}
+		}
+	}
+
+	for k, v := range r.stdlibEnv {
+		if r.ioRegistry.HasModule(k) || r.extensions.get(k) != nil {
+			continue
+		}
+		input[k] = v
+	}
+
+	vm := lang.NewVM(program, r.engine, vmOpts...)
+	return vm.ExecuteFunction(fn, args, input)
+}
+
 // ExecuteJSON compiles and executes a program in one call (with caching).
 func (r *Runtime) ExecuteJSON(programJSON []byte, input map[string]any) (*lang.ExecutionResult, error) {
 	compiled, err := r.Compile(programJSON)

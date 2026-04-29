@@ -160,6 +160,59 @@ func (vm *VM) Execute(input map[string]any) (*ExecutionResult, error) {
 	return er, nil
 }
 
+// ExecuteFunction calls a specific compiled function with named arguments.
+// All program functions are available for inter-function calls.
+func (vm *VM) ExecuteFunction(fn *CompiledFunc, args map[string]any, env map[string]any) (any, error) {
+	start := time.Now()
+	vm.startTime = start
+
+	if vm.cancel != nil {
+		defer vm.cancel()
+	}
+
+	vm.scope = NewScope("main")
+
+	for k, v := range env {
+		vm.scope.Declare(k, v, "any")
+	}
+
+	for name, ffn := range vm.program.Functions {
+		wrapped := vm.wrapFunction(ffn)
+		vm.scope.Declare(name, wrapped, "func")
+	}
+
+	funcScope := vm.scope.IsolatedChild("func:" + fn.Name)
+
+	for _, param := range fn.Params {
+		if val, ok := args[param.Name]; ok {
+			funcScope.Declare(param.Name, val, param.Type)
+		} else if param.HasDefault {
+			funcScope.Declare(param.Name, param.Default, param.Type)
+		} else {
+			funcScope.Declare(param.Name, nil, param.Type)
+		}
+	}
+
+	for name, ffn := range vm.program.Functions {
+		wrapped := vm.wrapFunction(ffn)
+		funcScope.Declare(name, wrapped, "func")
+	}
+
+	vm.callStack = append(vm.callStack, StackFrame{Function: fn.Name, Step: -1})
+
+	result, err := vm.withScope(funcScope, func() (any, error) {
+		return vm.executeSteps(fn.Steps)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if rv, ok := result.(returnValue); ok {
+		return rv.value, nil
+	}
+	return nil, nil
+}
+
 func (vm *VM) executeSteps(steps []Node) (any, error) {
 	for _, step := range steps {
 		// Context check (timeout/cancellation).
