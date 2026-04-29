@@ -51,13 +51,19 @@ Phase 4.5d adds a built-in web server execution mode to go-json. Programs can de
       "headers": ["Content-Type", "Authorization"],
       "max_age": 86400
     },
-    "jwt": {
-      "secret_env": "JWT_SECRET",
-      "algorithm": "HS256",
-      "expiry": "24h",
-      "cookie": "token",
-      "header": "Authorization",
-      "prefix": "Bearer"
+    "auth": {
+      "default": "jwt",
+      "strategies": {
+        "jwt": {
+          "type": "bearer",
+          "secret_env": "JWT_SECRET",
+          "algorithm": "HS256",
+          "expiry": "24h",
+          "cookie": "token",
+          "header": "Authorization",
+          "prefix": "Bearer"
+        }
+      }
     },
     "rate_limit": {
       "requests": 100,
@@ -394,7 +400,7 @@ Or use the `error` step with code (status inferred from code pattern, see §16.4
 {"error": {"code": "'NOT_FOUND'", "message": "'User not found'"}}
 ```
 
-→ Returns 404 because `NOT_FOUND` maps to 404 (see §16.4 for full mapping).
+→ Returns 404 because `NOT_FOUND` maps to 404 (see §18.4 for full mapping).
 
 ### 5.6 No Return (204 No Content)
 
@@ -423,50 +429,196 @@ If handler has no `return` step or returns `nil`:
 | `logger` | Log every request (method, path, status, duration) | None |
 | `recover` | Catch panics, return 500 with error | None |
 | `cors` | CORS headers from `server.cors` config | `server.cors` |
-| `jwt` | Validate JWT token, inject `request.user` | `server.jwt` |
+| `auth` | Authenticate using default strategy, inject `request.user` | `server.auth` |
+| `auth:<strategy>` | Authenticate using specific strategy | `server.auth.strategies.<name>` |
 | `rate_limit` | Rate limiting per IP/user | `server.rate_limit` |
 | `request_id` | Add `X-Request-ID` header | None |
 | `compress` | Gzip/Brotli response compression | None |
 | `secure` | Security headers (HSTS, X-Frame-Options, etc.) | None |
 
-### 6.2 JWT Middleware Detail
+Note: `"jwt"` is kept as alias for `"auth:jwt"` for backward compatibility.
 
-When `jwt` middleware is applied to a route:
+### 6.2 Plugable Auth System
 
-1. Extract token from `Authorization: Bearer <token>` header OR cookie (configurable)
-2. Validate signature using secret from env var (`server.jwt.secret_env`)
-3. Check expiry
-4. If valid: decode payload → inject into `request.user`
-5. If invalid/missing: return 401 `{"error": "unauthorized"}`
+Auth is configured via `server.auth` with named strategies. Each strategy has a `type` that determines the authentication mechanism.
 
 ```json
 {
   "server": {
-    "jwt": {
-      "secret_env": "JWT_SECRET",
-      "algorithm": "HS256",
-      "expiry": "24h",
-      "cookie": "token",
-      "header": "Authorization",
-      "prefix": "Bearer",
-      "claims": {
-        "issuer": "my-app",
-        "audience": "api"
+    "auth": {
+      "default": "jwt",
+      "strategies": {
+        "jwt": {
+          "type": "bearer",
+          "secret_env": "JWT_SECRET",
+          "algorithm": "HS256",
+          "expiry": "24h",
+          "cookie": "token",
+          "header": "Authorization",
+          "prefix": "Bearer",
+          "claims": {"issuer": "my-app"}
+        },
+        "apikey": {
+          "type": "api_key",
+          "header": "X-API-Key",
+          "query_param": "api_key",
+          "keys_env": "API_KEYS"
+        },
+        "basic": {
+          "type": "basic",
+          "users_env": "BASIC_AUTH_USERS",
+          "realm": "My App"
+        }
       }
     }
   }
 }
 ```
 
-After JWT validation, handler can access:
+### 6.3 Auth Strategy Types
 
+| Type | Description | Token Source | `request.user` |
+|------|-------------|-------------|-----------------|
+| `bearer` | JWT Bearer token | `Authorization: Bearer <token>` or cookie | Decoded JWT payload |
+| `api_key` | API key validation | Header or query param | `{"key": "the-key", "name": "key-name"}` |
+| `basic` | HTTP Basic Auth | `Authorization: Basic <base64>` | `{"username": "user"}` |
+| `oauth2` | OAuth2 token introspection (future) | `Authorization: Bearer <token>` | Provider-specific payload |
+| `custom` | Custom go-json function | Defined by function | Whatever function returns |
+
+### 6.4 Auth Strategy Detail: Bearer (JWT)
+
+```json
+{
+  "jwt": {
+    "type": "bearer",
+    "secret_env": "JWT_SECRET",
+    "algorithm": "HS256",
+    "expiry": "24h",
+    "cookie": "token",
+    "header": "Authorization",
+    "prefix": "Bearer",
+    "claims": {"issuer": "my-app", "audience": "api"}
+  }
+}
+```
+
+Flow:
+1. Extract token from `Authorization: Bearer <token>` header OR cookie (configurable)
+2. Validate signature using secret from env var
+3. Check expiry and claims (issuer, audience)
+4. If valid: decode payload → inject into `request.user`
+5. If invalid/missing: return 401
+
+After auth, handler can access:
 ```json
 {"let": "user_id", "expr": "request.user.sub"},
 {"let": "email", "expr": "request.user.email"},
 {"let": "roles", "expr": "request.user.roles"}
 ```
 
-### 6.3 JWT Token Generation
+### 6.5 Auth Strategy Detail: API Key
+
+```json
+{
+  "apikey": {
+    "type": "api_key",
+    "header": "X-API-Key",
+    "query_param": "api_key",
+    "keys_env": "API_KEYS"
+  }
+}
+```
+
+`API_KEYS` env var format: `key1:name1,key2:name2` (comma-separated key:name pairs).
+
+Flow:
+1. Extract key from header `X-API-Key` or query param `?api_key=...`
+2. Validate against keys from env var
+3. If valid: inject `{"key": "...", "name": "..."}` into `request.user`
+4. If invalid/missing: return 401
+
+### 6.6 Auth Strategy Detail: Basic
+
+```json
+{
+  "basic": {
+    "type": "basic",
+    "users_env": "BASIC_AUTH_USERS",
+    "realm": "My App"
+  }
+}
+```
+
+`BASIC_AUTH_USERS` env var format: `user1:pass1,user2:pass2`.
+
+Flow:
+1. Extract credentials from `Authorization: Basic <base64>`
+2. Validate against users from env var
+3. If valid: inject `{"username": "..."}` into `request.user`
+4. If invalid/missing: return 401 with `WWW-Authenticate: Basic realm="My App"`
+
+### 6.7 Auth Strategy Detail: Custom
+
+For auth mechanisms not covered by built-in types, use a go-json function:
+
+```json
+{
+  "server": {
+    "auth": {
+      "strategies": {
+        "custom_token": {
+          "type": "custom",
+          "handler": "validateCustomToken"
+        }
+      }
+    }
+  },
+  "functions": {
+    "validateCustomToken": {
+      "steps": [
+        {"let": "token", "expr": "request.headers['X-Custom-Token']"},
+        {"if": "token == nil", "then": [
+          {"return": {"status": 401, "body": {"error": "missing token"}}}
+        ]},
+        {"let": "user", "call": "sql.query", "with": {
+          "query": "SELECT * FROM tokens WHERE token = ? AND expires_at > NOW()",
+          "args": ["token"]
+        }},
+        {"if": "len(user.rows) == 0", "then": [
+          {"return": {"status": 401, "body": {"error": "invalid token"}}}
+        ]},
+        {"return": "user.rows[0]"}
+      ]
+    }
+  }
+}
+```
+
+Custom auth function:
+- Receives `request` in scope
+- Returns user object → injected into `request.user`
+- Returns response with `status` → short-circuit (auth failed)
+
+### 6.8 Route-Level Auth
+
+```json
+{
+  "routes": [
+    {"method": "GET",  "path": "/api/public",   "handler": "publicData"},
+    {"method": "GET",  "path": "/api/profile",  "handler": "getProfile",  "middleware": ["auth"]},
+    {"method": "POST", "path": "/api/admin",    "handler": "adminAction", "middleware": ["auth", "requireAdmin"]},
+    {"method": "POST", "path": "/webhook",      "handler": "webhook",     "middleware": ["auth:apikey"]},
+    {"method": "GET",  "path": "/internal",     "handler": "internal",    "middleware": ["auth:basic"]}
+  ]
+}
+```
+
+- `"auth"` → uses `server.auth.default` strategy (e.g., `"jwt"`)
+- `"auth:apikey"` → uses specific `"apikey"` strategy
+- `"auth:basic"` → uses specific `"basic"` strategy
+- `"jwt"` → alias for `"auth:jwt"` (backward compatible)
+
+### 6.9 JWT Token Generation
 
 For login endpoints, handlers can generate tokens:
 
@@ -476,16 +628,20 @@ For login endpoints, handlers can generate tokens:
     "login": {
       "steps": [
         {"let": "body", "expr": "request.body"},
-        {"let": "user", "call": "sql.query", "with": {
-          "query": "SELECT * FROM users WHERE email = ? AND password_hash = ?",
-          "args": ["body.email", "crypto.hash(body.password)"]
+        {"let": "users", "call": "sql.query", "with": {
+          "query": "SELECT id, email, role, password_hash FROM users WHERE email = ?",
+          "args": ["body.email"]
         }},
-        {"if": "len(user.rows) == 0", "then": [
+        {"if": "len(users.rows) == 0", "then": [
+          {"return": {"status": 401, "body": {"error": "invalid credentials"}}}
+        ]},
+        {"let": "user", "expr": "users.rows[0]"},
+        {"let": "valid", "call": "crypto.verify", "with": {"value": "body.password", "hash": "user.password_hash"}},
+        {"if": "!valid", "then": [
           {"return": {"status": 401, "body": {"error": "invalid credentials"}}}
         ]},
         {"let": "token", "call": "jwt.sign", "with": {
-          "payload": {"sub": "user.rows[0].id", "email": "user.rows[0].email", "role": "user.rows[0].role"},
-          "expiry": "'24h'"
+          "payload": {"sub": "user.id", "email": "user.email", "role": "user.role"}
         }},
         {"return": {"status": 200, "body": {"token": "token"}, "cookies": [{"name": "token", "value": "token", "http_only": true, "max_age": 86400}]}}
       ]
@@ -987,7 +1143,183 @@ go-json serve api.json --framework fiber
 
 ---
 
-## §15. Server Mode Detection
+## §15. OpenAPI / Swagger
+
+### 15.1 Auto-Generated OpenAPI Spec
+
+`go-json serve` can auto-generate an OpenAPI 3.0 spec from route definitions:
+
+```bash
+# Serve with Swagger UI at /docs
+go-json serve api.json --docs
+
+# Export OpenAPI spec to file
+go-json openapi api.json --output openapi.json
+```
+
+When `--docs` is enabled, two endpoints are added:
+- `GET /docs` — Swagger UI (embedded)
+- `GET /docs/openapi.json` — raw OpenAPI spec
+
+### 15.2 What's Auto-Generated
+
+From the program JSON, the following OpenAPI fields are inferred automatically:
+
+| OpenAPI Field | Source |
+|---|---|
+| `info.title` | `name` from program |
+| `info.version` | `"1.0.0"` default or `server.version` |
+| `paths` | `routes[].method` + `routes[].path` |
+| `paths.*.parameters` (path) | `:id` in path → `{id}` path parameter |
+| `paths.*.security` | Route has `auth`/`jwt` middleware → bearer/apiKey scheme |
+| `tags` | Route group prefix → tag name |
+| `components.securitySchemes` | From `server.auth.strategies` |
+
+### 15.3 What's NOT Auto-Generated (Needs `api` Annotation)
+
+Request body schemas, response schemas, query parameters, and descriptions cannot be inferred from go-json code (dynamically typed). Use optional `api` annotation on routes:
+
+```json
+{
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/api/users",
+      "handler": "createUser",
+      "middleware": ["auth"],
+      "api": {
+        "summary": "Create a new user",
+        "description": "Creates a user account and returns the created user object",
+        "tags": ["Users"],
+        "body": {
+          "required": true,
+          "content": {
+            "name": {"type": "string", "required": true, "description": "User's full name"},
+            "email": {"type": "string", "required": true, "format": "email"},
+            "role": {"type": "string", "enum": ["user", "admin"], "default": "user"}
+          }
+        },
+        "query": {
+          "notify": {"type": "boolean", "description": "Send welcome email", "default": true}
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "id": {"type": "integer"},
+              "name": {"type": "string"},
+              "email": {"type": "string"}
+            }
+          },
+          "400": {"description": "Validation error"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    }
+  ]
+}
+```
+
+### 15.4 `api` Annotation Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `summary` | string | Short description (shown in Swagger UI route list) |
+| `description` | string | Detailed description (shown when expanded) |
+| `tags` | []string | Grouping tags |
+| `deprecated` | bool | Mark route as deprecated |
+| `body` | object | Request body schema |
+| `body.required` | bool | Whether body is required |
+| `body.content` | map | Field definitions: `{name: {type, required, format, enum, default, description}}` |
+| `query` | map | Query parameter definitions (same field format) |
+| `responses` | map | Response definitions keyed by status code |
+| `responses.*.description` | string | Response description |
+| `responses.*.content` | map | Response body field definitions |
+
+### 15.5 Security Schemes in OpenAPI
+
+Auth strategies from `server.auth.strategies` are auto-mapped to OpenAPI security schemes:
+
+| Auth Type | OpenAPI Security Scheme |
+|---|---|
+| `bearer` (JWT) | `bearerAuth` — `type: http, scheme: bearer, bearerFormat: JWT` |
+| `api_key` | `apiKeyAuth` — `type: apiKey, in: header, name: X-API-Key` |
+| `basic` | `basicAuth` — `type: http, scheme: basic` |
+
+### 15.6 Minimal vs Full Annotation
+
+Routes without `api` annotation still appear in the spec — just with minimal info (method, path, security). This means:
+
+- **Zero-config:** `go-json serve api.json --docs` works immediately with basic spec
+- **Progressive enhancement:** Add `api` annotations to routes that need detailed docs
+- **No all-or-nothing:** Some routes documented, some not — that's fine
+
+---
+
+## §16. Unified SQL Query Parameters
+
+### 16.1 The Problem
+
+Different SQL drivers use different placeholder syntax:
+
+| Driver | Positional | Named |
+|--------|-----------|-------|
+| SQLite | `?` | not supported |
+| MySQL | `?` | not supported |
+| PostgreSQL | `$1`, `$2` | not supported natively |
+| SQL Server | `@p1`, `@p2` | `@name` |
+| Oracle | `:1`, `:2` | `:name` |
+
+This means switching databases requires rewriting all queries — bad for portability.
+
+### 16.2 Solution: Universal Placeholders
+
+go-json uses `?` as universal positional placeholder and `:name` for named parameters. The SQL module auto-translates to driver-specific syntax before execution.
+
+**Positional (user always writes `?`):**
+
+```json
+{"call": "sql.query", "with": {
+  "query": "SELECT * FROM users WHERE id = ? AND status = ?",
+  "args": [42, "active"]
+}}
+```
+
+**Named (user always writes `:name`):**
+
+```json
+{"call": "sql.query", "with": {
+  "query": "SELECT * FROM users WHERE id = :id AND status = :status",
+  "args": {"id": 42, "status": "active"}
+}}
+```
+
+### 16.3 Translation Table
+
+| Driver | `?` becomes | `:name` becomes | Args format |
+|--------|------------|----------------|-------------|
+| SQLite | `?` (no change) | `?` + ordered args | `[]any` |
+| MySQL | `?` (no change) | `?` + ordered args | `[]any` |
+| PostgreSQL | `$1`, `$2`, ... | `$1`, `$2`, ... + ordered args | `[]any` |
+| SQL Server | `@p1`, `@p2`, ... | `@name` | named |
+| Oracle | `:1`, `:2`, ... | `:name` | named |
+
+User never needs to know which driver is active. Switching from SQLite to PostgreSQL requires zero query changes.
+
+### 16.4 Edge Cases
+
+| Case | Behavior |
+|---|---|
+| `??` in query | Literal `?` (escape). For PostgreSQL JSON operator `data ? 'key'` |
+| `?` inside single quotes | NOT treated as placeholder. `'what?'` stays as-is |
+| Mixed `?` and `:name` in same query | Error: "cannot mix positional and named parameters" |
+| `:name` not found in args map | Error: "named parameter ':name' not found in args" |
+| More `?` than args | Error: "query has N placeholders but only M args provided" |
+| Fewer `?` than args | Error: "query has N placeholders but M args provided" |
+
+---
+
+## §17. Server Mode Detection
 
 ### 15.1 How `go-json serve` Detects Server Programs
 
@@ -1042,7 +1374,7 @@ Validation errors are reported at startup, not at request time.
 
 ---
 
-## §16. Error Handling
+## §18. Error Handling
 
 ### 16.1 Handler Panics
 
@@ -1108,7 +1440,7 @@ For template-rendered routes, errors can render error templates:
 
 ---
 
-## §17. Middleware Data Passing
+## §19. Middleware Data Passing
 
 ### 17.1 The Problem
 
@@ -1156,7 +1488,7 @@ Custom middleware that returns with `status`/`body`/`redirect` = short-circuit.
 
 ---
 
-## §18. Full Example: Blog API + SSR
+## §20. Full Example: Blog API + SSR
 
 ```json
 {
@@ -1247,7 +1579,7 @@ Custom middleware that returns with `status`/`body`/`redirect` = short-circuit.
 
 ---
 
-## §19. Implementation Scope
+## §21. Implementation Scope
 
 ### Package Structure
 

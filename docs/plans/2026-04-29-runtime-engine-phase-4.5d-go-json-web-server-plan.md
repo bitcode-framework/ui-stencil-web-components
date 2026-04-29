@@ -47,11 +47,20 @@ Batch 7: Codegen                │
   Task 24 (JS+Express codegen)
   Task 25 (Python+FastAPI codegen)
                                 │
-Batch 8: Tests                  │
-  Task 26-31 (all test suites)
+Batch 8: Plugable Auth           │
+  Task 26-30 (auth strategies)
                                 │
-Batch 9: Docs                   │
-  Task 32 (AGENTS.md + docs)
+Batch 9: OpenAPI/Swagger        │
+  Task 31-33 (spec, UI, CLI)
+                                │
+Batch 10: SQL Query Params      │
+  Task 34-35 (translator + integration)
+                                │
+Batch 11: Tests                 │
+  Task 36-43 (all test suites)
+                                │
+Batch 12: Docs                  │
+  Task 44 (AGENTS.md + docs)
 ```
 
 ---
@@ -636,53 +645,227 @@ func ResolveFramework(lang, explicit, serverConfig string) string { ... } // sel
 
 ---
 
-## Batch 8: Tests
+## Batch 8: Plugable Auth System
 
-### Task 26: Server Config Tests
+### Task 26: Auth Strategy Interface + Registry
+
+**Files:**
+- Create: `packages/go-json/server/auth.go`
+- Modify: `packages/go-json/server/config.go` (add AuthConfig, StrategyConfig)
+
+**Step 1:** Define auth strategy interface:
+
+```go
+type AuthStrategy interface {
+    Name() string
+    Type() string
+    Authenticate(ctx *adapters.RequestContext) (any, error) // returns user object or error
+}
+
+type AuthRegistry struct {
+    strategies map[string]AuthStrategy
+    defaultStrategy string
+}
+```
+
+**Step 2:** Parse `server.auth` config with `default` and `strategies` map.
+
+**Step 3:** Implement `auth` and `auth:<name>` middleware resolution — `auth` uses default, `auth:apikey` uses specific. Keep `jwt` as alias for `auth:jwt`.
+
+**Step 4:** Commit: `feat(go-json): plugable auth strategy interface and registry`
+
+---
+
+### Task 27: Bearer (JWT) Auth Strategy
+
+**Files:**
+- Modify: `packages/go-json/server/auth.go`
+- Modify: `packages/go-json/server/jwt.go`
+
+**Step 1:** Implement `BearerStrategy` that wraps existing JWT logic. Extract token from header or cookie, validate, return decoded payload.
+
+**Step 2:** Commit: `feat(go-json): bearer/JWT auth strategy`
+
+---
+
+### Task 28: API Key Auth Strategy
+
+**Files:**
+- Modify: `packages/go-json/server/auth.go`
+
+**Step 1:** Implement `APIKeyStrategy`:
+- Extract key from header (`X-API-Key`) or query param (`api_key`)
+- Validate against keys from env var (format: `key1:name1,key2:name2`)
+- Return `{"key": "...", "name": "..."}` as user object
+
+**Step 2:** Commit: `feat(go-json): API key auth strategy`
+
+---
+
+### Task 29: Basic Auth Strategy
+
+**Files:**
+- Modify: `packages/go-json/server/auth.go`
+
+**Step 1:** Implement `BasicStrategy`:
+- Extract credentials from `Authorization: Basic <base64>`
+- Validate against users from env var (format: `user1:pass1,user2:pass2`)
+- Return `{"username": "..."}` as user object
+- Return 401 with `WWW-Authenticate: Basic realm="..."` on failure
+
+**Step 2:** Commit: `feat(go-json): basic auth strategy`
+
+---
+
+### Task 30: Custom Auth Strategy (go-json Function)
+
+**Files:**
+- Modify: `packages/go-json/server/auth.go`
+
+**Step 1:** Implement `CustomStrategy`:
+- Execute named go-json function with `request` in scope
+- Function returns user object → auth success
+- Function returns response with status → auth failure (short-circuit)
+
+**Step 2:** Commit: `feat(go-json): custom auth strategy via go-json functions`
+
+---
+
+## Batch 9: OpenAPI / Swagger
+
+### Task 31: OpenAPI Spec Generator
+
+**Files:**
+- Create: `packages/go-json/server/openapi.go`
+
+**Step 1:** Implement OpenAPI 3.0 spec generation from program:
+- Extract paths from routes (translate `:id` → `{id}`)
+- Extract security schemes from `server.auth.strategies`
+- Extract tags from route group prefixes
+- Parse `api` annotations on routes for body/query/response schemas
+- Routes without `api` annotation get minimal spec (method, path, security only)
+
+**Step 2:** Commit: `feat(go-json): OpenAPI 3.0 spec auto-generation from routes`
+
+---
+
+### Task 32: Swagger UI Endpoint
+
+**Files:**
+- Modify: `packages/go-json/server/openapi.go`
+- Modify: `packages/go-json/server/server.go`
+
+**Step 1:** When `--docs` flag enabled:
+- Register `GET /docs` → embedded Swagger UI HTML (use swagger-ui-dist CDN or embedded)
+- Register `GET /docs/openapi.json` → generated spec
+
+**Step 2:** Commit: `feat(go-json): Swagger UI endpoint at /docs`
+
+---
+
+### Task 33: `go-json openapi` CLI Command
+
+**Files:**
+- Modify: `packages/go-json/cmd/go-json/main.go`
+
+**Step 1:** Add `openapi` command:
+```bash
+go-json openapi api.json --output openapi.json
+go-json openapi api.json  # stdout
+```
+
+**Step 2:** Commit: `feat(go-json): go-json openapi CLI command`
+
+---
+
+## Batch 10: SQL Query Parameter Translation
+
+### Task 34: Query Parameter Translator
+
+**Files:**
+- Create: `packages/go-json/io/sql_params.go`
+- Test: `packages/go-json/io/sql_params_test.go`
+
+**Step 1:** Implement `translateQuery(query, driver string, args any) (string, []any, error)`:
+- Detect mode: positional (`[]any` args) or named (`map[string]any` args)
+- Parse query, track string literals (skip `?` inside single quotes)
+- Handle `??` escape → literal `?`
+- Reject mixed `?` and `:name` in same query
+- Translate `?` to driver-specific: `$1` (postgres), `@p1` (sqlserver), `:1` (oracle), `?` (sqlite/mysql)
+- Translate `:name` to driver-specific: extract names in order, build ordered args for drivers that need positional
+
+**Step 2:** Write comprehensive tests:
+- Positional for each driver
+- Named for each driver
+- `??` escape
+- `?` inside string literals
+- Mixed positional+named → error
+- Arg count mismatch → error
+- Named param not found → error
+
+**Step 3:** Commit: `feat(go-json): unified SQL query parameter translation across drivers`
+
+---
+
+### Task 35: Integrate Translator into SQL Module
+
+**Files:**
+- Modify: `packages/go-json/io/sql.go`
+
+**Step 1:** Call `translateQuery()` at the start of `sqlQuery()` and `sqlExecute()` before passing to `database/sql`.
+
+**Step 2:** Commit: `feat(go-json): SQL module uses unified parameter translation`
+
+---
+
+## Batch 11: Tests
+
+### Task 36: Server Config Tests
 
 **Files:**
 - Create: `packages/go-json/server/config_test.go`
 
-Tests: default config, validation, parsing from JSON, invalid config errors.
+Tests: default config, validation, parsing from JSON, invalid config errors, auth config parsing.
 
 **Commit:** `test(go-json): server config parsing and validation tests`
 
 ---
 
-### Task 27: Route Parsing Tests
+### Task 37: Route Parsing Tests
 
 **Files:**
 - Create: `packages/go-json/server/router_test.go`
 
-Tests: basic routes, groups, nested groups, middleware merging, duplicate detection, handler validation.
+Tests: basic routes, groups, nested groups, middleware merging, duplicate detection, handler validation, api annotation parsing.
 
 **Commit:** `test(go-json): route parsing, flattening, and validation tests`
 
 ---
 
-### Task 28: Handler Bridge Tests
+### Task 38: Handler Bridge Tests
 
 **Files:**
 - Create: `packages/go-json/server/handler_test.go`
 
-Tests: request object construction, response conversion (JSON, template, redirect, 204), error handling, timeout.
+Tests: request object construction, file upload handling, response conversion (JSON, template, redirect, 204), error handling, timeout.
 
 **Commit:** `test(go-json): handler bridge request/response tests`
 
 ---
 
-### Task 29: Middleware Tests
+### Task 39: Middleware + Auth Tests
 
 **Files:**
 - Create: `packages/go-json/server/middleware_test.go`
+- Create: `packages/go-json/server/auth_test.go`
 
-Tests: chain execution order, short-circuit, built-in middleware behavior, custom middleware, JWT validation, JWT token generation.
+Tests: chain execution order, short-circuit, built-in middleware, custom middleware, JWT strategy, API key strategy, basic auth strategy, custom auth strategy, `auth` vs `auth:name` resolution.
 
-**Commit:** `test(go-json): middleware chain, built-in, custom, and JWT tests`
+**Commit:** `test(go-json): middleware chain, auth strategies, and JWT tests`
 
 ---
 
-### Task 30: Template + Static Tests
+### Task 40: Template + Static Tests
 
 **Files:**
 - Create: `packages/go-json/server/template_test.go`
@@ -694,7 +877,24 @@ Tests: template rendering, layouts, partials, custom functions, static file serv
 
 ---
 
-### Task 31: Server Codegen Tests
+### Task 41: OpenAPI Tests
+
+**Files:**
+- Create: `packages/go-json/server/openapi_test.go`
+
+Tests: spec generation from routes, security scheme mapping, api annotation parsing, tag extraction, minimal spec without annotations.
+
+**Commit:** `test(go-json): OpenAPI spec generation tests`
+
+---
+
+### Task 42: SQL Parameter Translation Tests
+
+Already covered in Task 34 (`packages/go-json/io/sql_params_test.go`).
+
+---
+
+### Task 43: Server Codegen Tests
 
 **Files:**
 - Create: `packages/go-json/codegen/server_test.go`
@@ -705,19 +905,21 @@ Tests: Go+Fiber output, Go+net/http output, JS+Express output, Python+FastAPI ou
 
 ---
 
-## Batch 9: Documentation
+## Batch 12: Documentation
 
-### Task 32: Update Documentation
+### Task 44: Update Documentation
 
 **Files:**
 - Modify: `packages/go-json/AGENTS.md`
 
 **Step 1:** Update with:
 - New `server/` package in structure
-- `go-json serve` command
+- `go-json serve` and `go-json openapi` commands
 - Server mode detection
 - Framework adapter pattern
-- JWT module
+- Plugable auth system (Bearer, API Key, Basic, Custom)
+- OpenAPI/Swagger support
+- SQL unified query parameters
 - Codegen framework selection
 
 **Step 2:** Commit and push: `docs(go-json): update AGENTS.md for Phase 4.5d web server`
@@ -729,12 +931,15 @@ Tests: Go+Fiber output, Go+net/http output, JS+Express output, Python+FastAPI ou
 | Batch | Tasks | Scope |
 |-------|-------|-------|
 | 1: Server Core | 1-5 | Config, adapter interface, Fiber adapter, routing, handler bridge |
-| 2: Request/Response | 6-7 | Request object, response convention |
-| 3: Middleware | 8-12 | Chain engine, built-in (logger/recover/cors/secure), JWT, custom |
+| 2: Request/Response | 6-7 | Request object (with file uploads), response convention |
+| 3: Middleware | 8-12 | Chain engine, built-in (logger/recover/cors/secure/rate_limit), JWT, custom |
 | 4: Template + Static | 13-14 | html/template engine, static file serving |
 | 5: CLI + Dev Mode | 15-16 | `go-json serve` command, file watching, pretty errors |
 | 6: Framework Adapters | 17-20 | net/http, Echo, Gin, Chi adapters |
 | 7: Server Codegen | 21-25 | Interface, Go+Fiber, Go+net/http, JS+Express, Python+FastAPI |
-| 8: Tests | 26-31 | Config, routing, handler, middleware, template, codegen tests |
-| 9: Docs | 32 | AGENTS.md update |
-| **Total** | **32 tasks** | |
+| 8: Plugable Auth | 26-30 | Auth interface, Bearer/JWT, API key, Basic, Custom strategies |
+| 9: OpenAPI/Swagger | 31-33 | Spec generator, Swagger UI, CLI command |
+| 10: SQL Query Params | 34-35 | Unified `?`/`:name` translation across drivers |
+| 11: Tests | 36-43 | Config, routing, handler, auth, middleware, template, OpenAPI, codegen tests |
+| 12: Docs | 44 | AGENTS.md update |
+| **Total** | **44 tasks** | |
