@@ -675,8 +675,13 @@ func parseLetCallNode(m map[string]any, index int) (*LetNode, error) {
 	}
 	node.Call = callName
 
-	if withRaw, ok := m["with"].(map[string]any); ok {
-		node.CallWith = toStringMap(withRaw)
+	hasWith, hasArgs, err := parseCallArgs(m, index, &node.CallWith, &node.CallWithArgs, &node.CallArgs)
+	if err != nil {
+		return nil, err
+	}
+	if hasWith && hasArgs {
+		return nil, CompileError("WITH_ARGS_CONFLICT",
+			"cannot use both 'with' and 'args' in the same call", index)
 	}
 
 	return node, nil
@@ -924,8 +929,13 @@ func parseCallNode(m map[string]any, index int) (*CallNode, error) {
 	}
 	node.Function = funcName
 
-	if withRaw, ok := m["with"].(map[string]any); ok {
-		node.With = toStringMap(withRaw)
+	hasWith, hasArgs, err := parseCallArgs(m, index, &node.With, &node.WithArgs, &node.Args)
+	if err != nil {
+		return nil, err
+	}
+	if hasWith && hasArgs {
+		return nil, CompileError("WITH_ARGS_CONFLICT",
+			"cannot use both 'with' and 'args' in the same call", index)
 	}
 
 	return node, nil
@@ -1596,4 +1606,58 @@ func toInt(v any) (int, bool) {
 		return int(n), true
 	}
 	return 0, false
+}
+
+func parseCallArgs(m map[string]any, index int,
+	namedOut *map[string]string, positionalOut *[]string, literalOut *[]any,
+) (hasWith, hasArgs bool, err error) {
+	if withRaw, ok := m["with"]; ok {
+		hasWith = true
+		switch w := withRaw.(type) {
+		case map[string]any:
+			*namedOut = toStringMap(w)
+		case []any:
+			strs, convErr := toExprSlice(w, index)
+			if convErr != nil {
+				return false, false, convErr
+			}
+			*positionalOut = strs
+		default:
+			return false, false, CompileError("INVALID_WITH",
+				"with must be an object or array", index)
+		}
+	}
+
+	if argsRaw, ok := m["args"]; ok {
+		hasArgs = true
+		arr, ok := argsRaw.([]any)
+		if !ok {
+			return false, false, CompileError("INVALID_ARGS",
+				"args must be an array", index)
+		}
+		*literalOut = arr
+	}
+
+	return hasWith, hasArgs, nil
+}
+
+func toExprSlice(arr []any, stepIndex int) ([]string, error) {
+	result := make([]string, len(arr))
+	for i, v := range arr {
+		switch val := v.(type) {
+		case string:
+			result[i] = val
+		case float64:
+			result[i] = fmt.Sprintf("%v", val)
+		case bool:
+			result[i] = fmt.Sprintf("%v", val)
+		case nil:
+			result[i] = "nil"
+		default:
+			return nil, CompileError("INVALID_WITH_ELEMENT",
+				fmt.Sprintf("with array element %d is %T — must be a string expression. "+
+					"Did you mean to use 'args' for literal values?", i, v), stepIndex)
+		}
+	}
+	return result, nil
 }

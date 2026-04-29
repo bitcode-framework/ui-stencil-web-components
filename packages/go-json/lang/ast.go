@@ -278,9 +278,10 @@ type LetNode struct {
 	HasValue bool   // distinguishes nil literal from "not set"
 	HasExpr  bool
 	HasWith  bool
-	// Call shorthand: {"let": "x", "call": "fn", "with": {...}}
-	Call     string
-	CallWith map[string]string
+	Call         string
+	CallWith     map[string]string
+	CallWithArgs []string
+	CallArgs     []any
 	New     string
 	NewWith map[string]any
 }
@@ -387,10 +388,16 @@ func (n *ReturnNode) nodeType() string { return "return" }
 func (n *ReturnNode) Meta() *NodeMeta  { return &n.NodeMeta }
 
 // CallNode calls a function at step level (without storing result).
+// Supports three argument modes (mutually exclusive):
+//   - With: named expression args (object with) — {"call": "fn", "with": {"a": "expr"}}
+//   - WithArgs: positional expression args (array with) — {"call": "fn", "with": ["expr1", "expr2"]}
+//   - Args: positional literal args (args key) — {"call": "fn", "args": [1, "hello", true]}
 type CallNode struct {
 	NodeMeta
 	Function string
-	With     map[string]string
+	With     map[string]string // named expression args (object with)
+	WithArgs []string          // positional expression args (array with)
+	Args     []any             // positional literal args (args key)
 }
 
 func (n *CallNode) nodeType() string { return "call" }

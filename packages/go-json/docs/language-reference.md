@@ -283,12 +283,27 @@ This is a critical distinction:
 {"let": "resp", "expr": "http.get('https://api.example.com')"}
 ```
 
-**For side-effect-only calls** (where you don't need the return value), use `let` with a throwaway variable:
+**For side-effect-only calls** (where you don't need the return value), use `call` directly:
 
 ```json
-{"let": "_", "expr": "fs.write('./log.txt', message)"}
-{"let": "_", "expr": "redis.set('key', value)"}
+{"call": "fs.write", "args": ["./log.txt", "content"]}
+{"call": "redis.set", "args": ["user:123", "value"]}
 ```
+
+Or with expression args:
+
+```json
+{"call": "fs.write", "with": ["'./log.txt'", "content"]}
+```
+
+**Literal values with `args`** — no expression evaluation, no quote wrapping:
+
+```json
+{"call": "fs.write", "args": ["./log.txt", "Don't forget `backtick` and \"quotes\""]}
+{"call": "redis.set", "args": ["user:123", {"name": "Alice", "age": 30}, 3600]}
+```
+
+`args` passes JSON values as-is. Strings are strings, numbers are numbers. No `'...'` wrapping needed. Use `args` when you have literal data; use `with` when you need computed values.
 
 ---
 
