@@ -240,70 +240,149 @@ Protected by `MaxLoopIterations` (default 10,000). The loop terminates if the it
 
 Arguments in `with` are expressions — each value string is evaluated.
 
-#### `call` vs `expr` — When to Use Which
+#### Three Ways to Call Functions
 
-This is a critical distinction:
+go-json provides three calling styles. All three work for **all function types** — program functions, struct methods, I/O modules, and extensions.
 
-**`call`** invokes functions defined in the program's `"functions"` block (or struct methods). It uses **named arguments** via `with`:
+##### 1. `call` + `with` (object) — Named Expression Args
+
+Each value is an **expression string** matched to parameter names:
 
 ```json
-{"call": "calculateDiscount", "with": {"price": "100.0", "tier": "'gold'"}}
+{"call": "calculateDiscount", "with": {"price": "input.price", "tier": "input.tier"}}
 {"let": "result", "call": "factorial", "with": {"n": "10"}}
-{"call": "person.birthday"}
+{"call": "person.greet", "with": {"greeting": "'Hello'"}}
 ```
 
-**`expr`** evaluates an expression via the expr-lang engine. It can call **anything** available in the expression environment — go-json functions (positional args), stdlib functions, I/O module functions, and extension functions:
+Best for: go-json defined functions where you want **named, self-documenting** arguments.
+
+Note: Named `with` does NOT work for I/O/extension namespace functions (map ordering is not guaranteed). Use array `with` or `args` instead.
+
+##### 2. `call` + `with` (array) — Positional Expression Args
+
+Each element is an **expression string** passed by position:
 
 ```json
-{"let": "result", "expr": "factorial(10)"}
-{"let": "hash", "expr": "crypto.sha256(password)"}
+{"call": "calculateDiscount", "with": ["input.price", "5", "'gold'"]}
+{"let": "resp", "call": "http.get", "with": ["url"]}
+{"call": "fs.write", "with": ["'./log.txt'", "content"]}
+{"call": "redis.set", "with": ["'user:' + id", "userData", "3600"]}
+```
+
+Best for: I/O modules and extensions where args are **computed from variables/expressions**.
+
+Note: Strings are expressions — `"content"` means the variable `content`, not the literal string. Use `'...'` for string literals: `"'./log.txt'"`.
+
+##### 3. `call` + `args` — Literal JSON Values
+
+Each element is a **literal JSON value** — no evaluation, no quote wrapping:
+
+```json
+{"call": "calculateDiscount", "args": [100.0, 5, "gold"]}
+{"call": "fs.write", "args": ["./log.txt", "Hello, World!"]}
+{"call": "redis.set", "args": ["user:123", {"name": "Alice", "age": 30}, 3600]}
+{"call": "sql.query", "args": ["SELECT * FROM users WHERE age > ?", [18]]}
+```
+
+Best for: **Literal data** — strings with special characters, objects, arrays, numbers. No escaping needed. `"Alice"` is the string `Alice`, not a variable lookup.
+
+##### 4. `expr` — Inline Expression
+
+Call any function directly inside an expression:
+
+```json
+{"let": "result", "expr": "calculateDiscount(input.price, 5, 'gold')"}
 {"let": "resp", "expr": "http.get('https://api.example.com/users')"}
-{"let": "rows", "expr": "sql.query('SELECT * FROM users', [])"}
+{"let": "hash", "expr": "crypto.sha256(password)"}
+{"let": "names", "expr": "users | filter(.active) | map(.name) | sort()"}
 ```
 
-**The rule:**
+Best for: **One-liners**, chaining, and using the result in a larger expression.
 
-| What you're calling | Use | Why |
-|---------------------|-----|-----|
-| Your own function (defined in `functions`) | `call` or `expr` | Both work. `call` gives named args; `expr` gives positional |
-| Struct method | `call` or `expr` | Both work. `call`: `{"call": "p.greet"}`. `expr`: `p.greet()` |
-| Stdlib function (`upper`, `clamp`, `crypto.*`) | `expr` only | These are expression-environment functions, not program functions |
-| I/O module function (`http.*`, `fs.*`, `sql.*`) | `expr` only | These are injected into the expression environment via import |
-| Extension function (`ext:*`) | `expr` only | Same — injected into expression environment |
+##### Side-by-Side Comparison
 
-**Common mistake** — this does NOT work:
+The same operation written all four ways:
+
+**Calling a go-json function:**
 
 ```json
-{"call": "http.get", "with": {"url": "'https://api.example.com'"}}
+{"let": "d", "call": "calculateDiscount", "with": {"price": "input.price", "tier": "'gold'"}}
+{"let": "d", "call": "calculateDiscount", "with": ["input.price", "5", "'gold'"]}
+{"let": "d", "call": "calculateDiscount", "args": [100.0, 5, "gold"]}
+{"let": "d", "expr": "calculateDiscount(input.price, 5, 'gold')"}
 ```
 
-`call` looks in `program.Functions` for a function named `http.get` — it won't find it because `http` is an I/O module, not a program-defined function. Use `expr` instead:
+**Calling an I/O module function:**
 
 ```json
-{"let": "resp", "expr": "http.get('https://api.example.com')"}
+{"let": "resp", "call": "http.get", "with": ["url"]}
+{"let": "resp", "call": "http.get", "args": ["https://api.example.com/users"]}
+{"let": "resp", "expr": "http.get('https://api.example.com/users')"}
 ```
 
-**For side-effect-only calls** (where you don't need the return value), use `call` directly:
-
-```json
-{"call": "fs.write", "args": ["./log.txt", "content"]}
-{"call": "redis.set", "args": ["user:123", "value"]}
-```
-
-Or with expression args:
+**Fire-and-forget (no return value needed):**
 
 ```json
 {"call": "fs.write", "with": ["'./log.txt'", "content"]}
+{"call": "fs.write", "args": ["./log.txt", "Hello, World!"]}
+{"let": "_", "expr": "fs.write('./log.txt', content)"}
 ```
 
-**Literal values with `args`** — no expression evaluation, no quote wrapping:
+**Calling a struct method:**
 
 ```json
-{"call": "fs.write", "args": ["./log.txt", "Don't forget `backtick` and \"quotes\""]}
-{"call": "redis.set", "args": ["user:123", {"name": "Alice", "age": 30}, 3600]}
+{"call": "person.birthday"}
+{"let": "name", "call": "person.greet", "with": {"greeting": "'Hello'"}}
+{"let": "name", "call": "person.greet", "with": ["'Hello'"]}
+{"let": "name", "call": "person.greet", "args": ["Hello"]}
+{"let": "name", "expr": "person.greet('Hello')"}
 ```
 
-`args` passes JSON values as-is. Strings are strings, numbers are numbers. No `'...'` wrapping needed. Use `args` when you have literal data; use `with` when you need computed values.
+**Multi-level namespace (extensions):**
+
+```json
+{"let": "rows", "call": "bc.db.query", "with": ["'SELECT * FROM users'"]}
+{"let": "rows", "call": "bc.db.query", "args": ["SELECT * FROM users"]}
+{"let": "rows", "expr": "bc.db.query('SELECT * FROM users')"}
+```
+
+##### When to Use Which
+
+| Situation | Recommended | Why |
+|-----------|-------------|-----|
+| Literal strings with quotes/backticks/markdown | `args` | Zero escaping — `"Don't forget"` just works |
+| Passing objects or arrays as data | `args` | `{"name": "Alice"}` is literal, not expression |
+| Computed values from variables | `with` (array) | `"input.price * 0.9"` is evaluated |
+| Named args for readability | `with` (object) | `{"price": "...", "tier": "..."}` is self-documenting |
+| One-liner with chaining | `expr` | `users \| filter(.active) \| map(.name)` |
+| Fire-and-forget side effect | `call` + `args` or `with` | No throwaway `let "_"` needed |
+| Complex expression with multiple calls | `expr` | `upper(name) + ' (' + string(age) + ')'` |
+
+##### `with` vs `args` — The Key Difference
+
+```json
+{"call": "fn", "with": ["name"]}
+```
+`"name"` is an **expression** — looks up the variable `name` and passes its value.
+
+```json
+{"call": "fn", "args": ["name"]}
+```
+`"name"` is a **literal string** — passes the string `"name"` as-is.
+
+```json
+{"call": "fn", "with": ["'Alice'"]}
+```
+`"'Alice'"` is an **expression** containing a string literal — passes the string `"Alice"`.
+
+```json
+{"call": "fn", "args": ["Alice"]}
+```
+`"Alice"` is a **literal string** — passes the string `"Alice"`.
+
+Both produce the same result, but `args` is cleaner when you have literal data.
+
+`with` and `args` are **mutually exclusive** — using both in the same step is a compile error.
 
 ---
 

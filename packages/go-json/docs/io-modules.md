@@ -36,24 +36,32 @@ This means a host can safely enable modules without worrying about programs that
 don't use them, and a program that declares its dependencies will fail fast if
 the host hasn't opted in.
 
-### Calling I/O Functions — Always Use `expr`
+### Three Ways to Call I/O Functions
 
-I/O module functions are called via **`expr`**, not `call`. The `call` step only works for functions defined in the program's `"functions"` block. I/O modules are injected into the expression environment, so they're accessed through expressions:
+I/O module functions can be called three ways. Choose based on whether your arguments are literal data or computed expressions:
 
 ```json
+// call + args — literal values, no escaping needed
+{"let": "resp", "call": "http.get", "args": ["https://api.example.com/users"]}
+{"call": "fs.write", "args": ["./log.txt", "Hello, World!"]}
+
+// call + with (array) — expression args, variables evaluated
+{"let": "resp", "call": "http.get", "with": ["url"]}
+{"call": "fs.write", "with": ["'./log.txt'", "content"]}
+
+// expr — inline expression, good for one-liners
 {"let": "resp", "expr": "http.get('https://api.example.com/users')"}
-{"let": "data", "expr": "fs.read('./config.json')"}
-{"let": "rows", "expr": "sql.query('SELECT * FROM users', [])"}
+{"let": "_", "expr": "fs.write('./log.txt', content)"}
 ```
 
-For side-effect-only calls (no return value needed), use a throwaway variable:
+**Fire-and-forget** (no return value needed) — use `call` directly, no throwaway variable:
 
 ```json
-{"let": "_", "expr": "fs.write('./output.txt', content)"}
-{"let": "_", "expr": "redis.set('key', value)"}
+{"call": "fs.write", "args": ["./output.txt", "done"]}
+{"call": "redis.set", "args": ["key", "value"]}
 ```
 
-See [Language Reference — `call` vs `expr`](language-reference.md#call-vs-expr--when-to-use-which) for the full explanation.
+See [Language Reference — Three Ways to Call Functions](language-reference.md#three-ways-to-call-functions) for the full explanation.
 
 ---
 
@@ -74,49 +82,77 @@ See [Language Reference — `call` vs `expr`](language-reference.md#call-vs-expr
 
 ### Examples
 
-**Simple GET:**
+**Simple GET** — three ways:
 
 ```json
-{
-  "let": "resp",
-  "expr": "http.get('https://api.example.com/users')"
-}
+// args — URL is literal
+{"let": "resp", "call": "http.get", "args": ["https://api.example.com/users"]}
+
+// with — URL from variable
+{"let": "resp", "call": "http.get", "with": ["apiUrl"]}
+
+// expr — inline
+{"let": "resp", "expr": "http.get('https://api.example.com/users')"}
 ```
 
 **POST with body:**
 
 ```json
-{
-  "let": "resp",
-  "expr": "http.post('https://api.example.com/users', {'name': 'Alice', 'age': 30})"
-}
+// args — body is literal JSON object
+{"let": "resp", "call": "http.post", "args": [
+  "https://api.example.com/users",
+  {"name": "Alice", "age": 30}
+]}
+
+// with — body from variable
+{"let": "resp", "call": "http.post", "with": ["apiUrl", "userData"]}
+
+// expr — inline
+{"let": "resp", "expr": "http.post('https://api.example.com/users', {'name': 'Alice', 'age': 30})"}
 ```
 
 **GET with custom headers and timeout:**
 
 ```json
-{
-  "let": "resp",
-  "expr": "http.get('https://api.example.com/data', {'X-Custom': 'value'}, 5000)"
-}
+// args — all literal
+{"let": "resp", "call": "http.get", "args": [
+  "https://api.example.com/data",
+  {"X-Custom": "value"},
+  5000
+]}
+
+// expr — inline
+{"let": "resp", "expr": "http.get('https://api.example.com/data', {'X-Custom': 'value'}, 5000)"}
 ```
 
 **Authenticated request (Bearer):**
 
 ```json
-{
-  "let": "resp",
-  "expr": "http.get('https://api.example.com/me', {}, null, {'type': 'bearer', 'token': 'eyJhbG...'})"
-}
+// args — token is literal
+{"let": "resp", "call": "http.get", "args": [
+  "https://api.example.com/me",
+  {},
+  null,
+  {"type": "bearer", "token": "eyJhbG..."}
+]}
+
+// with — token from variable
+{"let": "resp", "call": "http.get", "with": [
+  "'https://api.example.com/me'", "{}", "nil",
+  "{'type': 'bearer', 'token': authToken}"
+]}
 ```
 
 **Authenticated request (Basic):**
 
 ```json
-{
-  "let": "resp",
-  "expr": "http.post('https://api.example.com/login', {}, {}, null, {'type': 'basic', 'username': 'admin', 'password': 's3cret'})"
-}
+{"let": "resp", "call": "http.post", "args": [
+  "https://api.example.com/login",
+  {},
+  {},
+  null,
+  {"type": "basic", "username": "admin", "password": "s3cret"}
+]}
 ```
 
 ### Response Shape
@@ -180,31 +216,41 @@ Every HTTP function returns an object with this structure:
 **Read a file:**
 
 ```json
-{
-  "let": "content",
-  "expr": "fs.read('./config.json')"
-}
+// args — path is literal
+{"let": "content", "call": "fs.read", "args": ["./config.json"]}
+
+// with — path from variable
+{"let": "content", "call": "fs.read", "with": ["filePath"]}
+
+// expr — inline
+{"let": "content", "expr": "fs.read('./config.json')"}
 ```
 
 **Read binary as base64:**
 
 ```json
-{
-  "let": "imageData",
-  "expr": "fs.read('./logo.png', 'base64')"
-}
+{"let": "imageData", "call": "fs.read", "args": ["./logo.png", "base64"]}
+{"let": "imageData", "expr": "fs.read('./logo.png', 'base64')"}
 ```
 
 **Write a file:**
 
 ```json
+// args — content is literal (no escaping needed for special chars)
+{"call": "fs.write", "args": ["./output.txt", "Hello, World!"]}
+
+// with — content from variable
+{"call": "fs.write", "with": ["'./output.txt'", "result"]}
+
+// expr
 {"let": "_", "expr": "fs.write('./output.txt', result)"}
 ```
 
 **Append to a log:**
 
 ```json
-{"let": "_", "expr": "fs.append('./app.log', logLine + '\\n')"}
+{"call": "fs.append", "with": ["'./app.log'", "logLine + '\\n'"]}
+{"call": "fs.append", "args": ["./app.log", "a static log line\n"]}
 ```
 
 **Check existence and read conditionally:**

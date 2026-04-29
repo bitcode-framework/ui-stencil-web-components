@@ -151,7 +151,30 @@ go-json serve api.json
 # Swagger UI at http://localhost:3000/docs
 ```
 
-### 5. JSONC Support (Comments!)
+### 5. I/O Modules
+
+```json
+{
+  "name": "fetch_and_save",
+  "import": {"http": "io:http", "fs": "io:fs"},
+  "steps": [
+    {"let": "resp", "call": "http.get", "args": ["https://api.example.com/data"]},
+    {"call": "fs.write", "args": ["./data.json", "raw content here"]},
+    {"call": "fs.write", "with": ["'./result.json'", "toJSON(resp.body)"]},
+    {"return": "resp.body"}
+  ]
+}
+```
+
+Three ways to call any function — choose based on your needs:
+
+```json
+{"call": "http.get", "args": ["https://api.com"]}
+{"call": "http.get", "with": ["url"]}
+{"let": "r", "expr": "http.get('https://api.com')"}
+```
+
+### 6. JSONC Support (Comments!)
 
 go-json supports JSONC — JSON with comments and trailing commas:
 

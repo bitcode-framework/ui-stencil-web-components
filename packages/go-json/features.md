@@ -282,10 +282,25 @@ I/O is opt-in at two levels: the program must **import** the module, and the run
 {
   "import": {"http": "io:http", "fs": "io:fs"},
   "steps": [
-    {"let": "resp", "expr": "http.get('https://api.example.com/users')"},
-    {"let": "data", "expr": "fs.read('./config.json')"}
+    {"let": "resp", "call": "http.get", "args": ["https://api.example.com/users"]},
+    {"let": "data", "call": "fs.read", "args": ["./config.json"]},
+    {"call": "fs.write", "with": ["'./output.json'", "toJSON(resp.body)"]},
+    {"let": "hash", "expr": "crypto.sha256(data)"}
   ]
 }
+```
+
+Three calling styles work for all I/O functions:
+
+```json
+// call + args — literal values, no escaping
+{"call": "fs.write", "args": ["./log.txt", "Don't forget `backtick`"]}
+
+// call + with — expression args, variables evaluated
+{"call": "fs.write", "with": ["'./log.txt'", "content"]}
+
+// expr — inline expression
+{"let": "_", "expr": "fs.write('./log.txt', content)"}
 ```
 
 | Module | Functions |
