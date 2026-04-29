@@ -18,9 +18,9 @@ Standalone JSON/JSONC programming language engine. Embeddable in Go applications
 ```
 packages/go-json/
 ├── lang/           Core language engine (AST, parser, compiler, VM, scope, types, errors, expr engine, debugger, import resolver)
-├── stdlib/         Layer 2 stdlib (34 functions + crypto namespace + regex). Layer 1 = expr-lang built-ins (~68 functions, zero work)
-├── runtime/        Runtime API: NewRuntime(), Execute(), CompileFile(), program cache, limits, logger, session, extensions
-├── io/             I/O modules: HTTP, FS, SQL, Exec with security layer (Phase 4.5c)
+├── stdlib/         Layer 2 stdlib (34 functions + crypto namespace + regex with LRU cache). Layer 1 = expr-lang built-ins (~68 functions, zero work)
+├── runtime/        Runtime API: NewRuntime(), Execute(), CompileFile(), Close(), program cache, limits, logger, session, extensions
+├── io/             I/O modules: HTTP, FS, SQL, Exec, MongoDB, Redis with security layer (Phase 4.5c)
 ├── codegen/        Code generation: Go, JavaScript, Python generators (Phase 4.5c)
 ├── cmd/go-json/    CLI: run, check, test, ast, codegen, migrate commands (Phase 4.5c)
 └── testdata/       Test fixture programs (.json, .jsonc)
@@ -77,7 +77,7 @@ packages/go-json/
 |-------|----------|-----------|
 | Layer 1 | expr-lang built-ins (~68 functions: abs, ceil, floor, round, min, max, len, upper, lower, trim, split, filter, map, reduce, find, sort, int, float, string, type, etc.) | expr-lang — DO NOT reimplement |
 | Layer 2 | go-json additions (34 functions + crypto namespace). Phase 4.5a: clamp, sign, randomInt, randomFloat, pow, sqrt, mod, padLeft, padRight, substring, format, matches, append, prepend, slice, chunk, zip, bool, isNil. Phase 4.5b: has, get, merge, pick, omit, formatDate, addDuration, diffDates, urlEncode, urlDecode, sprintf, crypto.sha256, crypto.md5, crypto.uuid, crypto.hmac | `stdlib/` package |
-| Layer 3 | I/O modules (HTTP, FS, SQL, Exec) with two-layer security gating. Regex stdlib (match, findAll, replace with caching). | `io/` and `stdlib/regex.go` |
+| Layer 3 | I/O modules (HTTP, FS, SQL, Exec, MongoDB, Redis) with two-layer security gating. Regex stdlib (match, findAll, replace with LRU caching). | `io/` and `stdlib/regex.go` |
 
 ## Conventions
 
@@ -90,7 +90,7 @@ packages/go-json/
 
 ```bash
 cd packages/go-json
-go test ./... -v          # All tests (171)
+go test ./... -v          # All tests (184)
 go test ./lang/ -v        # Language engine tests
 go test ./lang/ -run TestStruct -v       # Struct tests
 go test ./lang/ -run TestMethod -v       # Method tests
@@ -117,22 +117,28 @@ go test ./codegen/ -v                    # Code generation tests
 
 - I/O module framework: `IOModule` interface, `IORegistry`, `WithIO()`/`WithoutIO()` runtime options
 - I/O security layer: `SecurityConfig`, two-layer gating (import + runtime enable), hardcoded deny lists, path traversal prevention, cloud metadata blocking
-- HTTP module: GET/POST/PUT/PATCH/DELETE with auth (bearer/basic), redirect following, response size limits
+- HTTP module: GET/POST/PUT/PATCH/DELETE with auth (bearer/basic), redirect following, response size limits, client reuse
 - FS module: read/write/append/exists/list/mkdir/remove with sandboxing, encoding (UTF-8/base64), symlink resolution
-- SQL module: query/execute with dual-mode DSN (standalone/hosted), transactions with savepoints, parameterized queries only
+- SQL module: query/execute with connection pooling per-DSN, DefaultDSN, multi-driver detection (postgres/mysql/sqlserver/oracle/sqlite), transactions with savepoints, DDL protection (blocked keywords + max query length), auto-rollback on Close/Cleanup
 - Exec module: command whitelisting, DeniedCommands (always blocked), env isolation, EngineSecrets stripping, output truncation
-- Regex stdlib: match/findAll/replace with compiled regex caching, ReDoS prevention (pattern length + input size limits)
+- MongoDB module: find/findOne/insert/insertMany/update/delete/count/aggregate with NoSQL injection protection ($where/$function blocking), security config (AllowedDatabases, MaxDocumentSize, MaxResults, MaxPools)
+- Redis module: get/set/del/exists/expire/ttl/incr/decr/hget/hset/hgetall/lpush/rpush/lrange/sadd/smembers/publish with auto JSON serialize/deserialize, KeyPrefix tenant isolation, blocked commands (FLUSHALL, CONFIG, etc.)
+- Regex stdlib: match/findAll/replace with LRU cache (max 1000 patterns), ReDoS prevention
 - Extension API: `Extension` struct with Functions/Structs/Constants, `WithExtension()` runtime option, `ext:name` import support
-- Bitcode bridge adapter: maps all 20 bridge namespaces (50+ functions) to go-json Extension, model proxy with CRUD/bulk/relation/sudo
+- Import resolver: `io:` and `ext:` imports recorded in `RequestedModules`, validated at runtime (two-layer security enforced)
+- Runtime.Close(): propagates to all I/O modules implementing Close() error
+- Bitcode bridge adapter: nested namespace maps for dotted access (bc.db.query), explicit type errors instead of silent coercion, optimized convertToAny
+- GoJSONRunner: uses CompileFile for proper import resolution
 - scripts/*.json support: `detectRuntimeFromExtension` detects `.json` → `go-json`, `GoJSONRunner` implements `EmbeddedRunner`
 - Backward compatibility: `ProcessDefinition.Runtime` field, `IsGoJSON()` helper, old format unchanged
 - Process engine data step replacement: `GoJSONDataHandler` adapts old step types to bridge calls
-- CLI: run (--input/--input-file/--timeout/--io/--trace), check (--verbose), test (--filter/--verbose), ast (--output), codegen (--target/--output), migrate (--from/--to/--dry-run)
-- Code generation: `CodeGenerator` interface, Go/JavaScript/Python generators handling all step types
-- 171 tests total (131 from Phase 4.5a/b + 40 new)
+- CLI: run (--input/--input-file/--timeout/--io/--trace/stdin), check (--verbose), test (--filter/--verbose), ast (--output), codegen (--target/--output/--package), migrate (--from/--to/--dry-run, JSON-aware key renaming)
+- Code generation: `CodeGenerator` interface, Go/JavaScript/Python generators handling all step types including new/import/expression
+- Windows path security: case-insensitive matching, directory boundary checks
+- 184 tests total (131 from Phase 4.5a/b + 53 new)
 
 ## What's NOT Done
 
 - Expression-level compile-time type validation (deferred to runtime)
-- `io:` import resolution at compile time (functions registered at runtime level)
+- MongoDB/Redis require external driver dependencies (stubbed until drivers added to go.mod)
 - REPL mode (future)
