@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -102,6 +103,21 @@ func cmdRun(args []string) {
 		if err := json.Unmarshal(data, &input); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: invalid JSON in input file: %s\n", err.Error())
 			os.Exit(1)
+		}
+	} else {
+		stat, _ := os.Stdin.Stat()
+		if stat != nil && (stat.Mode()&os.ModeCharDevice) == 0 {
+			data, err := io.ReadAll(os.Stdin)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error reading stdin: %s\n", err.Error())
+				os.Exit(1)
+			}
+			if len(data) > 0 {
+				if err := json.Unmarshal(data, &input); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: invalid JSON from stdin: %s\n", err.Error())
+					os.Exit(1)
+				}
+			}
 		}
 	}
 
