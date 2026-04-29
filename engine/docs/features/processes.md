@@ -247,6 +247,19 @@ Edges can have a `condition` field. The edge is only followed if the condition e
 
 If all incoming edges to a node are conditional and none evaluate to true, the node is skipped.
 
+### Condition Evaluation
+
+Conditions are evaluated using expr-lang/expr (via go-json's `EvalExprBool`). Both `{{}}` syntax and bare expr-lang syntax work:
+
+```json
+{"condition": "{{input.total > 10000}}"}
+{"condition": "input.total > 10000"}
+```
+
+The `{{}}` wrapper is stripped before evaluation. The environment contains `input` (all input fields) and all process variables. Full expr-lang operators and functions are available (`&&`, `||`, `>`, `<`, `==`, `!=`, `in`, `contains`, `startsWith`, ternary `? :`, etc.).
+
+Translation interpolation (`{{t('key')}}`) is processed before condition evaluation.
+
 ### Cycle Detection
 
 The engine validates the graph before execution. Cycles are rejected with an error.

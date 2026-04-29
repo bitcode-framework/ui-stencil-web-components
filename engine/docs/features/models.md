@@ -61,7 +61,7 @@ This creates a `customers` table with `id`, `name`, `email`, `created_at`, `upda
 | `options` | string[] | Enum values (selection) |
 | `model` | string | Related model name (many2one, one2many, many2many) |
 | `inverse` | string | Inverse FK field name (one2many) |
-| `computed` | string | Computation expression (computed) |
+| `computed` | string | Computation expression (computed). Uses expr-lang/expr engine with full function library (68+ built-in + go-json stdlib). Supports arithmetic, string functions, ternary, aggregates over child collections (`sum("lines.subtotal")`). |
 | `auto` | bool | Auto-set value (datetime) |
 | `storage` | string | Storage hint override (e.g. `"bigint"`, `"smallint"`, `"numeric"`, `"longtext"`) |
 | `scale` | int | Decimal scale (alias for `precision` in decimal/currency) |

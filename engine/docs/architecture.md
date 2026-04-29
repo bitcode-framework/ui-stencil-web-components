@@ -77,8 +77,9 @@ Execution engines.
 | Package | Responsibility |
 |---------|---------------|
 | `bridge/` | Bridge API — 20 namespace interfaces, Context struct, Factory, SecurityRules enforcement. Unified `bitcode.*` API for all script runtimes. |
-| `executor/` | Process executor — dispatches steps, manages context |
+| `executor/` | Process executor — dispatches steps, manages context. `condition.go` provides shared `EvaluateCondition` using expr-lang (replaces 3 hand-rolled evaluators). |
 | `executor/steps/` | Step handlers: validate, data (CRUD), control (if/switch/loop), emit, call, script, http, assign, log |
+| `expression/` | Computed field hydration — `Hydrator` evaluates `computed`/`formula` fields via `go-json/runtime.EvalExpr`. Aggregate functions (`sum`, `count`, `avg`, `min`, `max`) scoped per-evaluation for child collection access. |
 | `agent/` | Agent worker (event subscription) + cron scheduler |
 | `workflow/` | State machine engine — validate transitions, get initial state |
 | `plugin/` | Plugin manager — spawn processes, JSON-RPC communication |

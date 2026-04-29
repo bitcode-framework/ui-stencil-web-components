@@ -173,11 +173,11 @@ func (w *ExprToFilters) extractComparison(n *ast.BinaryNode) *WhereClause {
 	if field == "" {
 		return nil
 	}
+	w.hasField = true
 	value, isDenyAll := w.resolveValue(n.Right)
 	if isDenyAll {
 		return denyAllClause()
 	}
-	w.hasField = true
 	return &WhereClause{Condition: &Condition{
 		Field:    field,
 		Operator: mapOperator(n.Operator),
@@ -190,6 +190,7 @@ func (w *ExprToFilters) extractInClause(n *ast.BinaryNode, negate bool) *WhereCl
 	if field == "" {
 		return nil
 	}
+	w.hasField = true
 	value, isDenyAll := w.resolveValue(n.Right)
 	if isDenyAll {
 		return denyAllClause()
@@ -197,7 +198,6 @@ func (w *ExprToFilters) extractInClause(n *ast.BinaryNode, negate bool) *WhereCl
 	if arr, ok := value.([]any); ok && len(arr) == 0 {
 		return denyAllClause()
 	}
-	w.hasField = true
 	op := "in"
 	if negate {
 		op = "not in"
@@ -214,6 +214,7 @@ func (w *ExprToFilters) extractLikeClause(n *ast.BinaryNode, pattern string) *Wh
 	if field == "" {
 		return nil
 	}
+	w.hasField = true
 	value, isDenyAll := w.resolveValue(n.Right)
 	if isDenyAll {
 		return denyAllClause()

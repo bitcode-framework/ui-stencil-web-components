@@ -19,7 +19,7 @@ Standalone JSON/JSONC programming language engine. Embeddable in Go applications
 packages/go-json/
 ├── lang/           Core language engine (AST, parser, compiler, VM, scope, types, errors, expr engine, debugger, import resolver)
 ├── stdlib/         Layer 2 stdlib (42+ functions + crypto namespace + regex + path + JSON). Layer 1 = expr-lang built-ins (~68 functions)
-├── runtime/        Runtime API: NewRuntime(), Execute(), ExecuteFunction(), CompileFile(), Close(), program cache, limits, logger, session, extensions
+├── runtime/        Runtime API: NewRuntime(), Execute(), ExecuteFunction(), CompileFile(), Close(), program cache, limits, logger, session, extensions. Also: EvalExpr(), EvalExprBool(), EvalExprFloat(), ParseExpr(), ValidateExpr() — lightweight expression evaluation API for engine consumers (shared singleton ExprLangEngine with stdlib + compilation cache).
 ├── io/             I/O modules: HTTP, FS, SQL, Exec, MongoDB, Redis with security layer + unified SQL param translation (Phase 4.5c-d)
 ├── codegen/        Code generation: Go/JS/Python generators + server codegen (Fiber/net-http/Express/FastAPI) + dependency management (Phase 4.5c-d)
 ├── server/         Web server execution mode: adapters (Fiber/net-http/Echo/Gin/Chi), middleware, JWT, auth, templates, static, OpenAPI (Phase 4.5d)

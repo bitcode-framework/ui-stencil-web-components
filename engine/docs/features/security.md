@@ -75,7 +75,7 @@ Defined on the model:
 
 Record rules are injected as WHERE clauses into every query. No opt-in needed — if the model has record_rules and the API has `auth: true`, they're enforced.
 
-### Domain Filter Syntax
+### Domain Filter Syntax (Legacy)
 
 ```json
 [["field", "operator", "value"]]
@@ -84,6 +84,31 @@ Record rules are injected as WHERE clauses into every query. No opt-in needed �
 Operators: `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`, `not in`, `like`
 
 Variables: `{{user.id}}`, `{{user.tenant_id}}`
+
+### Domain Filter Expression (New — expr-lang)
+
+Record rules can use `domain_filter_expr` with expr-lang syntax for richer, type-safe filtering:
+
+```json
+"record_rules": [
+  { "groups": ["sales.user"], "domain_filter_expr": "created_by == ctx.user_id" },
+  { "groups": ["sales.manager"], "domain_filter_expr": "department_id in ctx.department_ids" }
+]
+```
+
+The `ctx.*` namespace provides user/session context:
+- `ctx.user_id`, `ctx.company_id`, `ctx.company_ids`
+- `ctx.department_id`, `ctx.department_ids`
+- `ctx.group_ids`, `ctx.groups`, `ctx.role`
+- `ctx.tenant_id`, `ctx.now`, `ctx.today`
+
+Supported operators: `==`, `!=`, `>`, `<`, `>=`, `<=`, `in`, `not in`, `contains`, `startsWith`, `endsWith`
+
+`contains`/`startsWith`/`endsWith` are converted to SQL `LIKE` patterns. `matches` is rejected (ReDoS risk).
+
+Both formats coexist — `domain_filter` (legacy) and `domain_filter_expr` (new) can be used on the same model. If a rule has both, `domain_filter_expr` takes precedence.
+
+Security: all values are parameterized (never string-concatenated to SQL). Expressions without field references (tautologies like `1 == 1`) are rejected. Empty context arrays produce deny-all filters (fail-closed).
 
 ## Auth Module
 
