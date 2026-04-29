@@ -121,5 +121,19 @@ func (c *Context) cloneWithTx(gormTx *gorm.DB) *Context {
 	if dbImpl, ok := c.db.(*dbBridge); ok {
 		clone.db = dbImpl.withTx(gormTx)
 	}
+	if mf, ok := c.model.(*modelFactory); ok {
+		clone.model = mf.withTx(gormTx)
+	}
 	return &clone
+}
+
+func (c *Context) CloneWithGormTx(gormTx *gorm.DB) *Context {
+	return c.cloneWithTx(gormTx)
+}
+
+func (c *Context) GormDB() *gorm.DB {
+	if dbImpl, ok := c.db.(*dbBridge); ok {
+		return dbImpl.db
+	}
+	return nil
 }

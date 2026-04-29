@@ -49,6 +49,15 @@ func newModelFactory(db *gorm.DB, registry *model.Registry, permService *persist
 	}
 }
 
+func (f *modelFactory) withTx(tx *gorm.DB) *modelFactory {
+	clone := *f
+	clone.db = tx
+	clone.repoFactory = func(modelName string, session Session, db *gorm.DB) (*persistence.GenericRepository, *parser.ModelDefinition, error) {
+		return f.repoFactory(modelName, session, tx)
+	}
+	return &clone
+}
+
 func (f *modelFactory) Model(name string, session Session, sudo bool) ModelHandle {
 	handle := &modelBridge{
 		factory:     f,

@@ -340,6 +340,48 @@ func TestGetEngineVersion(t *testing.T) {
 	}
 }
 
+func TestTxStoreBasic(t *testing.T) {
+	store := newTxStore()
+	if store == nil {
+		t.Fatal("newTxStore returned nil")
+	}
+	if len(store.entries) != 0 {
+		t.Errorf("expected empty entries, got %d", len(store.entries))
+	}
+}
+
+func TestTxStoreGetContextMissing(t *testing.T) {
+	store := newTxStore()
+	ctx := store.GetContext("nonexistent-tx-id")
+	if ctx != nil {
+		t.Error("expected nil for nonexistent tx")
+	}
+}
+
+func TestTxStoreRollbackMissing(t *testing.T) {
+	store := newTxStore()
+	err := store.Rollback("nonexistent-tx-id")
+	if err != nil {
+		t.Errorf("rollback of nonexistent tx should not error, got: %v", err)
+	}
+}
+
+func TestTxStoreCommitMissing(t *testing.T) {
+	store := newTxStore()
+	err := store.Commit("nonexistent-tx-id")
+	if err == nil {
+		t.Error("commit of nonexistent tx should error")
+	}
+}
+
+func TestTxStoreCleanupAll(t *testing.T) {
+	store := newTxStore()
+	store.CleanupAll()
+	if len(store.entries) != 0 {
+		t.Errorf("expected empty after cleanup, got %d", len(store.entries))
+	}
+}
+
 func TestProcessShouldRecycle(t *testing.T) {
 	proc := &PluginProcess{executionCount: 999}
 	cfg := PoolConfig{MaxExecutions: 1000}

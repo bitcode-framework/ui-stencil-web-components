@@ -35,6 +35,7 @@ type Manager struct {
 	backgroundPool *ProcessPool
 	bridgeHandler  *BridgeHandler
 	bridgeFactory  *bridge.Factory
+	txStore        *txStore
 	runtimeConfig  RuntimeConfig
 	mu             sync.RWMutex
 	nodeAvailable  bool
@@ -43,6 +44,7 @@ type Manager struct {
 func NewManager() *Manager {
 	return &Manager{
 		bridgeHandler: &BridgeHandler{},
+		txStore:       newTxStore(),
 		runtimeConfig: DefaultRuntimeConfig(),
 	}
 }
@@ -285,13 +287,20 @@ func (m *Manager) handleBridgeRequest(ctx context.Context, proc *PluginProcess, 
 		params = make(map[string]any)
 	}
 
+	effectiveCtx := bc
+	if msg.TxID != "" && !strings.HasPrefix(msg.Method, "tx.") {
+		if txCtx := m.txStore.GetContext(msg.TxID); txCtx != nil {
+			effectiveCtx = txCtx
+		}
+	}
+
 	var result any
 	var bridgeErr *bridge.BridgeError
 
 	if strings.HasPrefix(msg.Method, "tx.") {
 		result, bridgeErr = m.handleTxMethod(ctx, bc, msg.Method, params)
 	} else {
-		result, bridgeErr = m.bridgeHandler.Handle(ctx, bc, msg.Method, params)
+		result, bridgeErr = m.bridgeHandler.Handle(ctx, effectiveCtx, msg.Method, params)
 	}
 
 	if bridgeErr != nil {
@@ -317,10 +326,33 @@ func (m *Manager) handleBridgeRequest(ctx context.Context, proc *PluginProcess, 
 
 func (m *Manager) handleTxMethod(ctx context.Context, bc *bridge.Context, method string, params map[string]any) (any, *bridge.BridgeError) {
 	switch method {
-	case "tx.begin", "tx.commit", "tx.rollback":
-		return nil, bridge.NewError("TX_NOT_IMPLEMENTED",
-			"transactions over JSON-RPC are not yet implemented. "+
-				"Use bitcode.model() calls without tx() — each call is auto-committed.")
+	case "tx.begin":
+		txID, _, err := m.txStore.Begin(bc)
+		if err != nil {
+			return nil, bridge.NewError(bridge.ErrInternalError, "failed to begin transaction: "+err.Error())
+		}
+		return map[string]any{"txId": txID}, nil
+
+	case "tx.commit":
+		txID := getString(params, "txId")
+		if txID == "" {
+			return nil, bridge.NewError(bridge.ErrValidation, "txId is required")
+		}
+		if err := m.txStore.Commit(txID); err != nil {
+			return nil, bridge.NewError(bridge.ErrInternalError, "commit failed: "+err.Error())
+		}
+		return map[string]any{"committed": true}, nil
+
+	case "tx.rollback":
+		txID := getString(params, "txId")
+		if txID == "" {
+			return nil, bridge.NewError(bridge.ErrValidation, "txId is required")
+		}
+		if err := m.txStore.Rollback(txID); err != nil {
+			return nil, bridge.NewError(bridge.ErrInternalError, "rollback failed: "+err.Error())
+		}
+		return nil, nil
+
 	default:
 		return nil, bridge.NewErrorf("UNKNOWN_METHOD", "unknown tx method: %s", method)
 	}
@@ -343,6 +375,9 @@ func (m *Manager) detectRuntime(script string, explicitRuntime string) string {
 }
 
 func (m *Manager) StopAll() {
+	if m.txStore != nil {
+		m.txStore.CleanupAll()
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.workerPool != nil {
