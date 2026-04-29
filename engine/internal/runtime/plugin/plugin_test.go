@@ -302,6 +302,44 @@ func TestParseSearchOptionsNil(t *testing.T) {
 	}
 }
 
+func TestIsVersionAtLeast(t *testing.T) {
+	tests := []struct {
+		version              string
+		major, minor, patch  int
+		want                 bool
+	}{
+		{"22.5.0", 20, 0, 0, true},
+		{"20.0.0", 20, 0, 0, true},
+		{"20.0.1", 20, 0, 0, true},
+		{"19.9.9", 20, 0, 0, false},
+		{"18.20.4", 20, 0, 0, false},
+		{"1.2.15", 1, 2, 15, true},
+		{"1.2.16", 1, 2, 15, true},
+		{"1.2.14", 1, 2, 15, false},
+		{"1.3.0", 1, 2, 15, true},
+		{"2.0.0", 1, 2, 15, true},
+		{"0.9.0", 1, 2, 15, false},
+		{"22.5.0-nightly", 20, 0, 0, true},
+		{"20.0.0-rc.1", 20, 0, 0, true},
+		{"18.0.0-rc.1", 20, 0, 0, false},
+	}
+
+	for _, tt := range tests {
+		got := isVersionAtLeast(tt.version, tt.major, tt.minor, tt.patch)
+		if got != tt.want {
+			t.Errorf("isVersionAtLeast(%q, %d, %d, %d) = %v, want %v",
+				tt.version, tt.major, tt.minor, tt.patch, got, tt.want)
+		}
+	}
+}
+
+func TestGetEngineVersion(t *testing.T) {
+	ver := getEngineVersion("nonexistent-binary-xyz")
+	if ver != "" {
+		t.Errorf("expected empty for nonexistent binary, got %q", ver)
+	}
+}
+
 func TestProcessShouldRecycle(t *testing.T) {
 	proc := &PluginProcess{executionCount: 999}
 	cfg := PoolConfig{MaxExecutions: 1000}

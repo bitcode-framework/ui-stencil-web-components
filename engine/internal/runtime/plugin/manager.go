@@ -342,23 +342,82 @@ func (m *Manager) StopPlugin(name string) error {
 
 func detectJSEngine(forceCommand string) (command string, engine string, err error) {
 	if forceCommand != "" {
-		p, err := exec.LookPath(forceCommand)
-		if err != nil {
+		p, lookErr := exec.LookPath(forceCommand)
+		if lookErr != nil {
 			return "", "", fmt.Errorf("%s not found in PATH", forceCommand)
 		}
 		if strings.Contains(forceCommand, "bun") {
+			ver := getEngineVersion(p)
+			if ver != "" && !isVersionAtLeast(ver, 1, 2, 15) {
+				return "", "", fmt.Errorf("Bun %s found but 1.2.15+ required for vm support", ver)
+			}
 			return p, "bun", nil
+		}
+		ver := getEngineVersion(p)
+		if ver != "" && !isVersionAtLeast(ver, 20, 0, 0) {
+			return "", "", fmt.Errorf("Node.js %s found but 20.0.0+ required", ver)
 		}
 		return p, "nodejs", nil
 	}
 
-	if p, err := exec.LookPath("bun"); err == nil {
-		return p, "bun", nil
+	if p, lookErr := exec.LookPath("bun"); lookErr == nil {
+		ver := getEngineVersion(p)
+		if ver != "" && isVersionAtLeast(ver, 1, 2, 15) {
+			log.Printf("[PLUGIN] Bun %s detected (faster startup, native TS)", ver)
+			return p, "bun", nil
+		}
+		if ver != "" {
+			log.Printf("[WARN] Bun %s found but 1.2.15+ required for vm support, skipping", ver)
+		}
 	}
 
-	if p, err := exec.LookPath("node"); err == nil {
-		return p, "nodejs", nil
+	if p, lookErr := exec.LookPath("node"); lookErr == nil {
+		ver := getEngineVersion(p)
+		if ver != "" && isVersionAtLeast(ver, 20, 0, 0) {
+			log.Printf("[PLUGIN] Node.js %s detected", ver)
+			return p, "nodejs", nil
+		}
+		if ver != "" {
+			log.Printf("[WARN] Node.js %s found but 20.0.0+ required, skipping", ver)
+		}
 	}
 
-	return "", "", fmt.Errorf("neither Bun nor Node.js found in PATH")
+	return "", "", fmt.Errorf("neither Bun (1.2.15+) nor Node.js (20.0.0+) found in PATH")
+}
+
+func getEngineVersion(binPath string) string {
+	out, err := exec.Command(binPath, "--version").Output()
+	if err != nil {
+		return ""
+	}
+	ver := strings.TrimSpace(string(out))
+	ver = strings.TrimPrefix(ver, "v")
+	if idx := strings.IndexByte(ver, '\n'); idx >= 0 {
+		ver = ver[:idx]
+	}
+	return ver
+}
+
+func isVersionAtLeast(version string, minMajor, minMinor, minPatch int) bool {
+	parts := strings.SplitN(version, "-", 2)
+	nums := strings.SplitN(parts[0], ".", 3)
+
+	major, minor, patch := 0, 0, 0
+	if len(nums) >= 1 {
+		fmt.Sscanf(nums[0], "%d", &major)
+	}
+	if len(nums) >= 2 {
+		fmt.Sscanf(nums[1], "%d", &minor)
+	}
+	if len(nums) >= 3 {
+		fmt.Sscanf(nums[2], "%d", &patch)
+	}
+
+	if major != minMajor {
+		return major > minMajor
+	}
+	if minor != minMinor {
+		return minor > minMinor
+	}
+	return patch >= minPatch
 }
