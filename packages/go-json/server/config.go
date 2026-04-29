@@ -198,22 +198,26 @@ func parseDuration(s string) (time.Duration, error) {
 // parseByteSize parses a byte size string like "10mb", "1gb", "512kb".
 func parseByteSize(s string) (int64, error) {
 	s = strings.TrimSpace(strings.ToLower(s))
-	multipliers := map[string]int64{
-		"b":  1,
-		"kb": 1024,
-		"mb": 1024 * 1024,
-		"gb": 1024 * 1024 * 1024,
+
+	// Check longest suffixes first to avoid "b" matching before "mb"/"gb"/"kb"
+	suffixes := []struct {
+		suffix string
+		mult   int64
+	}{
+		{"gb", 1024 * 1024 * 1024},
+		{"mb", 1024 * 1024},
+		{"kb", 1024},
+		{"b", 1},
 	}
 
-	for suffix, mult := range multipliers {
-		if strings.HasSuffix(s, suffix) {
-			numStr := strings.TrimSuffix(s, suffix)
-			numStr = strings.TrimSpace(numStr)
+	for _, entry := range suffixes {
+		if strings.HasSuffix(s, entry.suffix) {
+			numStr := strings.TrimSpace(strings.TrimSuffix(s, entry.suffix))
 			n, err := strconv.ParseFloat(numStr, 64)
 			if err != nil {
 				return 0, fmt.Errorf("invalid number in %q", s)
 			}
-			return int64(n * float64(mult)), nil
+			return int64(n * float64(entry.mult)), nil
 		}
 	}
 
