@@ -136,6 +136,19 @@ func NewRuntime(opts ...Option) *Runtime {
 	return r
 }
 
+// Close releases all resources held by I/O modules that implement Close() error.
+func (r *Runtime) Close() error {
+	var firstErr error
+	for _, mod := range r.ioRegistry.AllModules() {
+		if closer, ok := mod.(interface{ Close() error }); ok {
+			if err := closer.Close(); err != nil && firstErr == nil {
+				firstErr = err
+			}
+		}
+	}
+	return firstErr
+}
+
 // IORegistry returns the runtime's I/O module registry.
 func (r *Runtime) IORegistry() *goio.IORegistry {
 	return r.ioRegistry

@@ -150,6 +150,7 @@ func cmdRun(args []string) {
 	}
 
 	rt := runtime.NewRuntime(opts...)
+	defer rt.Close()
 
 	compiled, err := rt.CompileFile(programPath)
 	if err != nil {
