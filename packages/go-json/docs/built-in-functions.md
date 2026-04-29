@@ -164,9 +164,9 @@ Nesting works to any depth — `app.db.pool.stats()` is valid as long as the map
 
 ## Layer 1 — expr-lang Built-ins
 
-These functions are provided by the [expr-lang/expr](https://github.com/expr-lang/expr) expression engine and are available in every `expr` and `with` context. go-json does NOT reimplement these.
+These functions are provided by the [expr-lang/expr](https://github.com/expr-lang/expr) expression engine (v1.17+) and are available in every `expr` and `with` context. go-json does NOT reimplement these — they come for free. Full upstream docs: https://expr-lang.org/docs/language-definition
 
-### Math
+### Math (expr-lang)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -180,7 +180,7 @@ These functions are provided by the [expr-lang/expr](https://github.com/expr-lan
 | `mean(arr)` | `[]number → float` | Average of array | `mean([1, 2, 3])` → `2.0` |
 | `median(arr)` | `[]number → float` | Median of array | `median([1, 2, 3])` → `2.0` |
 
-### String
+### String (expr-lang)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -194,19 +194,25 @@ These functions are provided by the [expr-lang/expr](https://github.com/expr-lan
 | `join(arr, sep)` | `[]string, string → string` | Join array | `join(["a","b"], ",")` → `"a,b"` |
 | `replace(s, old, new)` | `string, string, string → string` | Replace all | `replace("hello", "l", "r")` → `"herro"` |
 | `repeat(s, n)` | `string, int → string` | Repeat string | `repeat("ab", 3)` → `"ababab"` |
-| `contains(s, sub)` | `string, string → bool` | Contains substring | `contains("hello", "ell")` → `true` |
-| `hasPrefix(s, prefix)` | `string, string → bool` | Starts with | `hasPrefix("hello", "he")` → `true` |
-| `hasSuffix(s, suffix)` | `string, string → bool` | Ends with | `hasSuffix("hello", "lo")` → `true` |
+| `hasPrefix(s, prefix)` | `string, string → bool` | Starts with (function) | `hasPrefix("hello", "he")` → `true` |
+| `hasSuffix(s, suffix)` | `string, string → bool` | Ends with (function) | `hasSuffix("hello", "lo")` → `true` |
 | `indexOf(s, sub)` | `string, string → int` | First index (-1 if not found) | `indexOf("hello", "ll")` → `2` |
-| `title(s)` | `string → string` | Title case | `title("hello world")` → `"Hello World"` |
+| `lastIndexOf(s, sub)` | `string, string → int` | Last index (-1 if not found) | `lastIndexOf("abcabc", "abc")` → `3` |
+| `contains` | operator | Substring check | `"hello" contains "ell"` → `true`. Also: `contains("hello", "ell")` (function alias, Layer 2) |
+| `startsWith` | operator | Prefix check | `"hello" startsWith "hel"` → `true`. Also: `startsWith("hello", "hel")` (function alias, Layer 2) |
+| `endsWith` | operator | Suffix check | `"hello" endsWith "llo"` → `true`. Also: `endsWith("hello", "llo")` (function alias, Layer 2) |
+| `matches` | operator | Regex match | `"hello" matches "^h"` → `true`. Also: `matches("hello", "^h")` (function alias, Layer 2) |
 
-### Array
+### Array (expr-lang)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
 | `len(arr)` | `[]any → int` | Array length | `len([1,2,3])` → `3` |
-| `first(arr)` | `[]any → any` | First element | `first([1,2,3])` → `1` |
-| `last(arr)` | `[]any → any` | Last element | `last([1,2,3])` → `3` |
+| `first(arr)` | `[]any → any` | First element (nil if empty) | `first([1,2,3])` → `1` |
+| `last(arr)` | `[]any → any` | Last element (nil if empty) | `last([1,2,3])` → `3` |
+| `get(arr, index)` | `[]any, int → any` | Safe index access (nil if out of range) | `get([1,2,3], 0)` → `1` |
+| `get(map, key)` | `map, string → any` | Safe key access (nil if missing) | `get(user, "name")` → `"Alice"` |
+| `take(arr, n)` | `[]any, int → []any` | First n elements | `take([1,2,3,4], 2)` → `[1,2]` |
 | `filter(arr, pred)` | `[]any, predicate → []any` | Filter elements | `filter(users, .age > 18)` |
 | `map(arr, fn)` | `[]any, function → []any` | Transform elements | `map(users, .name)` |
 | `reduce(arr, fn, init)` | `[]any, function, any → any` | Reduce to single value | `reduce([1,2,3], # + #acc, 0)` → `6` |
@@ -215,17 +221,20 @@ These functions are provided by the [expr-lang/expr](https://github.com/expr-lan
 | `findLast(arr, pred)` | `[]any, predicate → any` | Last matching element | `findLast(items, .price > 100)` |
 | `findLastIndex(arr, pred)` | `[]any, predicate → int` | Index of last match | `findLastIndex(items, .active)` |
 | `count(arr, pred)` | `[]any, predicate → int` | Count matching | `count(users, .active)` |
+| `sum(arr, pred?)` | `[]any, predicate? → number` | Sum (with optional field) | `sum(orders, .total)` |
 | `all(arr, pred)` | `[]any, predicate → bool` | All match predicate | `all(scores, # >= 60)` |
 | `any(arr, pred)` | `[]any, predicate → bool` | Any match predicate | `any(users, .admin)` |
 | `none(arr, pred)` | `[]any, predicate → bool` | None match predicate | `none(items, .deleted)` |
-| `sort(arr)` | `[]any → []any` | Sort ascending | `sort([3,1,2])` → `[1,2,3]` |
-| `sortBy(arr, field)` | `[]any, string → []any` | Sort by field | `sortBy(users, 'age')` |
+| `one(arr, pred)` | `[]any, predicate → bool` | Exactly one matches | `one(users, .winner)` |
+| `sort(arr, order?)` | `[]any, string? → []any` | Sort (default asc) | `sort([3,1,2])` → `[1,2,3]` |
+| `sortBy(arr, pred, order?)` | `[]any, predicate, string? → []any` | Sort by field | `sortBy(users, .age, "desc")` |
+| `groupBy(arr, pred)` | `[]any, predicate → map` | Group by key | `groupBy(users, .department)` |
 | `reverse(arr)` | `[]any → []any` | Reverse array | `reverse([1,2,3])` → `[3,2,1]` |
 | `flatten(arr)` | `[][]any → []any` | Flatten one level | `flatten([[1,2],[3]])` → `[1,2,3]` |
-| `unique(arr)` | `[]any → []any` | Remove duplicates | `unique([1,2,2,3])` → `[1,2,3]` |
-| `groupBy(arr, fn)` | `[]any, function → map` | Group by key | `groupBy(users, .department)` |
+| `uniq(arr)` | `[]any → []any` | Remove duplicates | `uniq([1,2,2,3])` → `[1,2,3]` |
+| `concat(a, b, ...)` | `...[]any → []any` | Concatenate arrays | `concat([1,2], [3,4])` → `[1,2,3,4]` |
 
-### Type Conversion & Checking
+### Type Conversion & Serialization (expr-lang)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -233,60 +242,80 @@ These functions are provided by the [expr-lang/expr](https://github.com/expr-lan
 | `float(x)` | `any → float` | Convert to float | `float("3.14")` → `3.14` |
 | `string(x)` | `any → string` | Convert to string | `string(42)` → `"42"` |
 | `type(x)` | `any → string` | Get type name | `type(42)` → `"int"` |
-| `toJSON(x)` | `any → string` | Serialize to JSON | `toJSON({"a": 1})` → `'{"a":1}'` |
+| `toJSON(x)` | `any → string` | Serialize to JSON (pretty-printed) | `toJSON({"a": 1})` |
 | `fromJSON(s)` | `string → any` | Parse JSON string | `fromJSON('{"a":1}')` → `{"a": 1}` |
 | `toBase64(s)` | `string → string` | Base64 encode | `toBase64("hello")` → `"aGVsbG8="` |
 | `fromBase64(s)` | `string → string` | Base64 decode | `fromBase64("aGVsbG8=")` → `"hello"` |
+| `toPairs(m)` | `map → [][]any` | Map to key-value pairs | `toPairs({"a":1})` → `[["a",1]]` |
+| `fromPairs(arr)` | `[][]any → map` | Key-value pairs to map | `fromPairs([["a",1]])` → `{"a":1}` |
 
-### Date & Time
+### Date & Time (expr-lang)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
 | `now()` | `→ datetime` | Current time | `now()` |
-| `date(s)` | `string → datetime` | Parse date string | `date("2024-01-15")` |
-| `duration(s)` | `string → duration` | Parse duration | `duration("2h30m")` |
+| `date(s, format?, tz?)` | `string, string?, string? → datetime` | Parse date string | `date("2024-01-15")` |
+| `duration(s)` | `string → duration` | Parse duration (ns, us, ms, s, m, h) | `duration("2h30m")` |
+| `timezone(s)` | `string → location` | Load timezone | `timezone("Asia/Jakarta")` |
 
-Date objects expose methods: `.Year()`, `.Month()`, `.Day()`, `.Hour()`, `.Minute()`, `.Second()`, `.Weekday()`.
+Date objects expose methods: `.Year()`, `.Month()`, `.Day()`, `.Hour()`, `.Minute()`, `.Second()`, `.Weekday()`, `.YearDay()`, `.In(tz)`.
 
-### Map/Object
+### Map/Object (expr-lang)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
 | `len(m)` | `map → int` | Number of keys | `len({"a":1,"b":2})` → `2` |
-| `keys(m)` | `map → []string` | Get all keys | `keys({"a":1,"b":2})` → `["a","b"]` |
+| `keys(m)` | `map → []any` | Get all keys | `keys({"a":1,"b":2})` → `["a","b"]` |
 | `values(m)` | `map → []any` | Get all values | `values({"a":1,"b":2})` → `[1,2]` |
-| `toPairs(m)` | `map → [][]any` | Key-value pairs | `toPairs({"a":1})` → `[["a",1]]` |
-| `fromPairs(arr)` | `[][]any → map` | Pairs to map | `fromPairs([["a",1]])` → `{"a":1}` |
+| `get(m, key)` | `map, string → any` | Safe key access (nil if missing) | `get(user, "email")` → `nil` |
 
-### Operators (used in expressions)
+### Bitwise (expr-lang)
+
+| Function | Signature | Description | Example |
+|----------|-----------|-------------|---------|
+| `bitand(a, b)` | `int, int → int` | Bitwise AND | `bitand(0b1010, 0b1100)` → `0b1000` |
+| `bitor(a, b)` | `int, int → int` | Bitwise OR | `bitor(0b1010, 0b1100)` → `0b1110` |
+| `bitxor(a, b)` | `int, int → int` | Bitwise XOR | `bitxor(0b1010, 0b1100)` → `0b0110` |
+| `bitnot(a)` | `int → int` | Bitwise NOT | `bitnot(0b1010)` |
+| `bitshl(a, n)` | `int, int → int` | Left shift | `bitshl(1, 4)` → `16` |
+| `bitshr(a, n)` | `int, int → int` | Right shift | `bitshr(16, 4)` → `1` |
+
+### Operators (expr-lang)
+
+These are **infix operators**, not functions. They are used directly in expressions.
 
 | Operator | Description | Example |
 |----------|-------------|---------|
 | `+`, `-`, `*`, `/`, `%` | Arithmetic | `a + b * 2` |
-| `**` | Exponentiation | `2 ** 10` → `1024` |
+| `**` or `^` | Exponentiation | `2 ** 10` → `1024` |
 | `==`, `!=`, `>`, `<`, `>=`, `<=` | Comparison | `age >= 18` |
-| `&&`, `\|\|`, `!` | Logical | `active && !deleted` |
+| `and` / `&&`, `or` / `||`, `not` / `!` | Logical | `active && !deleted` |
 | `? :` | Ternary | `age >= 18 ? 'adult' : 'minor'` |
+| `if {} else {}` | Multiline conditional | `if (x > 0) { x } else { -x }` |
 | `??` | Nil coalescing | `name ?? 'Anonymous'` |
 | `?.` | Optional chaining | `user?.address?.city` |
 | `\|` | Pipe | `items \| filter(.active) \| map(.name)` |
-| `in` | Membership | `'admin' in user.roles` |
-| `matches` | Regex match | `email matches '^[a-z]+@'` |
-| `contains` | String/array contains | `name contains 'alice'` |
-| `startsWith` | String prefix | `name startsWith 'A'` |
-| `endsWith` | String suffix | `name endsWith 'son'` |
-| `..` | Range | `1..10` → `[1,2,3,...,9]` |
+| `in`, `not in` | Membership | `'admin' in user.roles` |
+| `matches`, `not matches` | Regex match (operator) | `email matches '^[a-z]+@'` |
+| `contains`, `not contains` | String/array contains (operator) | `name contains 'alice'` |
+| `startsWith`, `not startsWith` | String prefix (operator) | `name startsWith 'A'` |
+| `endsWith`, `not endsWith` | String suffix (operator) | `name endsWith 'son'` |
+| `..` | Range | `1..10` → `[1,2,...,10]` |
+| `[:]` | Slice | `arr[1:3]`, `arr[:2]`, `arr[2:]` |
+| `let` | Variable declaration | `let x = 42; x * 2` |
 
-### Predicate Syntax
+### Predicate Syntax (expr-lang)
 
-In array functions, use `#` for the current element and `#acc` for the accumulator:
+In array functions, use `#` for the current element, `#acc` for the accumulator, and `#index` for the index:
 
 ```
 filter(items, # > 3)              // items where value > 3
-filter(users, .age > 18)          // users where .age > 18
+filter(users, .age > 18)          // users where .age > 18 (shorthand for #.age)
 map(users, .name)                 // extract name from each user
 reduce(items, # + #acc, 0)        // sum all items
 all(scores, # >= 60)              // all scores >= 60
+count(users, .active)             // count active users
+sum(orders, .total)               // sum order totals
 ```
 
 ---
