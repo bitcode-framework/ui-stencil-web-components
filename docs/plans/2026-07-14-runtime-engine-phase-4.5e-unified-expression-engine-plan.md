@@ -63,7 +63,7 @@ Task 13 (docs) — after all
 8. Write tests:
    - `TestEvalExpr_Arithmetic` — `2 + 3`, `10 * 5`
    - `TestEvalExpr_Comparison` — `a > b`, `a == b`
-   - `TestEvalExpr_StringFunctions` — `upper("hello")`, `contains("abc", "b")`
+   - `TestEvalExpr_StringFunctions` — `upper("hello")`, `"abc" contains "b"`
    - `TestEvalExprBool_Truthiness` — nil, 0, "", empty array, non-empty string, etc.
    - `TestEvalExprFloat_Coercion` — int, float64, string "3.14"
    - `TestParseExpr_ValidExpression` — returns ExprTree with BinaryNode
