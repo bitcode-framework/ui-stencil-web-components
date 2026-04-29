@@ -316,8 +316,10 @@ func (s *Server) buildHandler(route FlatRoute) adapters.HandlerFunc {
 - Parse body based on Content-Type (JSON, form, multipart, raw)
 - Extract path params, query params, headers, cookies, IP
 - Initialize empty `store` map
+- File upload handling: save multipart files to temp dir, expose as `{_file: true, filename, size, content_type, temp_path}`
+- Cleanup temp files after handler completes (deferred)
 
-**Step 2:** Commit: `feat(go-json): request object builder with body parsing`
+**Step 2:** Commit: `feat(go-json): request object builder with body parsing and file uploads`
 
 ---
 
@@ -473,8 +475,10 @@ func (s *Server) buildMiddlewareChain(route FlatRoute) []adapters.MiddlewareFunc
 
 **Step 1:** Add `serve` command to CLI:
 - Parse program file
+- Detect server mode (check for `"routes"` key)
 - Validate server config and routes
 - Setup runtime with I/O modules
+- Register built-in `/health` endpoint (bypasses middleware)
 - Build adapter, register routes, start server
 - Handle graceful shutdown on SIGTERM/SIGINT
 
