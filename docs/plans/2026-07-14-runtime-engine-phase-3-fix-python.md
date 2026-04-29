@@ -1,7 +1,7 @@
 # Phase 3: Fix Python Child Process + venv
 
 **Date**: 14 July 2026
-**Status**: Draft
+**Status**: Done
 **Depends on**: Phase 1 (bridge API interfaces), Phase 1.5 (multi-tenancy), Phase 2 (bidirectional JSON-RPC protocol — reused)
 **Unlocks**: Phase 6C (engine enhancements), Phase 7 (module setting)
 **Master doc**: `2026-07-14-runtime-engine-redesign-master.md`
