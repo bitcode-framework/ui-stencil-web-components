@@ -125,6 +125,8 @@ type Program struct {
 	Functions map[string]*FuncDef
 	Steps     []Node
 	Limits    *LimitsDef
+
+	RequestedModules map[string]ImportDef // io: and ext: imports for runtime validation
 }
 
 func (n *Program) nodeType() string { return "program" }

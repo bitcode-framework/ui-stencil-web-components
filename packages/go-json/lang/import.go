@@ -29,25 +29,33 @@ func (ir *ImportResolver) ResolveImports(program *Program, basePath string, impo
 	}
 
 	for _, imp := range program.Imports {
-		if imp.PathType != "relative" {
+		switch imp.PathType {
+		case "relative":
+			resolvedPath := ir.resolvePath(imp.Path, basePath)
+
+			if ir.isInStack(resolvedPath, importStack) {
+				chain := append(importStack, resolvedPath)
+				return CompileError("CIRCULAR_IMPORT",
+					fmt.Sprintf("circular import detected: %s", strings.Join(chain, " → ")), -1)
+			}
+
+			imported, err := ir.loadFile(resolvedPath, append(importStack, resolvedPath))
+			if err != nil {
+				return CompileError("IMPORT_ERROR",
+					fmt.Sprintf("error importing '%s' (alias '%s'): %s", imp.Path, imp.Alias, err.Error()), -1)
+			}
+
+			ir.mergeExports(program, imported, imp.Alias)
+
+		case "io", "ext":
+			if program.RequestedModules == nil {
+				program.RequestedModules = make(map[string]ImportDef)
+			}
+			program.RequestedModules[imp.Alias] = *imp
+
+		case "stdlib":
 			continue
 		}
-
-		resolvedPath := ir.resolvePath(imp.Path, basePath)
-
-		if ir.isInStack(resolvedPath, importStack) {
-			chain := append(importStack, resolvedPath)
-			return CompileError("CIRCULAR_IMPORT",
-				fmt.Sprintf("circular import detected: %s", strings.Join(chain, " → ")), -1)
-		}
-
-		imported, err := ir.loadFile(resolvedPath, append(importStack, resolvedPath))
-		if err != nil {
-			return CompileError("IMPORT_ERROR",
-				fmt.Sprintf("error importing '%s' (alias '%s'): %s", imp.Path, imp.Alias, err.Error()), -1)
-		}
-
-		ir.mergeExports(program, imported, imp.Alias)
 	}
 
 	return nil

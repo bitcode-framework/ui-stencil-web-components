@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	goio "github.com/bitcode-framework/go-json/io"
@@ -232,9 +233,43 @@ func (r *Runtime) Execute(program *lang.CompiledProgram, input map[string]any) (
 		input["session"] = r.session.ToMap()
 	}
 
+	if program.AST != nil && program.AST.RequestedModules != nil {
+		for alias, imp := range program.AST.RequestedModules {
+			switch imp.PathType {
+			case "io":
+				moduleName := strings.TrimPrefix(imp.Path, "io:")
+				if r.ioDisabled {
+					return nil, fmt.Errorf("I/O module '%s' requested but I/O is disabled", moduleName)
+				}
+				mod := r.ioRegistry.GetModule(moduleName)
+				if mod == nil {
+					return nil, fmt.Errorf("I/O module '%s' not registered (imported as '%s')", moduleName, alias)
+				}
+				if input == nil {
+					input = make(map[string]any)
+				}
+				input[alias] = mod.Functions()
+
+			case "ext":
+				extName := strings.TrimPrefix(imp.Path, "ext:")
+				ext := r.extensions.get(extName)
+				if ext == nil {
+					return nil, fmt.Errorf("extension '%s' not registered (imported as '%s')", extName, alias)
+				}
+				if input == nil {
+					input = make(map[string]any)
+				}
+				input[alias] = ext.Functions
+			}
+		}
+	}
+
 	for k, v := range r.stdlibEnv {
 		if input == nil {
 			input = make(map[string]any)
+		}
+		if r.ioRegistry.HasModule(k) || r.extensions.get(k) != nil {
+			continue
 		}
 		input[k] = v
 	}

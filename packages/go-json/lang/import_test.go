@@ -224,6 +224,90 @@ func TestImport_BarrelFile(t *testing.T) {
 	}
 }
 
+func TestImport_IOModuleRecordedInRequestedModules(t *testing.T) {
+	program, err := Parse([]byte(`{
+		"import": {
+			"http": "io:http",
+			"db": "io:sql"
+		},
+		"steps": []
+	}`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	resolver := NewImportResolver()
+	if err := resolver.ResolveImports(program, "", nil); err != nil {
+		t.Fatalf("resolve error: %v", err)
+	}
+
+	if program.RequestedModules == nil {
+		t.Fatal("expected RequestedModules to be populated")
+	}
+	if imp, ok := program.RequestedModules["http"]; !ok {
+		t.Error("expected 'http' in RequestedModules")
+	} else if imp.PathType != "io" {
+		t.Errorf("expected PathType=io, got %s", imp.PathType)
+	}
+	if imp, ok := program.RequestedModules["db"]; !ok {
+		t.Error("expected 'db' in RequestedModules")
+	} else if imp.Path != "io:sql" {
+		t.Errorf("expected Path=io:sql, got %s", imp.Path)
+	}
+}
+
+func TestImport_ExtModuleRecordedInRequestedModules(t *testing.T) {
+	program, err := Parse([]byte(`{
+		"import": {
+			"bc": "ext:bitcode"
+		},
+		"steps": []
+	}`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	resolver := NewImportResolver()
+	if err := resolver.ResolveImports(program, "", nil); err != nil {
+		t.Fatalf("resolve error: %v", err)
+	}
+
+	if program.RequestedModules == nil {
+		t.Fatal("expected RequestedModules to be populated")
+	}
+	if imp, ok := program.RequestedModules["bc"]; !ok {
+		t.Error("expected 'bc' in RequestedModules")
+	} else {
+		if imp.PathType != "ext" {
+			t.Errorf("expected PathType=ext, got %s", imp.PathType)
+		}
+		if imp.Path != "ext:bitcode" {
+			t.Errorf("expected Path=ext:bitcode, got %s", imp.Path)
+		}
+	}
+}
+
+func TestImport_StdlibNotInRequestedModules(t *testing.T) {
+	program, err := Parse([]byte(`{
+		"import": {
+			"v": "stdlib:validators"
+		},
+		"steps": []
+	}`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	resolver := NewImportResolver()
+	if err := resolver.ResolveImports(program, "", nil); err != nil {
+		t.Fatalf("resolve error: %v", err)
+	}
+
+	if program.RequestedModules != nil && len(program.RequestedModules) > 0 {
+		t.Error("stdlib imports should not appear in RequestedModules")
+	}
+}
+
 func TestParallel_CompileError_ParentWrite(t *testing.T) {
 	program, err := Parse([]byte(`{
 		"steps": [
