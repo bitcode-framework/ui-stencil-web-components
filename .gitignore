@@ -18,6 +18,9 @@ coverage.out
 # Dependencies
 vendor/
 node_modules/
+modules/*/.venv/
+__pycache__/
+*.pyc
 
 # IDE
 .idea/

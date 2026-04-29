@@ -453,6 +453,7 @@ func (a *App) startPluginRuntimes() {
 	if err := a.PluginManager.StartPythonPool(); err != nil {
 		log.Printf("[PLUGIN] Python runtime not available: %v", err)
 	}
+	a.PluginManager.CheckPythonVenvs(a.Config.ModuleDir)
 }
 
 func (a *App) createEmailSender() email.Sender {

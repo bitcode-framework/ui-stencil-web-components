@@ -495,9 +495,9 @@ func moduleCmd() *cobra.Command {
 	installDepsCmd.Flags().Bool("all", false, "Install deps for all modules with package.json")
 	cmd.AddCommand(installDepsCmd)
 
-	cmd.AddCommand(&cobra.Command{
+	addPkgCmd := &cobra.Command{
 		Use:   "add-package [module] [package...]",
-		Short: "Add npm package to a module",
+		Short: "Add package to a module (npm by default, --pip for Python)",
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			moduleDir := envOrDefault("MODULE_DIR", "modules")
@@ -505,6 +505,13 @@ func moduleCmd() *cobra.Command {
 			if _, err := os.Stat(modDir); os.IsNotExist(err) {
 				return fmt.Errorf("module %q not found at %s", args[0], modDir)
 			}
+			usePip, _ := cmd.Flags().GetBool("pip")
+			packages := args[1:]
+
+			if usePip {
+				return pipAddPackages(modDir, args[0], packages)
+			}
+
 			pkgJSON := filepath.Join(modDir, "package.json")
 			if _, err := os.Stat(pkgJSON); os.IsNotExist(err) {
 				initCmd := exec.Command("npm", "init", "-y")
@@ -515,7 +522,7 @@ func moduleCmd() *cobra.Command {
 					return fmt.Errorf("npm init failed: %w", err)
 				}
 			}
-			npmArgs := append([]string{"install", "--save"}, args[1:]...)
+			npmArgs := append([]string{"install", "--save"}, packages...)
 			npmCmd := exec.Command("npm", npmArgs...)
 			npmCmd.Dir = modDir
 			npmCmd.Stdout = os.Stdout
@@ -526,20 +533,29 @@ func moduleCmd() *cobra.Command {
 			fmt.Printf("Packages installed in %s\n", modDir)
 			return nil
 		},
-	})
+	}
+	addPkgCmd.Flags().Bool("pip", false, "Install Python pip package instead of npm")
+	cmd.AddCommand(addPkgCmd)
 
-	cmd.AddCommand(&cobra.Command{
+	rmPkgCmd := &cobra.Command{
 		Use:   "remove-package [module] [package...]",
-		Short: "Remove npm package from a module",
+		Short: "Remove package from a module (npm by default, --pip for Python)",
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			moduleDir := envOrDefault("MODULE_DIR", "modules")
 			modDir := filepath.Join(moduleDir, args[0])
+			usePip, _ := cmd.Flags().GetBool("pip")
+			packages := args[1:]
+
+			if usePip {
+				return pipRemovePackages(modDir, args[0], packages)
+			}
+
 			pkgJSON := filepath.Join(modDir, "package.json")
 			if _, err := os.Stat(pkgJSON); os.IsNotExist(err) {
 				return fmt.Errorf("no package.json in module %q", args[0])
 			}
-			npmArgs := append([]string{"uninstall", "--save"}, args[1:]...)
+			npmArgs := append([]string{"uninstall", "--save"}, packages...)
 			npmCmd := exec.Command("npm", npmArgs...)
 			npmCmd.Dir = modDir
 			npmCmd.Stdout = os.Stdout
@@ -550,7 +566,9 @@ func moduleCmd() *cobra.Command {
 			fmt.Printf("Packages removed from %s\n", modDir)
 			return nil
 		},
-	})
+	}
+	rmPkgCmd.Flags().Bool("pip", false, "Remove Python pip package instead of npm")
+	cmd.AddCommand(rmPkgCmd)
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "recreate-venv [module-name]",
@@ -708,6 +726,65 @@ func venvPythonPath(venvDir string) string {
 		return filepath.Join(venvDir, "Scripts", "python.exe")
 	}
 	return filepath.Join(venvDir, "bin", "python3")
+}
+
+func pipAddPackages(modDir, moduleName string, packages []string) error {
+	venvDir := filepath.Join(modDir, ".venv")
+	if _, err := os.Stat(venvDir); os.IsNotExist(err) {
+		pythonCmd := findPythonCommand()
+		fmt.Printf("[pip] Creating venv for module %s...\n", moduleName)
+		createCmd := exec.Command(pythonCmd, "-m", "venv", venvDir)
+		createCmd.Stdout = os.Stdout
+		createCmd.Stderr = os.Stderr
+		if err := createCmd.Run(); err != nil {
+			return fmt.Errorf("venv creation failed: %w", err)
+		}
+	}
+
+	pipBin := venvPipPath(venvDir)
+	pipArgs := append([]string{"install"}, packages...)
+	pipCmd := exec.Command(pipBin, pipArgs...)
+	pipCmd.Dir = modDir
+	pipCmd.Stdout = os.Stdout
+	pipCmd.Stderr = os.Stderr
+	if err := pipCmd.Run(); err != nil {
+		return fmt.Errorf("pip install failed: %w", err)
+	}
+
+	reqTxt := filepath.Join(modDir, "requirements.txt")
+	out, err := exec.Command(pipBin, "freeze").Output()
+	if err == nil {
+		os.WriteFile(reqTxt, out, 0644)
+	}
+
+	fmt.Printf("[pip] Packages installed in %s\n", modDir)
+	return nil
+}
+
+func pipRemovePackages(modDir, moduleName string, packages []string) error {
+	venvDir := filepath.Join(modDir, ".venv")
+	if _, err := os.Stat(venvDir); os.IsNotExist(err) {
+		return fmt.Errorf("no .venv found in module %q — run install-deps first", moduleName)
+	}
+
+	pipBin := venvPipPath(venvDir)
+	pipArgs := append([]string{"uninstall", "-y"}, packages...)
+	pipCmd := exec.Command(pipBin, pipArgs...)
+	pipCmd.Dir = modDir
+	pipCmd.Stdout = os.Stdout
+	pipCmd.Stderr = os.Stderr
+	if err := pipCmd.Run(); err != nil {
+		return fmt.Errorf("pip uninstall failed: %w", err)
+	}
+
+	reqTxt := filepath.Join(modDir, "requirements.txt")
+	out, err := exec.Command(pipBin, "freeze").Output()
+	if err == nil {
+		os.WriteFile(reqTxt, out, 0644)
+	}
+
+	fmt.Printf("[pip] Packages removed from %s\n", modDir)
+	return nil
 }
 
 func installAllModuleDeps(moduleDir string) error {

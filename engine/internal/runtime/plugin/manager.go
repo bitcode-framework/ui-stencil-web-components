@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -434,6 +437,34 @@ func (m *Manager) StartTypescript(nodeCmd string) error {
 		m.runtimeConfig.NodeCommand = nodeCmd
 	}
 	return m.StartNodePool()
+}
+
+func (m *Manager) CheckPythonVenvs(moduleDir string) {
+	entries, err := os.ReadDir(moduleDir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		modPath := filepath.Join(moduleDir, entry.Name())
+		var venvPython string
+		if runtime.GOOS == "windows" {
+			venvPython = filepath.Join(modPath, ".venv", "Scripts", "python.exe")
+		} else {
+			venvPython = filepath.Join(modPath, ".venv", "bin", "python3")
+		}
+		if _, err := os.Stat(venvPython); err != nil {
+			continue
+		}
+		venvVer := getEngineVersion(venvPython)
+		systemVer := getEngineVersion(m.runtimeConfig.PythonCommand)
+		if venvVer != "" && systemVer != "" && venvVer != systemVer {
+			log.Printf("[WARN] Module %q: venv Python %s != system Python %s. Run: bitcode module recreate-venv %s",
+				entry.Name(), venvVer, systemVer, entry.Name())
+		}
+	}
 }
 
 func (m *Manager) StartPythonPool() error {

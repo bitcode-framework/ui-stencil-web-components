@@ -13,7 +13,6 @@ Go's ProcessPool routes executions to available processes.
 import sys
 import json
 import threading
-import importlib.util
 import inspect
 import traceback
 import os
@@ -625,16 +624,13 @@ def execute_script(script_path, params, module_name, session, security_rules):
         if os.path.isdir(module_dir) and module_dir not in sys.path:
             sys.path.insert(0, module_dir)
 
-        # Load script as module (invalidate cache for hot reload)
-        if "bitcode_script" in sys.modules:
-            del sys.modules["bitcode_script"]
-
-        spec = importlib.util.spec_from_file_location("bitcode_script", script_path)
-        if spec is None:
-            raise ImportError("cannot load script: {}".format(script_path))
-
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        import types
+        with open(script_path, "r") as f:
+            source = f.read()
+        code = compile(source, script_path, "exec")
+        mod = types.ModuleType("bitcode_script")
+        mod.__file__ = script_path
+        exec(code, mod.__dict__)
 
         # Call execute function
         if hasattr(mod, "execute"):
