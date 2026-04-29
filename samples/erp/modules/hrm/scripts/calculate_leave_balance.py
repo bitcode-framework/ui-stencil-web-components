@@ -1,12 +1,20 @@
-def execute(params):
-    """Calculate remaining leave balance for an employee"""
-    employee = params.get("input", {})
+def execute(bitcode, params):
+    employee_id = params.get("input", {}).get("employee_id", "")
     total_annual = 12
-    used = params.get("used_days", 0)
+
+    approved_leaves = bitcode.model("leave_request").search({
+        "domain": [
+            ["employee_id", "=", employee_id],
+            ["status", "=", "approved"],
+        ],
+        "fields": ["days"],
+    })
+
+    used = sum(l.get("days", 0) for l in (approved_leaves or []) if isinstance(l, dict))
     remaining = total_annual - used
 
     return {
-        "employee_id": employee.get("employee_id", ""),
+        "employee_id": employee_id,
         "total_annual": total_annual,
         "used": used,
         "remaining": max(0, remaining),
