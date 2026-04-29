@@ -120,12 +120,56 @@ export default definePlugin({
 
 `runtime: "typescript"` is mapped to `"node"` internally.
 
+## Transactions
+
+Wrap multiple operations in a database transaction:
+
+```typescript
+export default {
+  async execute(bitcode, params) {
+    await bitcode.tx(async (tx) => {
+      await tx.model("order").create({ total: 100 });
+      await tx.model("inventory").write(itemId, { stock: newStock });
+    });
+  },
+};
+```
+
+All operations inside `tx()` use the same database transaction. On error, everything is rolled back automatically. Transaction timeout: 30 seconds.
+
+## CLI Commands
+
+```bash
+bitcode module install-deps crm          # npm install in modules/crm/
+bitcode module install-deps --all        # npm install for all modules
+bitcode module add-package crm axios     # npm install axios in modules/crm/
+bitcode module remove-package crm axios  # npm uninstall axios from modules/crm/
+```
+
+## Configuration
+
+```yaml
+runtime:
+  node:
+    enabled: "auto"        # "auto" | "true" | "false"
+    command: ""            # empty = auto-detect (bun > node)
+  worker:
+    pool_size: 4           # processes for fast scripts
+    max_executions: 1000   # recycle after N executions
+  background:
+    pool_size: 2           # processes for long-running scripts
+    max_executions: 100
+```
+
 ## Plugin Manager
 
 The plugin manager handles:
-- Process pool with configurable size (default: 4 worker, 2 background)
+- Dual process pool: worker (fast, 4 procs) + background (long-running, 2 procs)
+- Version validation: Node.js 20+, Bun 1.2.15+ (auto-detected)
 - Crash recovery with exponential backoff (up to 5 restart attempts)
-- Process recycling after N executions (default: 1000)
+- Process recycling after N executions (configurable)
+- Real transactions over JSON-RPC with 30s auto-rollback timeout
 - Bidirectional JSON-RPC for real bridge method execution
 - Auto-detection of Bun vs Node.js (Bun preferred if available)
 - Graceful degradation when Node.js is not installed
+- Python 3.10+ runtime with same bidirectional protocol
