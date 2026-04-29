@@ -86,16 +86,16 @@ function createBitcodeProxy(session, securityRules, moduleDir) {
     },
 
     http: {
-      get: (url, opts) => bridgeCall('http.request', { method: 'GET', url, ...opts }),
-      post: (url, opts) => bridgeCall('http.request', { method: 'POST', url, ...opts }),
-      put: (url, opts) => bridgeCall('http.request', { method: 'PUT', url, ...opts }),
-      patch: (url, opts) => bridgeCall('http.request', { method: 'PATCH', url, ...opts }),
-      delete: (url, opts) => bridgeCall('http.request', { method: 'DELETE', url, ...opts }),
+      get: (url, opts) => bridgeCall('http.request', { method: 'GET', url, ...(opts || {}) }),
+      post: (url, opts) => bridgeCall('http.request', { method: 'POST', url, ...(opts || {}) }),
+      put: (url, opts) => bridgeCall('http.request', { method: 'PUT', url, ...(opts || {}) }),
+      patch: (url, opts) => bridgeCall('http.request', { method: 'PATCH', url, ...(opts || {}) }),
+      delete: (url, opts) => bridgeCall('http.request', { method: 'DELETE', url, ...(opts || {}) }),
     },
 
     cache: {
       get: (key) => bridgeCall('cache.get', { key }),
-      set: (key, value, opts) => bridgeCall('cache.set', { key, value, ...opts }),
+      set: (key, value, opts) => bridgeCall('cache.set', { key, value, ...(opts || {}) }),
       del: (key) => bridgeCall('cache.del', { key }),
     },
 
@@ -115,7 +115,7 @@ function createBitcodeProxy(session, securityRules, moduleDir) {
       remove: (p) => bridgeCall('fs.remove', { path: p }),
     },
 
-    exec: (cmd, args, opts) => bridgeCall('exec', { cmd, args, ...opts }),
+    exec: (cmd, args, opts) => bridgeCall('exec', { cmd, args, ...(opts || {}) }),
 
     email: {
       send: (opts) => bridgeCall('email.send', opts),
@@ -225,29 +225,37 @@ function createBitcodeProxy(session, securityRules, moduleDir) {
 
 function loadScript(scriptPath) {
   const code = fs.readFileSync(scriptPath, 'utf-8');
-  if (scriptPath.endsWith('.ts') || scriptPath.endsWith('.tsx')) {
-    if (typeof Bun !== 'undefined') {
-      return code;
-    }
-    try {
-      const esbuild = require('esbuild');
-      return esbuild.transformSync(code, {
-        loader: scriptPath.endsWith('.tsx') ? 'tsx' : 'ts',
-        format: 'cjs',
-        target: 'node18',
-        sourcemap: 'inline',
-      }).code;
-    } catch (e) {
-      if (e.code === 'MODULE_NOT_FOUND') {
-        throw new Error(
-          'esbuild is required for TypeScript transpilation. ' +
-          'Run: npm install esbuild --save-dev in engine/plugins/node/'
-        );
-      }
-      throw e;
-    }
+
+  const needsTranspile = scriptPath.endsWith('.ts') || scriptPath.endsWith('.tsx')
+    || (code.includes('export default') || code.includes('export {') || code.includes('import '));
+
+  if (!needsTranspile) return code;
+
+  if (typeof Bun !== 'undefined' && (scriptPath.endsWith('.ts') || scriptPath.endsWith('.tsx'))) {
+    return code;
   }
-  return code;
+
+  try {
+    const esbuild = require('esbuild');
+    let loader = 'js';
+    if (scriptPath.endsWith('.tsx')) loader = 'tsx';
+    else if (scriptPath.endsWith('.ts')) loader = 'ts';
+
+    return esbuild.transformSync(code, {
+      loader,
+      format: 'cjs',
+      target: 'node18',
+      sourcemap: 'inline',
+    }).code;
+  } catch (e) {
+    if (e.code === 'MODULE_NOT_FOUND') {
+      throw new Error(
+        'esbuild is required for TypeScript/ESM transpilation. ' +
+        'Run: npm install in engine/plugins/node/'
+      );
+    }
+    throw e;
+  }
 }
 
 const definePlugin = (obj) => obj;

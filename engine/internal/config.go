@@ -9,6 +9,7 @@ import (
 	"github.com/bitcode-framework/bitcode/internal/infrastructure/persistence"
 	infrastorage "github.com/bitcode-framework/bitcode/internal/infrastructure/storage"
 	"github.com/bitcode-framework/bitcode/internal/presentation/middleware"
+	"github.com/bitcode-framework/bitcode/internal/runtime/plugin"
 	"github.com/spf13/viper"
 )
 
@@ -61,6 +62,11 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 	v.SetDefault("auth.register_enabled", false)
 
 	v.SetDefault("app.mode", "online")
+
+	v.SetDefault("runtime.node.enabled", "auto")
+	v.SetDefault("runtime.node.command", "")
+	v.SetDefault("runtime.worker.pool_size", 4)
+	v.SetDefault("runtime.worker.max_executions", 1000)
 
 	v.SetDefault("execution_log.enabled", true)
 	v.SetDefault("execution_log.save_input", true)
@@ -268,6 +274,14 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 				Width:   v.GetInt("storage.thumbnail.width"),
 				Height:  v.GetInt("storage.thumbnail.height"),
 				Quality: v.GetInt("storage.thumbnail.quality"),
+			},
+		},
+		Runtime: plugin.RuntimeConfig{
+			NodeEnabled: v.GetString("runtime.node.enabled"),
+			NodeCommand: v.GetString("runtime.node.command"),
+			WorkerPool: plugin.PoolConfig{
+				Size:          v.GetInt("runtime.worker.pool_size"),
+				MaxExecutions: v.GetInt("runtime.worker.max_executions"),
 			},
 		},
 		AppMode: v.GetString("app.mode"),

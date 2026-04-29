@@ -31,6 +31,7 @@ import (
 	gqlPkg "github.com/bitcode-framework/bitcode/internal/presentation/graphql"
 	ws "github.com/bitcode-framework/bitcode/internal/presentation/websocket"
 	"github.com/bitcode-framework/bitcode/pkg/email"
+	"github.com/bitcode-framework/bitcode/internal/runtime/bridge"
 	jsrt "github.com/bitcode-framework/bitcode/internal/runtime/embedded"
 	gojaRT "github.com/bitcode-framework/bitcode/internal/runtime/embedded/goja"
 	qjsRT "github.com/bitcode-framework/bitcode/internal/runtime/embedded/qjs"
@@ -58,12 +59,13 @@ type AppConfig struct {
 	IPWhitelist     middleware.IPWhitelistConfig
 	Security        SecurityConfig
 	SMTP            SMTPConfig
+	Runtime         plugin.RuntimeConfig
 	JWTSecret       string
 	EncryptionKey   string
 	Port            string
 	ModuleDir       string
 	GlobalModuleDir string
-	AppMode         string // "online" (default) | "offline" — project-level app mode
+	AppMode         string
 }
 
 type SecurityConfig struct {
@@ -408,12 +410,40 @@ func NewApp(cfg AppConfig) (*App, error) {
 		})
 	}
 
+	pluginMgr.SetRuntimeConfig(cfg.Runtime)
+
 	app.registerStepHandlers()
 	app.setupMiddleware()
 	app.setupRoutes()
+	app.wireBridgeFactory()
 	app.startPluginRuntimes()
 
 	return app, nil
+}
+
+func (a *App) wireBridgeFactory() {
+	if a.DB == nil {
+		return
+	}
+	emailSender := a.createEmailSender()
+	permSvc := persistence.NewPermissionService(a.DB)
+	permSvc.SetTableNameResolver(func(name string) string { return a.ModelRegistry.TableName(name) })
+
+	factory := &bridge.Factory{
+		DB:            a.DB,
+		ModelRegistry: a.ModelRegistry,
+		PermService:   permSvc,
+		Cache:         a.Cache,
+		EventBus:      a.EventBus,
+		EmailSender:   emailSender,
+		WSHub:         a.WSHub,
+		Translator:    a.Translator,
+		AuditRepo:     a.AuditLogRepo,
+		Encryptor:     a.FieldEncryptor,
+		Executor:      a.Executor,
+		ProcessRegistry: a.ProcessRegistry,
+	}
+	a.PluginManager.SetBridgeFactory(factory)
 }
 
 func (a *App) startPluginRuntimes() {

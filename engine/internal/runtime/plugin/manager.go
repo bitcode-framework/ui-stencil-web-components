@@ -181,15 +181,35 @@ func (m *Manager) Execute(ctx context.Context, script string, params map[string]
 		return nil, fmt.Errorf("send execute request: %w", err)
 	}
 
+	type receiveResult struct {
+		msg *Message
+		err error
+	}
+
 	for {
-		resp, err := proc.receive()
-		if err != nil {
-			return nil, fmt.Errorf("receive from process: %w", err)
+		ch := make(chan receiveResult, 1)
+		go func() {
+			msg, err := proc.receive()
+			ch <- receiveResult{msg, err}
+		}()
+
+		var rr receiveResult
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("script execution cancelled: %w", ctx.Err())
+		case rr = <-ch:
 		}
+
+		if rr.err != nil {
+			return nil, fmt.Errorf("receive from process: %w", rr.err)
+		}
+		resp := rr.msg
 
 		switch resp.Type {
 		case MsgTypeBridgeRequest:
-			m.handleBridgeRequest(ctx, proc, bc, resp)
+			if err := m.handleBridgeRequest(ctx, proc, bc, resp); err != nil {
+				return nil, fmt.Errorf("bridge request failed: %w", err)
+			}
 
 		case MsgTypeExecuteComplete:
 			if resp.ID == execID {
@@ -217,9 +237,9 @@ func (m *Manager) Execute(ctx context.Context, script string, params map[string]
 	}
 }
 
-func (m *Manager) handleBridgeRequest(ctx context.Context, proc *PluginProcess, bc *bridge.Context, msg *Message) {
+func (m *Manager) handleBridgeRequest(ctx context.Context, proc *PluginProcess, bc *bridge.Context, msg *Message) error {
 	if bc == nil {
-		proc.send(Message{
+		return proc.send(Message{
 			Type: MsgTypeBridgeResponse,
 			ID:   msg.ID,
 			Error: &MessageError{
@@ -227,7 +247,6 @@ func (m *Manager) handleBridgeRequest(ctx context.Context, proc *PluginProcess, 
 				Message: "bridge context not available for this execution",
 			},
 		})
-		return
 	}
 
 	var params map[string]any
@@ -248,11 +267,9 @@ func (m *Manager) handleBridgeRequest(ctx context.Context, proc *PluginProcess, 
 	}
 
 	if bridgeErr != nil {
-		resultJSON, _ := json.Marshal(nil)
-		proc.send(Message{
-			Type:   MsgTypeBridgeResponse,
-			ID:     msg.ID,
-			Result: resultJSON,
+		return proc.send(Message{
+			Type: MsgTypeBridgeResponse,
+			ID:   msg.ID,
 			Error: &MessageError{
 				Code:      bridgeErr.Code,
 				Message:   bridgeErr.Message,
@@ -260,24 +277,22 @@ func (m *Manager) handleBridgeRequest(ctx context.Context, proc *PluginProcess, 
 				Retryable: bridgeErr.Retryable,
 			},
 		})
-	} else {
-		resultJSON, _ := json.Marshal(result)
-		proc.send(Message{
-			Type:   MsgTypeBridgeResponse,
-			ID:     msg.ID,
-			Result: resultJSON,
-		})
 	}
+
+	resultJSON, _ := json.Marshal(result)
+	return proc.send(Message{
+		Type:   MsgTypeBridgeResponse,
+		ID:     msg.ID,
+		Result: resultJSON,
+	})
 }
 
 func (m *Manager) handleTxMethod(ctx context.Context, bc *bridge.Context, method string, params map[string]any) (any, *bridge.BridgeError) {
 	switch method {
-	case "tx.begin":
-		return map[string]any{"txId": "tx-not-implemented"}, nil
-	case "tx.commit":
-		return nil, nil
-	case "tx.rollback":
-		return nil, nil
+	case "tx.begin", "tx.commit", "tx.rollback":
+		return nil, bridge.NewError("TX_NOT_IMPLEMENTED",
+			"transactions over JSON-RPC are not yet implemented. "+
+				"Use bitcode.model() calls without tx() — each call is auto-committed.")
 	default:
 		return nil, bridge.NewErrorf("UNKNOWN_METHOD", "unknown tx method: %s", method)
 	}

@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os/exec"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -47,6 +48,7 @@ type PluginProcess struct {
 	executionCount int64
 	startedAt      time.Time
 	id             int
+	recycled       bool
 }
 
 func (p *PluginProcess) send(msg any) error {
@@ -129,7 +131,7 @@ func (pool *ProcessPool) startProcess() (*PluginProcess, error) {
 		return nil, fmt.Errorf("stdout pipe: %w", err)
 	}
 
-	cmd.Stderr = nil
+	cmd.Stderr = &logWriter{prefix: fmt.Sprintf("[plugin:node:%d] ", pool.nextProcID+1)}
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("start process: %w", err)
@@ -155,7 +157,7 @@ func (pool *ProcessPool) monitorProcess(proc *PluginProcess) {
 	err := proc.cmd.Wait()
 
 	pool.mu.Lock()
-	if pool.stopped {
+	if pool.stopped || proc.recycled {
 		pool.mu.Unlock()
 		return
 	}
@@ -221,10 +223,14 @@ func (pool *ProcessPool) Release(proc *PluginProcess) {
 }
 
 func (pool *ProcessPool) recycleProcess(proc *PluginProcess) {
+	proc.recycled = true
 	proc.stdin.Close()
 
-	done := make(chan error, 1)
-	go func() { done <- proc.cmd.Wait() }()
+	done := make(chan struct{}, 1)
+	go func() {
+		proc.cmd.Wait()
+		done <- struct{}{}
+	}()
 
 	select {
 	case <-done:
@@ -289,4 +295,13 @@ func (pool *ProcessPool) stopAllLocked() {
 		}
 	}
 	pool.processes = nil
+}
+
+type logWriter struct {
+	prefix string
+}
+
+func (w *logWriter) Write(p []byte) (n int, err error) {
+	log.Printf("%s%s", w.prefix, strings.TrimRight(string(p), "\n\r"))
+	return len(p), nil
 }
