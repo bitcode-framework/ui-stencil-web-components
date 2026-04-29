@@ -1,0 +1,9 @@
+{
+  "name": "bitcode-plugin-node",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node.js runtime for BitCode engine — bidirectional JSON-RPC bridge",
+  "dependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
