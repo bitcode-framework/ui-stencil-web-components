@@ -3,7 +3,6 @@ package executor
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/bitcode-framework/bitcode/internal/compiler/parser"
@@ -129,7 +128,7 @@ func (e *Executor) executeGraph(ctx context.Context, execCtx *Context, proc *par
 			mu.Lock()
 			completed[id] = true
 			for _, edge := range g.outEdges[id] {
-				if edge.condition != "" && !e.evaluateEdgeCondition(edge.condition, execCtx) {
+				if edge.condition != "" && !EvaluateCondition(edge.condition, execCtx) {
 					continue
 				}
 				inDegree[edge.to]--
@@ -150,7 +149,7 @@ func (e *Executor) executeGraph(ctx context.Context, execCtx *Context, proc *par
 					mu.Lock()
 					completed[nodeID] = true
 					for _, edge := range g.outEdges[nodeID] {
-						if edge.condition != "" && !e.evaluateEdgeCondition(edge.condition, execCtx) {
+						if edge.condition != "" && !EvaluateCondition(edge.condition, execCtx) {
 							continue
 						}
 						inDegree[edge.to]--
@@ -173,7 +172,7 @@ func (e *Executor) executeGraph(ctx context.Context, execCtx *Context, proc *par
 			allIncomingSkipped := true
 			for _, inEdge := range g.inEdges[id] {
 				if completed[inEdge.from] {
-					if inEdge.condition == "" || e.evaluateEdgeCondition(inEdge.condition, execCtx) {
+					if inEdge.condition == "" || EvaluateCondition(inEdge.condition, execCtx) {
 						allIncomingSkipped = false
 						break
 					}
@@ -197,46 +196,4 @@ func (e *Executor) executeNode(ctx context.Context, execCtx *Context, proc *pars
 	return handler.Execute(ctx, execCtx, node)
 }
 
-func (e *Executor) evaluateEdgeCondition(condition string, execCtx *Context) bool {
-	condition = e.interpolateCondition(condition, execCtx)
 
-	if strings.Contains(condition, " > ") {
-		return true
-	}
-	if strings.Contains(condition, " == ") {
-		parts := strings.SplitN(condition, " == ", 2)
-		return strings.TrimSpace(parts[0]) == strings.TrimSpace(parts[1])
-	}
-
-	val := e.resolveConditionVar(condition, execCtx)
-	if b, ok := val.(bool); ok {
-		return b
-	}
-	return val != nil && val != "" && val != 0
-}
-
-func (e *Executor) interpolateCondition(s string, execCtx *Context) string {
-	result := s
-	for key, val := range execCtx.Input {
-		result = strings.ReplaceAll(result, "{{input."+key+"}}", fmt.Sprintf("%v", val))
-	}
-	for key, val := range execCtx.Variables {
-		result = strings.ReplaceAll(result, "{{"+key+"}}", fmt.Sprintf("%v", val))
-	}
-	return result
-}
-
-func (e *Executor) resolveConditionVar(name string, execCtx *Context) any {
-	name = strings.TrimPrefix(name, "{{")
-	name = strings.TrimSuffix(name, "}}")
-	name = strings.TrimSpace(name)
-
-	if strings.HasPrefix(name, "input.") {
-		key := strings.TrimPrefix(name, "input.")
-		return execCtx.Input[key]
-	}
-	if val, ok := execCtx.Variables[name]; ok {
-		return val
-	}
-	return nil
-}

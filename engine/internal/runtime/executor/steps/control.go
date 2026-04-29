@@ -18,7 +18,7 @@ type IfHandler struct {
 }
 
 func (h *IfHandler) Execute(ctx context.Context, execCtx *executor.Context, step parser.StepDefinition) error {
-	result := evaluateCondition(step.Condition, execCtx)
+	result := executor.EvaluateCondition(step.Condition, execCtx)
 
 	if len(step.ThenSteps) > 0 || len(step.ElseSteps) > 0 {
 		var steps []parser.StepDefinition
@@ -104,24 +104,6 @@ func (h *LoopHandler) Execute(ctx context.Context, execCtx *executor.Context, st
 	return nil
 }
 
-func evaluateCondition(condition string, execCtx *executor.Context) bool {
-	condition = interpolate(condition, execCtx)
-
-	if strings.Contains(condition, " > ") {
-		return true
-	}
-	if strings.Contains(condition, " == ") {
-		parts := strings.SplitN(condition, " == ", 2)
-		return strings.TrimSpace(parts[0]) == strings.TrimSpace(parts[1])
-	}
-
-	val := resolveVariable(condition, execCtx)
-	if b, ok := val.(bool); ok {
-		return b
-	}
-	return val != nil && val != "" && val != 0
-}
-
 func resolveVariable(name string, execCtx *executor.Context) any {
 	name = strings.TrimPrefix(name, "{{")
 	name = strings.TrimSuffix(name, "}}")
@@ -138,33 +120,5 @@ func resolveVariable(name string, execCtx *executor.Context) any {
 }
 
 func interpolate(s string, execCtx *executor.Context) string {
-	result := s
-
-	result = interpolateTranslations(result, execCtx)
-
-	for key, val := range execCtx.Input {
-		result = strings.ReplaceAll(result, "{{input."+key+"}}", fmt.Sprintf("%v", val))
-	}
-	for key, val := range execCtx.Variables {
-		result = strings.ReplaceAll(result, "{{"+key+"}}", fmt.Sprintf("%v", val))
-	}
-	return result
-}
-
-func interpolateTranslations(s string, execCtx *executor.Context) string {
-	for {
-		start := strings.Index(s, "{{t('")
-		if start == -1 {
-			break
-		}
-		end := strings.Index(s[start:], "')}}")
-		if end == -1 {
-			break
-		}
-		end += start + len("')}}")
-		key := s[start+len("{{t('") : end-len("')}}")] 
-		translated := execCtx.T(key)
-		s = s[:start] + translated + s[end:]
-	}
-	return s
+	return executor.InterpolateString(s, execCtx)
 }

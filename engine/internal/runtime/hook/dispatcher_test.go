@@ -194,16 +194,16 @@ func TestExprEvaluator_Basic(t *testing.T) {
 		"count":  float64(10),
 	}
 
-	if !evaluateSimpleExpr("status == 'active'", data) {
+	if !evaluateHandlerCondition("status == 'active'", data) {
 		t.Fatal("expected true for status == 'active'")
 	}
-	if evaluateSimpleExpr("status == 'draft'", data) {
+	if evaluateHandlerCondition("status == 'draft'", data) {
 		t.Fatal("expected false for status == 'draft'")
 	}
-	if !evaluateSimpleExpr("count > 5", data) {
+	if !evaluateHandlerCondition("count > 5", data) {
 		t.Fatal("expected true for count > 5")
 	}
-	if !evaluateSimpleExpr("status != 'draft'", data) {
+	if !evaluateHandlerCondition("status != 'draft'", data) {
 		t.Fatal("expected true for status != 'draft'")
 	}
 }
@@ -214,10 +214,10 @@ func TestExprEvaluator_OldData(t *testing.T) {
 		"__old":  map[string]any{"status": "draft"},
 	}
 
-	if !evaluateSimpleExpr("old.status != status", data) {
+	if !evaluateHandlerCondition("old.status != status", data) {
 		t.Fatal("expected true: old.status (draft) != status (active)")
 	}
-	if evaluateSimpleExpr("old.status == status", data) {
+	if evaluateHandlerCondition("old.status == status", data) {
 		t.Fatal("expected false: old.status (draft) == status (active)")
 	}
 }
@@ -228,13 +228,13 @@ func TestExprEvaluator_AndOr(t *testing.T) {
 		"role":   "admin",
 	}
 
-	if !evaluateSimpleExpr("status == 'active' && role == 'admin'", data) {
+	if !evaluateHandlerCondition("status == 'active' && role == 'admin'", data) {
 		t.Fatal("expected true for AND")
 	}
-	if evaluateSimpleExpr("status == 'draft' && role == 'admin'", data) {
+	if evaluateHandlerCondition("status == 'draft' && role == 'admin'", data) {
 		t.Fatal("expected false for AND with one false")
 	}
-	if !evaluateSimpleExpr("status == 'draft' || role == 'admin'", data) {
+	if !evaluateHandlerCondition("status == 'draft' || role == 'admin'", data) {
 		t.Fatal("expected true for OR with one true")
 	}
 }

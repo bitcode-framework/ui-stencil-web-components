@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bitcode-framework/bitcode/internal/compiler/parser"
+	"github.com/bitcode-framework/go-json/runtime"
 )
 
 type ProcessLoader interface {
@@ -340,7 +341,29 @@ func (d *Dispatcher) buildConditionData(eventCtx *EventContext) map[string]any {
 }
 
 func evaluateHandlerCondition(condition string, data map[string]any) bool {
-	return evaluateSimpleExpr(condition, data)
+	env := buildHookEnv(data)
+	result, err := runtime.EvalExprBool(condition, env)
+	if err != nil {
+		return false
+	}
+	return result
+}
+
+func buildHookEnv(data map[string]any) map[string]any {
+	env := make(map[string]any, len(data)+2)
+	for k, v := range data {
+		if k == "__old" || k == "__session" {
+			continue
+		}
+		env[k] = v
+	}
+	if old, ok := data["__old"].(map[string]any); ok {
+		env["old"] = old
+	}
+	if sess, ok := data["__session"].(map[string]any); ok {
+		env["session"] = sess
+	}
+	return env
 }
 
 func isBeforeEvent(name string) bool {
