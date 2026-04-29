@@ -13,6 +13,7 @@ import (
 	goio "github.com/bitcode-framework/go-json/io"
 	"github.com/bitcode-framework/go-json/lang"
 	"github.com/bitcode-framework/go-json/runtime"
+	"github.com/bitcode-framework/go-json/server"
 	"github.com/bitcode-framework/go-json/stdlib"
 )
 
@@ -27,6 +28,8 @@ func main() {
 	switch os.Args[1] {
 	case "run":
 		cmdRun(os.Args[2:])
+	case "serve":
+		cmdServe(os.Args[2:])
 	case "check":
 		cmdCheck(os.Args[2:])
 	case "test":
@@ -55,6 +58,7 @@ Usage: go-json <command> [options]
 
 Commands:
   run       Execute a go-json program
+  serve     Start a web server from a server program
   check     Validate a program (compile check, no execution)
   test      Run test files
   ast       Export program AST as JSON
@@ -432,5 +436,77 @@ func migrateValue(v any, renames map[string]string, changes *[]string) any {
 		return result
 	default:
 		return v
+	}
+}
+
+func cmdServe(args []string) {
+	fs := flag.NewFlagSet("serve", flag.ExitOnError)
+	dev := fs.Bool("dev", false, "Enable dev mode (template reload, verbose logging)")
+	port := fs.Int("port", 0, "Override server port")
+	host := fs.String("host", "", "Override server host")
+	docs := fs.Bool("docs", false, "Enable /docs Swagger UI endpoint")
+	ioSpec := fs.String("io", "all", "Enable I/O modules (http,fs,sql,exec or 'all')")
+	fs.Parse(args)
+
+	if fs.NArg() < 1 {
+		fmt.Fprintln(os.Stderr, "Usage: go-json serve <program.json> [options]")
+		os.Exit(1)
+	}
+
+	programPath := fs.Arg(0)
+
+	reg := stdlib.DefaultRegistry()
+	rtOpts := []runtime.Option{
+		runtime.WithStdlib(reg.All()),
+		runtime.WithStdlibEnv(reg.EnvVars()),
+	}
+
+	sec := goio.DefaultSecurityConfig()
+	if *ioSpec == "all" {
+		rtOpts = append(rtOpts, runtime.WithIO(goio.All(sec)...))
+	} else if *ioSpec != "" {
+		for _, mod := range strings.Split(*ioSpec, ",") {
+			mod = strings.TrimSpace(mod)
+			switch mod {
+			case "http":
+				rtOpts = append(rtOpts, runtime.WithIO(goio.HTTP(sec)))
+			case "fs":
+				rtOpts = append(rtOpts, runtime.WithIO(goio.FS(sec)))
+			case "sql":
+				rtOpts = append(rtOpts, runtime.WithIO(goio.SQL(sec)))
+			case "exec":
+				rtOpts = append(rtOpts, runtime.WithIO(goio.Exec(sec)))
+			default:
+				fmt.Fprintf(os.Stderr, "Warning: unknown I/O module: %s\n", mod)
+			}
+		}
+	}
+
+	rt := runtime.NewRuntime(rtOpts...)
+	defer rt.Close()
+
+	var serverOpts []server.ServerOption
+	if *dev {
+		serverOpts = append(serverOpts, server.WithDevMode(true))
+	}
+	if *docs {
+		serverOpts = append(serverOpts, server.WithDocs(true))
+	}
+	if *port > 0 {
+		serverOpts = append(serverOpts, server.WithPort(*port))
+	}
+	if *host != "" {
+		serverOpts = append(serverOpts, server.WithHost(*host))
+	}
+
+	srv, err := server.NewServer(programPath, rt, serverOpts...)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := srv.Start(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
 }

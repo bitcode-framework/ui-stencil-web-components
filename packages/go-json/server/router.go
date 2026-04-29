@@ -46,7 +46,7 @@ func FlattenRoutes(routes []lang.RouteConfig, parentPrefix string, parentMiddlew
 }
 
 // ValidateRoutes checks for common route configuration errors.
-func ValidateRoutes(routes []FlatRoute, functions map[string]*lang.FuncDef) []error {
+func ValidateRoutes(routes []FlatRoute, functions map[string]*lang.CompiledFunc) []error {
 	var errs []error
 	seen := make(map[string]bool)
 
