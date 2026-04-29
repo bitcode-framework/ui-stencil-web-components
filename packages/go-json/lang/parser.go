@@ -106,6 +106,33 @@ func parseProgram(raw map[string]any, cleanedJSON []byte) (*Program, error) {
 		}
 	}
 
+	// Parse server config.
+	if serverRaw, ok := raw["server"].(map[string]any); ok {
+		sc, err := parseServerConfig(serverRaw)
+		if err != nil {
+			return nil, err
+		}
+		prog.Server = sc
+	}
+
+	// Parse routes.
+	if routesRaw, ok := raw["routes"].([]any); ok {
+		routes, err := parseRouteConfigs(routesRaw)
+		if err != nil {
+			return nil, err
+		}
+		prog.Routes = routes
+	}
+
+	// Parse global middleware.
+	if mwRaw, ok := raw["middleware"].([]any); ok {
+		for _, v := range mwRaw {
+			if s, ok := v.(string); ok {
+				prog.Middleware = append(prog.Middleware, s)
+			}
+		}
+	}
+
 	// Parse steps.
 	if stepsRaw, ok := raw["steps"].([]any); ok {
 		steps, err := parseSteps(stepsRaw)
@@ -116,6 +143,380 @@ func parseProgram(raw map[string]any, cleanedJSON []byte) (*Program, error) {
 	}
 
 	return prog, nil
+}
+
+func parseServerConfig(raw map[string]any) (*ServerConfig, error) {
+	sc := &ServerConfig{}
+
+	if v, ok := raw["framework"].(string); ok {
+		sc.Framework = v
+	}
+	if v, ok := raw["port"].(float64); ok {
+		sc.Port = int(v)
+	}
+	if v, ok := raw["host"].(string); ok {
+		sc.Host = v
+	}
+	if v, ok := raw["templates"].(string); ok {
+		sc.Templates = v
+	}
+	if v, ok := raw["graceful_shutdown"].(string); ok {
+		sc.GracefulShutdown = v
+	}
+	if v, ok := raw["read_timeout"].(string); ok {
+		sc.ReadTimeout = v
+	}
+	if v, ok := raw["write_timeout"].(string); ok {
+		sc.WriteTimeout = v
+	}
+	if v, ok := raw["max_body_size"].(string); ok {
+		sc.MaxBodySize = v
+	}
+
+	// Static: string or {dir, prefix}
+	switch s := raw["static"].(type) {
+	case string:
+		sc.Static = s
+	case map[string]any:
+		cfg := StaticConfig{}
+		if d, ok := s["dir"].(string); ok {
+			cfg.Dir = d
+		}
+		if p, ok := s["prefix"].(string); ok {
+			cfg.Prefix = p
+		}
+		sc.Static = cfg
+	}
+
+	// CORS
+	if corsRaw, ok := raw["cors"].(map[string]any); ok {
+		sc.CORS = &CORSConfig{}
+		if v, ok := corsRaw["origins"].([]any); ok {
+			sc.CORS.Origins = toStringSlice(v)
+		}
+		if v, ok := corsRaw["methods"].([]any); ok {
+			sc.CORS.Methods = toStringSlice(v)
+		}
+		if v, ok := corsRaw["headers"].([]any); ok {
+			sc.CORS.Headers = toStringSlice(v)
+		}
+		if v, ok := corsRaw["max_age"].(float64); ok {
+			sc.CORS.MaxAge = int(v)
+		}
+	}
+
+	// JWT
+	if jwtRaw, ok := raw["jwt"].(map[string]any); ok {
+		sc.JWT = parseJWTConfig(jwtRaw)
+	}
+
+	// Auth
+	if authRaw, ok := raw["auth"].(map[string]any); ok {
+		ac, err := parseAuthConfig(authRaw)
+		if err != nil {
+			return nil, err
+		}
+		sc.Auth = ac
+	}
+
+	// Rate limit
+	if rlRaw, ok := raw["rate_limit"].(map[string]any); ok {
+		sc.RateLimit = &RateLimitConfig{}
+		if v, ok := rlRaw["requests"].(float64); ok {
+			sc.RateLimit.Requests = int(v)
+		}
+		if v, ok := rlRaw["window"].(string); ok {
+			sc.RateLimit.Window = v
+		}
+		if v, ok := rlRaw["by"].(string); ok {
+			sc.RateLimit.By = v
+		}
+	}
+
+	// Error templates
+	if etRaw, ok := raw["error_templates"].(map[string]any); ok {
+		sc.ErrorTemplates = make(map[string]string)
+		for k, v := range etRaw {
+			if s, ok := v.(string); ok {
+				sc.ErrorTemplates[k] = s
+			}
+		}
+	}
+
+	return sc, nil
+}
+
+func parseJWTConfig(raw map[string]any) *JWTConfig {
+	jc := &JWTConfig{}
+	if v, ok := raw["secret_env"].(string); ok {
+		jc.SecretEnv = v
+	}
+	if v, ok := raw["algorithm"].(string); ok {
+		jc.Algorithm = v
+	}
+	if v, ok := raw["expiry"].(string); ok {
+		jc.Expiry = v
+	}
+	if v, ok := raw["cookie"].(string); ok {
+		jc.Cookie = v
+	}
+	if v, ok := raw["header"].(string); ok {
+		jc.Header = v
+	}
+	if v, ok := raw["prefix"].(string); ok {
+		jc.Prefix = v
+	}
+	if claimsRaw, ok := raw["claims"].(map[string]any); ok {
+		jc.Claims = make(map[string]string)
+		for k, v := range claimsRaw {
+			if s, ok := v.(string); ok {
+				jc.Claims[k] = s
+			}
+		}
+	}
+	return jc
+}
+
+func parseAuthConfig(raw map[string]any) (*AuthConfig, error) {
+	ac := &AuthConfig{}
+	if v, ok := raw["default"].(string); ok {
+		ac.Default = v
+	}
+	if strategiesRaw, ok := raw["strategies"].(map[string]any); ok {
+		ac.Strategies = make(map[string]*StrategyConfig)
+		for name, sRaw := range strategiesRaw {
+			sMap, ok := sRaw.(map[string]any)
+			if !ok {
+				return nil, CompileError("INVALID_AUTH_STRATEGY",
+					fmt.Sprintf("auth strategy '%s' must be an object", name), -1)
+			}
+			sc := &StrategyConfig{}
+			if v, ok := sMap["type"].(string); ok {
+				sc.Type = v
+			}
+			if v, ok := sMap["secret_env"].(string); ok {
+				sc.SecretEnv = v
+			}
+			if v, ok := sMap["algorithm"].(string); ok {
+				sc.Algorithm = v
+			}
+			if v, ok := sMap["expiry"].(string); ok {
+				sc.Expiry = v
+			}
+			if v, ok := sMap["cookie"].(string); ok {
+				sc.Cookie = v
+			}
+			if v, ok := sMap["header"].(string); ok {
+				sc.Header = v
+			}
+			if v, ok := sMap["prefix"].(string); ok {
+				sc.Prefix = v
+			}
+			if v, ok := sMap["query_param"].(string); ok {
+				sc.QueryParam = v
+			}
+			if v, ok := sMap["keys_env"].(string); ok {
+				sc.KeysEnv = v
+			}
+			if v, ok := sMap["users_env"].(string); ok {
+				sc.UsersEnv = v
+			}
+			if v, ok := sMap["realm"].(string); ok {
+				sc.Realm = v
+			}
+			if v, ok := sMap["handler"].(string); ok {
+				sc.Handler = v
+			}
+			if claimsRaw, ok := sMap["claims"].(map[string]any); ok {
+				sc.Claims = make(map[string]string)
+				for k, v := range claimsRaw {
+					if s, ok := v.(string); ok {
+						sc.Claims[k] = s
+					}
+				}
+			}
+			ac.Strategies[name] = sc
+		}
+	}
+	return ac, nil
+}
+
+func parseRouteConfigs(rawRoutes []any) ([]RouteConfig, error) {
+	routes := make([]RouteConfig, 0, len(rawRoutes))
+	for i, rRaw := range rawRoutes {
+		rMap, ok := rRaw.(map[string]any)
+		if !ok {
+			return nil, CompileError("INVALID_ROUTE",
+				fmt.Sprintf("route %d must be an object", i), -1)
+		}
+		rc, err := parseRouteConfig(rMap)
+		if err != nil {
+			return nil, err
+		}
+		routes = append(routes, rc)
+	}
+	return routes, nil
+}
+
+func parseRouteConfig(raw map[string]any) (RouteConfig, error) {
+	rc := RouteConfig{}
+	if v, ok := raw["method"].(string); ok {
+		rc.Method = v
+	}
+	if v, ok := raw["path"].(string); ok {
+		rc.Path = v
+	}
+	if v, ok := raw["handler"].(string); ok {
+		rc.Handler = v
+	}
+	if v, ok := raw["render"].(string); ok {
+		rc.Render = v
+	}
+	if v, ok := raw["prefix"].(string); ok {
+		rc.Prefix = v
+	}
+
+	// Middleware: string or []string
+	switch mw := raw["middleware"].(type) {
+	case string:
+		rc.Middleware = []string{mw}
+	case []any:
+		rc.Middleware = toStringSlice(mw)
+	}
+
+	// Nested routes (for groups)
+	if nestedRaw, ok := raw["routes"].([]any); ok {
+		nested, err := parseRouteConfigs(nestedRaw)
+		if err != nil {
+			return rc, err
+		}
+		rc.Routes = nested
+	}
+
+	// API annotation
+	if apiRaw, ok := raw["api"].(map[string]any); ok {
+		api, err := parseAPIAnnotation(apiRaw)
+		if err != nil {
+			return rc, err
+		}
+		rc.API = api
+	}
+
+	return rc, nil
+}
+
+func parseAPIAnnotation(raw map[string]any) (*APIAnnotation, error) {
+	api := &APIAnnotation{}
+	if v, ok := raw["summary"].(string); ok {
+		api.Summary = v
+	}
+	if v, ok := raw["description"].(string); ok {
+		api.Description = v
+	}
+	if v, ok := raw["tags"].([]any); ok {
+		api.Tags = toStringSlice(v)
+	}
+
+	// Body
+	if bodyRaw, ok := raw["body"].(map[string]any); ok {
+		body := &APIBodyAnnotation{}
+		if v, ok := bodyRaw["required"].(bool); ok {
+			body.Required = v
+		}
+		if contentRaw, ok := bodyRaw["content"].(map[string]any); ok {
+			body.Content = make(map[string]*APIFieldAnnotation)
+			for name, fRaw := range contentRaw {
+				fMap, ok := fRaw.(map[string]any)
+				if !ok {
+					continue
+				}
+				body.Content[name] = parseAPIFieldAnnotation(fMap)
+			}
+		}
+		api.Body = body
+	}
+
+	// Query
+	if queryRaw, ok := raw["query"].(map[string]any); ok {
+		api.Query = make(map[string]*APIParamAnnotation)
+		for name, pRaw := range queryRaw {
+			pMap, ok := pRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+			param := &APIParamAnnotation{}
+			if v, ok := pMap["type"].(string); ok {
+				param.Type = v
+			}
+			if v, ok := pMap["description"].(string); ok {
+				param.Description = v
+			}
+			if v, ok := pMap["default"]; ok {
+				param.Default = v
+			}
+			api.Query[name] = param
+		}
+	}
+
+	// Responses
+	if respRaw, ok := raw["responses"].(map[string]any); ok {
+		api.Responses = make(map[string]*APIResponseAnnotation)
+		for code, rRaw := range respRaw {
+			switch r := rRaw.(type) {
+			case map[string]any:
+				resp := &APIResponseAnnotation{}
+				if v, ok := r["description"].(string); ok {
+					resp.Description = v
+				}
+				if contentRaw, ok := r["content"].(map[string]any); ok {
+					resp.Content = make(map[string]*APIFieldAnnotation)
+					for name, fRaw := range contentRaw {
+						fMap, ok := fRaw.(map[string]any)
+						if !ok {
+							continue
+						}
+						resp.Content[name] = parseAPIFieldAnnotation(fMap)
+					}
+				}
+				api.Responses[code] = resp
+			}
+		}
+	}
+
+	return api, nil
+}
+
+func parseAPIFieldAnnotation(raw map[string]any) *APIFieldAnnotation {
+	f := &APIFieldAnnotation{}
+	if v, ok := raw["type"].(string); ok {
+		f.Type = v
+	}
+	if v, ok := raw["required"].(bool); ok {
+		f.Required = v
+	}
+	if v, ok := raw["description"].(string); ok {
+		f.Description = v
+	}
+	if v, ok := raw["format"].(string); ok {
+		f.Format = v
+	}
+	if v, ok := raw["enum"].([]any); ok {
+		f.Enum = toStringSlice(v)
+	}
+	if v, ok := raw["default"]; ok {
+		f.Default = v
+	}
+	return f
+}
+
+func toStringSlice(arr []any) []string {
+	result := make([]string, 0, len(arr))
+	for _, v := range arr {
+		if s, ok := v.(string); ok {
+			result = append(result, s)
+		}
+	}
+	return result
 }
 
 func parseSteps(rawSteps []any) ([]Node, error) {

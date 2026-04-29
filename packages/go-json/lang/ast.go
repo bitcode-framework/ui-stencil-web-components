@@ -114,6 +114,130 @@ type ParallelNode struct {
 func (n *ParallelNode) nodeType() string { return "parallel" }
 func (n *ParallelNode) Meta() *NodeMeta  { return &n.NodeMeta }
 
+// ServerConfig holds server-level configuration parsed from the "server" key.
+type ServerConfig struct {
+	Framework        string            `json:"framework"`
+	Port             int               `json:"port"`
+	Host             string            `json:"host"`
+	Static           any               `json:"static"`           // string or StaticConfig
+	Templates        string            `json:"templates"`
+	CORS             *CORSConfig       `json:"cors,omitempty"`
+	JWT              *JWTConfig        `json:"jwt,omitempty"`
+	Auth             *AuthConfig       `json:"auth,omitempty"`
+	RateLimit        *RateLimitConfig  `json:"rate_limit,omitempty"`
+	GracefulShutdown string            `json:"graceful_shutdown"`
+	ReadTimeout      string            `json:"read_timeout"`
+	WriteTimeout     string            `json:"write_timeout"`
+	MaxBodySize      string            `json:"max_body_size"`
+	ErrorTemplates   map[string]string `json:"error_templates,omitempty"`
+}
+
+// StaticConfig holds custom static file serving configuration.
+type StaticConfig struct {
+	Dir    string `json:"dir"`
+	Prefix string `json:"prefix"`
+}
+
+// CORSConfig holds CORS middleware configuration.
+type CORSConfig struct {
+	Origins []string `json:"origins"`
+	Methods []string `json:"methods"`
+	Headers []string `json:"headers"`
+	MaxAge  int      `json:"max_age"`
+}
+
+// JWTConfig holds JWT authentication configuration.
+type JWTConfig struct {
+	SecretEnv string            `json:"secret_env"`
+	Algorithm string            `json:"algorithm"`
+	Expiry    string            `json:"expiry"`
+	Cookie    string            `json:"cookie"`
+	Header    string            `json:"header"`
+	Prefix    string            `json:"prefix"`
+	Claims    map[string]string `json:"claims,omitempty"`
+}
+
+// AuthConfig holds the plugable auth system configuration.
+type AuthConfig struct {
+	Default    string                       `json:"default"`
+	Strategies map[string]*StrategyConfig   `json:"strategies,omitempty"`
+}
+
+// StrategyConfig holds configuration for a single auth strategy.
+type StrategyConfig struct {
+	Type       string `json:"type"`
+	SecretEnv  string `json:"secret_env,omitempty"`
+	Algorithm  string `json:"algorithm,omitempty"`
+	Expiry     string `json:"expiry,omitempty"`
+	Cookie     string `json:"cookie,omitempty"`
+	Header     string `json:"header,omitempty"`
+	Prefix     string `json:"prefix,omitempty"`
+	QueryParam string `json:"query_param,omitempty"`
+	KeysEnv    string `json:"keys_env,omitempty"`
+	UsersEnv   string `json:"users_env,omitempty"`
+	Realm      string `json:"realm,omitempty"`
+	Handler    string `json:"handler,omitempty"`
+	Claims     map[string]string `json:"claims,omitempty"`
+}
+
+// RateLimitConfig holds rate limiting configuration.
+type RateLimitConfig struct {
+	Requests int    `json:"requests"`
+	Window   string `json:"window"`
+	By       string `json:"by"`
+}
+
+// RouteConfig represents a single route or route group definition.
+type RouteConfig struct {
+	Method     string         `json:"method,omitempty"`
+	Path       string         `json:"path,omitempty"`
+	Handler    string         `json:"handler,omitempty"`
+	Middleware []string       `json:"middleware,omitempty"`
+	Render     string         `json:"render,omitempty"`
+	Prefix     string         `json:"prefix,omitempty"`
+	Routes     []RouteConfig  `json:"routes,omitempty"`
+	API        *APIAnnotation `json:"api,omitempty"`
+}
+
+// APIAnnotation holds OpenAPI annotation for a route.
+type APIAnnotation struct {
+	Summary     string                       `json:"summary,omitempty"`
+	Description string                       `json:"description,omitempty"`
+	Tags        []string                     `json:"tags,omitempty"`
+	Body        *APIBodyAnnotation           `json:"body,omitempty"`
+	Query       map[string]*APIParamAnnotation `json:"query,omitempty"`
+	Responses   map[string]*APIResponseAnnotation `json:"responses,omitempty"`
+}
+
+// APIBodyAnnotation describes the request body schema for OpenAPI.
+type APIBodyAnnotation struct {
+	Required bool                          `json:"required,omitempty"`
+	Content  map[string]*APIFieldAnnotation `json:"content,omitempty"`
+}
+
+// APIFieldAnnotation describes a single field in an API schema.
+type APIFieldAnnotation struct {
+	Type        string   `json:"type,omitempty"`
+	Required    bool     `json:"required,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Format      string   `json:"format,omitempty"`
+	Enum        []string `json:"enum,omitempty"`
+	Default     any      `json:"default,omitempty"`
+}
+
+// APIParamAnnotation describes a query parameter for OpenAPI.
+type APIParamAnnotation struct {
+	Type        string `json:"type,omitempty"`
+	Description string `json:"description,omitempty"`
+	Default     any    `json:"default,omitempty"`
+}
+
+// APIResponseAnnotation describes a response for OpenAPI.
+type APIResponseAnnotation struct {
+	Description string                         `json:"description,omitempty"`
+	Content     map[string]*APIFieldAnnotation `json:"content,omitempty"`
+}
+
 // Program is the root AST node representing an entire go-json program.
 type Program struct {
 	NodeMeta
@@ -125,6 +249,11 @@ type Program struct {
 	Functions map[string]*FuncDef
 	Steps     []Node
 	Limits    *LimitsDef
+
+	// Server mode fields
+	Server     *ServerConfig  `json:"server,omitempty"`
+	Routes     []RouteConfig  `json:"routes,omitempty"`
+	Middleware []string       `json:"middleware,omitempty"` // global middleware names
 
 	RequestedModules map[string]ImportDef // io: and ext: imports for runtime validation
 }
