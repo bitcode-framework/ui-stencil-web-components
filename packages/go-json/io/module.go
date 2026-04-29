@@ -93,8 +93,12 @@ func (r *IORegistry) ExprOptions() []expr.Option {
 	var opts []expr.Option
 	for _, mod := range r.modules {
 		for fnName, fn := range mod.Functions() {
+			exprFn, ok := fn.(func(...any) (any, error))
+			if !ok {
+				continue
+			}
 			fullName := mod.Name() + "." + fnName
-			opts = append(opts, expr.Function(fullName, fn.(func(...any) (any, error))))
+			opts = append(opts, expr.Function(fullName, exprFn))
 		}
 	}
 	return opts
