@@ -1,8 +1,13 @@
-import { definePlugin } from '@bitcode/sdk';
+export default {
+  async execute(bitcode, params) {
+    const employees = await bitcode.model("employee").search({
+      domain: [["active", "=", true]],
+    });
 
-export default definePlugin({
-  async execute(ctx, params) {
-    console.log('📊 Generating weekly attendance report...');
-    return { report: 'generated' };
-  }
-});
+    bitcode.log("info", "Weekly attendance report generated", {
+      employeeCount: employees.length,
+    });
+
+    return { report: "generated", employeeCount: employees.length };
+  },
+};

@@ -1,20 +1,20 @@
-import { definePlugin } from '@bitcode/sdk';
-
-export default definePlugin({
-  async execute(ctx, params) {
+export default {
+  async execute(bitcode, params) {
     const lead = params.input;
-    
-    // Example: send congratulations notification
-    console.log(`🎉 Deal Won! ${lead.name} - Revenue: $${lead.expected_revenue}`);
-    
-    // Example: create a follow-up task
-    // await ctx.db.create('activity', {
-    //   lead_id: lead.id,
-    //   type: 'task',
-    //   summary: 'Send welcome package to new client',
-    //   due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    // });
 
-    return { success: true, message: 'Deal won notification sent' };
-  }
-});
+    await bitcode.model("activity").create({
+      lead_id: lead.id,
+      type: "task",
+      summary: "Send welcome package to new client",
+    });
+
+    await bitcode.email.send({
+      to: "manager@company.com",
+      subject: "Deal Won: " + lead.name,
+      body: "<h1>Revenue: $" + lead.expected_revenue + "</h1>",
+    });
+
+    bitcode.log("info", "Deal won processed", { leadId: lead.id });
+    return { success: true, message: "Deal won notification sent" };
+  },
+};
