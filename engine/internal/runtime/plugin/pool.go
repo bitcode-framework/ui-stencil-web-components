@@ -83,14 +83,15 @@ func (p *PluginProcess) shouldRecycle(config PoolConfig) bool {
 }
 
 type ProcessPool struct {
-	command   string
-	args      []string
-	config    PoolConfig
-	available chan *PluginProcess
-	mu        sync.Mutex
-	processes []*PluginProcess
+	command    string
+	args       []string
+	config     PoolConfig
+	logPrefix  string
+	available  chan *PluginProcess
+	mu         sync.Mutex
+	processes  []*PluginProcess
 	nextProcID int
-	stopped   bool
+	stopped    bool
 }
 
 func NewProcessPool(command string, args []string, config PoolConfig) *ProcessPool {
@@ -98,6 +99,17 @@ func NewProcessPool(command string, args []string, config PoolConfig) *ProcessPo
 		command:   command,
 		args:      args,
 		config:    config,
+		logPrefix: "plugin",
+		available: make(chan *PluginProcess, config.Size),
+	}
+}
+
+func NewProcessPoolWithPrefix(command string, args []string, config PoolConfig, logPrefix string) *ProcessPool {
+	return &ProcessPool{
+		command:   command,
+		args:      args,
+		config:    config,
+		logPrefix: logPrefix,
 		available: make(chan *PluginProcess, config.Size),
 	}
 }
@@ -131,7 +143,7 @@ func (pool *ProcessPool) startProcess() (*PluginProcess, error) {
 		return nil, fmt.Errorf("stdout pipe: %w", err)
 	}
 
-	cmd.Stderr = &logWriter{prefix: fmt.Sprintf("[plugin:node:%d] ", pool.nextProcID+1)}
+	cmd.Stderr = &logWriter{prefix: fmt.Sprintf("[%s:%d] ", pool.logPrefix, pool.nextProcID+1)}
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("start process: %w", err)

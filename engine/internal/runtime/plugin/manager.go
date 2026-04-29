@@ -13,32 +13,41 @@ import (
 )
 
 type RuntimeConfig struct {
-	NodeEnabled    string
-	NodeCommand    string
-	NodeMinVersion string
-	WorkerPool     PoolConfig
-	BackgroundPool PoolConfig
+	NodeEnabled      string
+	NodeCommand      string
+	NodeMinVersion   string
+	PythonEnabled    string
+	PythonCommand    string
+	PythonMinVersion string
+	WorkerPool       PoolConfig
+	BackgroundPool   PoolConfig
 }
 
 func DefaultRuntimeConfig() RuntimeConfig {
 	return RuntimeConfig{
-		NodeEnabled:    "auto",
-		NodeCommand:    "",
-		NodeMinVersion: "20.0.0",
-		WorkerPool:     DefaultWorkerPoolConfig(),
-		BackgroundPool: DefaultBackgroundPoolConfig(),
+		NodeEnabled:      "auto",
+		NodeCommand:      "",
+		NodeMinVersion:   "20.0.0",
+		PythonEnabled:    "auto",
+		PythonCommand:    "python3",
+		PythonMinVersion: "3.10.0",
+		WorkerPool:       DefaultWorkerPoolConfig(),
+		BackgroundPool:   DefaultBackgroundPoolConfig(),
 	}
 }
 
 type Manager struct {
-	workerPool     *ProcessPool
-	backgroundPool *ProcessPool
-	bridgeHandler  *BridgeHandler
-	bridgeFactory  *bridge.Factory
-	txStore        *txStore
-	runtimeConfig  RuntimeConfig
-	mu             sync.RWMutex
-	nodeAvailable  bool
+	workerPool       *ProcessPool
+	backgroundPool   *ProcessPool
+	pyWorkerPool     *ProcessPool
+	pyBackgroundPool *ProcessPool
+	bridgeHandler    *BridgeHandler
+	bridgeFactory    *bridge.Factory
+	txStore          *txStore
+	runtimeConfig    RuntimeConfig
+	mu               sync.RWMutex
+	nodeAvailable    bool
+	pythonAvailable  bool
 }
 
 func NewManager() *Manager {
@@ -113,6 +122,8 @@ func (m *Manager) IsRunning(name string) bool {
 	switch name {
 	case "node", "typescript":
 		return m.nodeAvailable
+	case "python":
+		return m.pythonAvailable
 	}
 	return false
 }
@@ -122,21 +133,38 @@ func (m *Manager) Run(ctx context.Context, script string, params map[string]any)
 }
 
 func (m *Manager) Execute(ctx context.Context, script string, params map[string]any, bridgeCtx *bridge.Context) (any, error) {
-	runtime := m.detectRuntime(script, "")
-	if runtime != "node" && runtime != "typescript" {
-		return nil, fmt.Errorf("unsupported runtime %q for external plugin", runtime)
+	rt := ""
+	if r, ok := params["__runtime"]; ok {
+		rt = fmt.Sprintf("%v", r)
 	}
+	runtime := m.detectRuntime(script, rt)
 
 	m.mu.RLock()
-	available := m.nodeAvailable
-	workerPool := m.workerPool
-	bgPool := m.backgroundPool
+	var available bool
+	var workerPool, bgPool *ProcessPool
+	var runtimeLabel string
+
+	switch runtime {
+	case "python":
+		available = m.pythonAvailable
+		workerPool = m.pyWorkerPool
+		bgPool = m.pyBackgroundPool
+		runtimeLabel = "Python"
+	case "node", "typescript":
+		available = m.nodeAvailable
+		workerPool = m.workerPool
+		bgPool = m.backgroundPool
+		runtimeLabel = "Node.js"
+	default:
+		m.mu.RUnlock()
+		return nil, fmt.Errorf("unsupported runtime %q for external plugin", runtime)
+	}
 	m.mu.RUnlock()
 
 	if !available || workerPool == nil {
 		return nil, &bridge.BridgeError{
 			Code:    "RUNTIME_NOT_AVAILABLE",
-			Message: "Node.js runtime is not available. Install Node.js 20+ or set runtime.node.enabled in bitcode.yaml",
+			Message: fmt.Sprintf("%s runtime is not available", runtimeLabel),
 		}
 	}
 
@@ -389,6 +417,15 @@ func (m *Manager) StopAll() {
 		m.backgroundPool = nil
 	}
 	m.nodeAvailable = false
+	if m.pyWorkerPool != nil {
+		m.pyWorkerPool.Stop()
+		m.pyWorkerPool = nil
+	}
+	if m.pyBackgroundPool != nil {
+		m.pyBackgroundPool.Stop()
+		m.pyBackgroundPool = nil
+	}
+	m.pythonAvailable = false
 }
 
 // StartTypescript is kept for backward compatibility. Delegates to StartNodePool.
@@ -399,8 +436,57 @@ func (m *Manager) StartTypescript(nodeCmd string) error {
 	return m.StartNodePool()
 }
 
-func (m *Manager) StartPython(pythonCmd string) error {
+func (m *Manager) StartPythonPool() error {
+	cfg := m.runtimeConfig
+
+	if cfg.PythonEnabled == "false" {
+		log.Println("[PLUGIN] Python runtime disabled by config")
+		return nil
+	}
+
+	command, version, err := detectPythonEngine(cfg.PythonCommand, cfg.PythonMinVersion)
+	if err != nil {
+		if cfg.PythonEnabled == "true" {
+			return fmt.Errorf("Python runtime required but not found: %w", err)
+		}
+		log.Printf("[PLUGIN] Python runtime not available: %v", err)
+		return nil
+	}
+
+	log.Printf("[PLUGIN] detected Python %s: %s", version, command)
+
+	args := []string{"plugins/python/runtime.py"}
+
+	workerPool := NewProcessPoolWithPrefix(command, args, cfg.WorkerPool, "plugin:python")
+	if err := workerPool.Start(); err != nil {
+		return fmt.Errorf("failed to start Python worker pool: %w", err)
+	}
+
+	var bgPool *ProcessPool
+	if cfg.BackgroundPool.Size > 0 {
+		bgPool = NewProcessPoolWithPrefix(command, args, cfg.BackgroundPool, "plugin:python:bg")
+		if err := bgPool.Start(); err != nil {
+			log.Printf("[WARN] failed to start Python background pool: %v — using worker pool as fallback", err)
+			bgPool = nil
+		}
+	}
+
+	m.mu.Lock()
+	m.pyWorkerPool = workerPool
+	m.pyBackgroundPool = bgPool
+	m.pythonAvailable = true
+	m.mu.Unlock()
+
+	log.Printf("[PLUGIN] Python runtime started (worker: %d, background: %d)",
+		cfg.WorkerPool.Size, cfg.BackgroundPool.Size)
 	return nil
+}
+
+func (m *Manager) StartPython(pythonCmd string) error {
+	if pythonCmd != "" {
+		m.runtimeConfig.PythonCommand = pythonCmd
+	}
+	return m.StartPythonPool()
 }
 
 func (m *Manager) StopPlugin(name string) error {
@@ -463,6 +549,50 @@ func getEngineVersion(binPath string) string {
 		ver = ver[:idx]
 	}
 	return ver
+}
+
+func detectPythonEngine(preferredCommand string, minVersion string) (command string, version string, err error) {
+	candidates := []string{preferredCommand}
+	if preferredCommand == "python3" {
+		candidates = append(candidates, "python")
+	}
+
+	minMajor, minMinor, minPatch := 3, 10, 0
+	if minVersion != "" {
+		fmt.Sscanf(minVersion, "%d.%d.%d", &minMajor, &minMinor, &minPatch)
+	}
+
+	for _, cmd := range candidates {
+		p, lookErr := exec.LookPath(cmd)
+		if lookErr != nil {
+			continue
+		}
+
+		out, execErr := exec.Command(p, "--version").Output()
+		if execErr != nil {
+			continue
+		}
+
+		verStr := strings.TrimSpace(string(out))
+		verStr = strings.TrimPrefix(verStr, "Python ")
+		verStr = strings.TrimPrefix(verStr, "python ")
+		if idx := strings.IndexByte(verStr, '\n'); idx >= 0 {
+			verStr = verStr[:idx]
+		}
+
+		if verStr == "" {
+			continue
+		}
+
+		if !isVersionAtLeast(verStr, minMajor, minMinor, minPatch) {
+			log.Printf("[WARN] Python %s found but %d.%d.%d+ required, skipping", verStr, minMajor, minMinor, minPatch)
+			continue
+		}
+
+		return p, verStr, nil
+	}
+
+	return "", "", fmt.Errorf("Python %d.%d.%d+ not found in PATH", minMajor, minMinor, minPatch)
 }
 
 func isVersionAtLeast(version string, minMajor, minMinor, minPatch int) bool {

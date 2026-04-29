@@ -450,6 +450,9 @@ func (a *App) startPluginRuntimes() {
 	if err := a.PluginManager.StartNodePool(); err != nil {
 		log.Printf("[PLUGIN] Node.js runtime not available: %v", err)
 	}
+	if err := a.PluginManager.StartPythonPool(); err != nil {
+		log.Printf("[PLUGIN] Python runtime not available: %v", err)
+	}
 }
 
 func (a *App) createEmailSender() email.Sender {

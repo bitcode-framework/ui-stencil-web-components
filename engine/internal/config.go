@@ -65,6 +65,9 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 
 	v.SetDefault("runtime.node.enabled", "auto")
 	v.SetDefault("runtime.node.command", "")
+	v.SetDefault("runtime.python.enabled", "auto")
+	v.SetDefault("runtime.python.command", "python3")
+	v.SetDefault("runtime.python.min_version", "3.10.0")
 	v.SetDefault("runtime.worker.pool_size", 4)
 	v.SetDefault("runtime.worker.max_executions", 1000)
 	v.SetDefault("runtime.background.pool_size", 2)
@@ -279,8 +282,11 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 			},
 		},
 		Runtime: plugin.RuntimeConfig{
-			NodeEnabled: v.GetString("runtime.node.enabled"),
-			NodeCommand: v.GetString("runtime.node.command"),
+			NodeEnabled:      v.GetString("runtime.node.enabled"),
+			NodeCommand:      v.GetString("runtime.node.command"),
+			PythonEnabled:    v.GetString("runtime.python.enabled"),
+			PythonCommand:    v.GetString("runtime.python.command"),
+			PythonMinVersion: v.GetString("runtime.python.min_version"),
 			WorkerPool: plugin.PoolConfig{
 				Size:          v.GetInt("runtime.worker.pool_size"),
 				MaxExecutions: v.GetInt("runtime.worker.max_executions"),

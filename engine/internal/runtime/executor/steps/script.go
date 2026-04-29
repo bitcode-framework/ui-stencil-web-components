@@ -89,7 +89,7 @@ func (h *ScriptHandler) needsBridge(step parser.StepDefinition) bool {
 	if rt == "" {
 		rt = detectRuntimeFromExtension(step.Script)
 	}
-	return rt == "node" || rt == "typescript"
+	return rt == "node" || rt == "typescript" || rt == "python"
 }
 
 func (h *ScriptHandler) selectRunner(step parser.StepDefinition) ScriptRunner {
