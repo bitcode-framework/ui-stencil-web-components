@@ -612,3 +612,48 @@ func TestInterpolateTranslation_TFunction(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+func TestDetectRuntimeFromExtension(t *testing.T) {
+	tests := []struct {
+		script string
+		want   string
+	}{
+		{"scripts/test.py", "python"},
+		{"scripts/test.ts", "node"},
+		{"scripts/test.js", "javascript"},
+		{"scripts/test.go", "go"},
+		{"scripts/test.json", "go-json"},
+		{"scripts/test.txt", ""},
+	}
+	for _, tt := range tests {
+		got := detectRuntimeFromExtension(tt.script)
+		if got != tt.want {
+			t.Errorf("detectRuntimeFromExtension(%q) = %q, want %q", tt.script, got, tt.want)
+		}
+	}
+}
+
+func TestNeedsBridgePython(t *testing.T) {
+	h := &ScriptHandler{}
+	tests := []struct {
+		script  string
+		runtime string
+		want    bool
+	}{
+		{"test.py", "", true},
+		{"test.py", "python", true},
+		{"test.ts", "", true},
+		{"test.ts", "node", true},
+		{"test.ts", "typescript", true},
+		{"test.js", "", false},
+		{"test.go", "", false},
+		{"test.json", "", false},
+	}
+	for _, tt := range tests {
+		step := parser.StepDefinition{Script: tt.script, Runtime: tt.runtime}
+		got := h.needsBridge(step)
+		if got != tt.want {
+			t.Errorf("needsBridge(script=%q, runtime=%q) = %v, want %v", tt.script, tt.runtime, got, tt.want)
+		}
+	}
+}

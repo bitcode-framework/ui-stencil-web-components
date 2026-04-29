@@ -1,8 +1,10 @@
 package plugin
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -379,6 +381,129 @@ func TestTxStoreCleanupAll(t *testing.T) {
 	store.CleanupAll()
 	if len(store.entries) != 0 {
 		t.Errorf("expected empty after cleanup, got %d", len(store.entries))
+	}
+}
+
+func TestRuntimeConfigPythonDefaults(t *testing.T) {
+	cfg := DefaultRuntimeConfig()
+	if cfg.PythonEnabled != "auto" {
+		t.Errorf("expected python enabled auto, got %q", cfg.PythonEnabled)
+	}
+	if cfg.PythonCommand != "python3" {
+		t.Errorf("expected python command python3, got %q", cfg.PythonCommand)
+	}
+	if cfg.PythonMinVersion != "3.10.0" {
+		t.Errorf("expected python min version 3.10.0, got %q", cfg.PythonMinVersion)
+	}
+}
+
+func TestDetectRuntimePython(t *testing.T) {
+	m := NewManager()
+	tests := []struct {
+		script   string
+		explicit string
+		want     string
+	}{
+		{"scripts/analyze.py", "", "python"},
+		{"modules/crm/scripts/test.py", "", "python"},
+		{"scripts/test.py", "python", "python"},
+	}
+	for _, tt := range tests {
+		got := m.detectRuntime(tt.script, tt.explicit)
+		if got != tt.want {
+			t.Errorf("detectRuntime(%q, %q) = %q, want %q", tt.script, tt.explicit, got, tt.want)
+		}
+	}
+}
+
+func TestManagerIsRunningPython(t *testing.T) {
+	m := NewManager()
+	if m.IsRunning("python") {
+		t.Error("expected python not running before start")
+	}
+	m.mu.Lock()
+	m.pythonAvailable = true
+	m.mu.Unlock()
+	if !m.IsRunning("python") {
+		t.Error("expected python running after setting pythonAvailable")
+	}
+}
+
+func TestStartPythonPoolDisabled(t *testing.T) {
+	m := NewManager()
+	cfg := DefaultRuntimeConfig()
+	cfg.PythonEnabled = "false"
+	m.SetRuntimeConfig(cfg)
+	if err := m.StartPythonPool(); err != nil {
+		t.Errorf("expected nil error when disabled, got: %v", err)
+	}
+	if m.IsRunning("python") {
+		t.Error("python should not be running when disabled")
+	}
+}
+
+func TestDetectPythonEngineVersionCheck(t *testing.T) {
+	tests := []struct {
+		version string
+		min     string
+		want    bool
+	}{
+		{"3.12.1", "3.10.0", true},
+		{"3.10.0", "3.10.0", true},
+		{"3.11.5", "3.10.0", true},
+		{"3.9.18", "3.10.0", false},
+		{"3.8.0", "3.10.0", false},
+		{"2.7.18", "3.10.0", false},
+	}
+	for _, tt := range tests {
+		var minMajor, minMinor, minPatch int
+		fmt.Sscanf(tt.min, "%d.%d.%d", &minMajor, &minMinor, &minPatch)
+		got := isVersionAtLeast(tt.version, minMajor, minMinor, minPatch)
+		if got != tt.want {
+			t.Errorf("isVersionAtLeast(%q, %s) = %v, want %v", tt.version, tt.min, got, tt.want)
+		}
+	}
+}
+
+func TestNewProcessPoolWithPrefix(t *testing.T) {
+	pool := NewProcessPoolWithPrefix("echo", []string{"test"}, DefaultWorkerPoolConfig(), "plugin:python")
+	if pool.logPrefix != "plugin:python" {
+		t.Errorf("expected logPrefix plugin:python, got %q", pool.logPrefix)
+	}
+	if pool.command != "echo" {
+		t.Errorf("expected command echo, got %q", pool.command)
+	}
+}
+
+func TestNewProcessPoolDefaultPrefix(t *testing.T) {
+	pool := NewProcessPool("echo", []string{"test"}, DefaultWorkerPoolConfig())
+	if pool.logPrefix != "plugin" {
+		t.Errorf("expected default logPrefix plugin, got %q", pool.logPrefix)
+	}
+}
+
+func TestManagerStopAllWithPython(t *testing.T) {
+	m := NewManager()
+	m.mu.Lock()
+	m.pythonAvailable = true
+	m.mu.Unlock()
+	m.StopAll()
+	if m.IsRunning("python") {
+		t.Error("python should not be running after StopAll")
+	}
+	if m.IsRunning("node") {
+		t.Error("node should not be running after StopAll")
+	}
+}
+
+func TestExecuteRejectsPythonWhenNotAvailable(t *testing.T) {
+	m := NewManager()
+	_, err := m.Execute(context.Background(), "test.py", map[string]any{}, nil)
+	if err == nil {
+		t.Fatal("expected error for python when not available")
+	}
+	if !strings.Contains(err.Error(), "not available") {
+		t.Errorf("expected 'not available' error, got: %v", err)
 	}
 }
 
