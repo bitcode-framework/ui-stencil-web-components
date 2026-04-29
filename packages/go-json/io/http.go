@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -113,7 +114,9 @@ func (m *HTTPModule) doRequest(method string, params []any) (any, error) {
 		}
 	}
 
-	m.applyAuth(req, opts)
+	if err := m.applyAuth(req, opts); err != nil {
+		return nil, err
+	}
 
 	client := &http.Client{
 		Timeout: timeout,
@@ -166,10 +169,14 @@ func (m *HTTPModule) doRequest(method string, params []any) (any, error) {
 	}, nil
 }
 
-func (m *HTTPModule) applyAuth(req *http.Request, opts map[string]any) {
+func (m *HTTPModule) applyAuth(req *http.Request, opts map[string]any) error {
 	auth, ok := opts["auth"].(map[string]any)
 	if !ok {
-		return
+		return nil
+	}
+
+	if req.Header.Get("Authorization") != "" {
+		fmt.Fprintf(os.Stderr, "warning: both auth config and Authorization header present — auth config takes precedence\n")
 	}
 
 	authType, _ := auth["type"].(string)
@@ -183,8 +190,12 @@ func (m *HTTPModule) applyAuth(req *http.Request, opts map[string]any) {
 		username, _ := auth["username"].(string)
 		password, _ := auth["password"].(string)
 		req.SetBasicAuth(username, password)
+	case "":
+		return nil
 	default:
+		return fmt.Errorf("http: unsupported auth type '%s' (use 'bearer' or 'basic')", authType)
 	}
+	return nil
 }
 
 func extractHTTPOpts(params []any) map[string]any {

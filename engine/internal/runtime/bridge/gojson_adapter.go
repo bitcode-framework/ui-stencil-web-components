@@ -122,7 +122,10 @@ func buildDBQuery(bc *Context) func(params ...any) (any, error) {
 		if len(params) < 1 {
 			return nil, fmt.Errorf("db.query: sql is required")
 		}
-		sqlStr, _ := params[0].(string)
+		sqlStr, ok := params[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("db.query: sql must be a string, got %T", params[0])
+		}
 		var args []any
 		if len(params) > 1 {
 			if a, ok := params[1].([]any); ok {
@@ -142,7 +145,10 @@ func buildDBExecute(bc *Context) func(params ...any) (any, error) {
 		if len(params) < 1 {
 			return nil, fmt.Errorf("db.execute: sql is required")
 		}
-		sqlStr, _ := params[0].(string)
+		sqlStr, ok := params[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("db.execute: sql must be a string, got %T", params[0])
+		}
 		var args []any
 		if len(params) > 1 {
 			if a, ok := params[1].([]any); ok {
@@ -162,7 +168,10 @@ func buildHTTPFunc(bc *Context, method string) func(params ...any) (any, error) 
 		if len(params) < 1 {
 			return nil, fmt.Errorf("http.%s: url required", strings.ToLower(method))
 		}
-		url, _ := params[0].(string)
+		url, ok := params[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("http.%s: url must be a string, got %T", strings.ToLower(method), params[0])
+		}
 		var opts *HTTPOptions
 		if len(params) > 1 {
 			if o, ok := params[1].(map[string]any); ok {

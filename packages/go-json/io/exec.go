@@ -57,20 +57,20 @@ func (m *ExecModule) execRun(params ...any) (any, error) {
 		}
 	}
 
-	timeoutMs := m.security.Exec.MaxTimeout
-	if timeoutMs <= 0 {
-		timeoutMs = 60
+	timeoutSec := m.security.Exec.MaxTimeout
+	if timeoutSec <= 0 {
+		timeoutSec = 60
 	}
 	if t, ok := opts["timeout"]; ok {
 		if tf, ok := toFloat64Val(t); ok {
-			tSec := int(tf / 1000)
-			if tSec > 0 && tSec < timeoutMs {
-				timeoutMs = tSec
+			requestedSec := int(tf)
+			if requestedSec > 0 && requestedSec < timeoutSec {
+				timeoutSec = requestedSec
 			}
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutMs)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSec)*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, cmdName, args...)
@@ -110,7 +110,7 @@ func (m *ExecModule) execRun(params ...any) (any, error) {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			exitCode = exitErr.ExitCode()
 		} else if ctx.Err() == context.DeadlineExceeded {
-			return nil, fmt.Errorf("exec.run: command timed out after %d seconds", timeoutMs)
+			return nil, fmt.Errorf("exec.run: command timed out after %d seconds", timeoutSec)
 		} else {
 			return nil, fmt.Errorf("exec.run: %s", err.Error())
 		}

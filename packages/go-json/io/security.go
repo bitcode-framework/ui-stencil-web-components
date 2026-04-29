@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"path/filepath"
+	goruntime "runtime"
 	"strings"
 )
 
@@ -135,6 +136,18 @@ var defaultBlockedPaths = []string{
 	"/dev/",
 }
 
+var defaultBlockedPathsWindows = []string{
+	`C:\Windows\`,
+	`C:\Program Files\`,
+	`C:\Program Files (x86)\`,
+}
+
+func init() {
+	if goruntime.GOOS == "windows" {
+		defaultBlockedPaths = append(defaultBlockedPaths, defaultBlockedPathsWindows...)
+	}
+}
+
 // localhostVariants maps all known localhost representations for blocking.
 var localhostVariants = map[string]bool{
 	"localhost": true,
@@ -203,23 +216,16 @@ func (sc *SecurityConfig) ValidateFilePath(path string, write bool) error {
 		return fmt.Errorf("security: cannot resolve path: %s", err.Error())
 	}
 
-	// Normalize to forward slashes for consistent comparison.
-	absPath = filepath.ToSlash(absPath)
-
-	// Check blocked paths.
-	for _, blocked := range sc.FS.BlockedPaths {
-		blocked = filepath.ToSlash(blocked)
-		if strings.HasPrefix(absPath, blocked) || strings.HasPrefix(absPath+"/", blocked) {
-			return fmt.Errorf("security: path '%s' is blocked", path)
-		}
+	if isPathBlocked(absPath, sc.FS.BlockedPaths) {
+		return fmt.Errorf("security: path '%s' is blocked", path)
 	}
 
-	// If AllowedPaths is set, path must be under one of them.
 	if len(sc.FS.AllowedPaths) > 0 {
 		allowed := false
 		for _, ap := range sc.FS.AllowedPaths {
-			ap = filepath.ToSlash(ap)
-			if strings.HasPrefix(absPath, ap) {
+			apNorm := strings.ToLower(filepath.ToSlash(ap))
+			absNorm := strings.ToLower(filepath.ToSlash(absPath))
+			if strings.HasPrefix(absNorm, apNorm) {
 				allowed = true
 				break
 			}
@@ -230,6 +236,20 @@ func (sc *SecurityConfig) ValidateFilePath(path string, write bool) error {
 	}
 
 	return nil
+}
+
+func isPathBlocked(absPath string, blockedPaths []string) bool {
+	absNorm := strings.ToLower(filepath.ToSlash(absPath))
+	for _, blocked := range blockedPaths {
+		blocked = strings.ToLower(filepath.ToSlash(blocked))
+		if !strings.HasSuffix(blocked, "/") {
+			blocked += "/"
+		}
+		if strings.HasPrefix(absNorm+"/", blocked) {
+			return true
+		}
+	}
+	return false
 }
 
 // ValidateCommand checks if a command is allowed by the security config.
