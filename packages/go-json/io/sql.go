@@ -90,6 +90,32 @@ func (m *SQLModule) Functions() map[string]any {
 	}
 }
 
+var defaultBlockedKeywords = []string{"DROP", "TRUNCATE", "ALTER", "GRANT", "REVOKE", "CREATE INDEX", "CREATE TABLE"}
+
+func (m *SQLModule) validateQuery(query string) error {
+	maxLen := m.security.SQL.MaxQueryLength
+	if maxLen <= 0 {
+		maxLen = 10000
+	}
+	if len(query) > maxLen {
+		return fmt.Errorf("sql: query exceeds max length (%d chars, max %d)", len(query), maxLen)
+	}
+
+	blocked := m.security.SQL.BlockedKeywords
+	if blocked == nil {
+		blocked = defaultBlockedKeywords
+	}
+
+	upper := strings.ToUpper(strings.TrimSpace(query))
+	for _, kw := range blocked {
+		if strings.Contains(upper, strings.ToUpper(kw)) {
+			return fmt.Errorf("sql: query contains blocked keyword '%s'", kw)
+		}
+	}
+
+	return nil
+}
+
 func (m *SQLModule) sqlQuery(params ...any) (any, error) {
 	if len(params) < 1 {
 		return nil, fmt.Errorf("sql.query: query is required")
@@ -97,6 +123,10 @@ func (m *SQLModule) sqlQuery(params ...any) (any, error) {
 
 	query, args, dsn, err := m.parseQueryParams(params)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := m.validateQuery(query); err != nil {
 		return nil, err
 	}
 
@@ -188,6 +218,10 @@ func (m *SQLModule) sqlExecute(params ...any) (any, error) {
 
 	query, args, dsn, err := m.parseQueryParams(params)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := m.validateQuery(query); err != nil {
 		return nil, err
 	}
 
