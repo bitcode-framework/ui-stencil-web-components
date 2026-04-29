@@ -37,7 +37,7 @@ go-json can be used without bitcode — anyone can build automation, workflows, 
 
 ### 1.2 Design Principles
 
-1. **JSON-native** — Programs are valid JSON. No custom syntax to learn beyond JSON.
+1. **JSON-native** — Programs are valid JSON/JSONC. Hybrid format supporting both strict JSON and JSONC (with comments).
 2. **Standalone** — Zero dependency on bitcode. Usable by anyone.
 3. **Embeddable** — Host applications extend go-json via extension hooks.
 4. **Gradually typed** — Untyped for quick scripts, fully typed for production.
@@ -69,6 +69,11 @@ go-json can be used without bitcode — anyone can build automation, workflows, 
 | Stdlib Tier 1: math (14), string (20), array (20), type (6) | §11 |
 | Context: session, execution metadata | §12 |
 | Variable scoping: block scope, isolation | §13 |
+| JSONC pre-processor + `_c` semantic comments | §14.5 |
+| Debugging & observability | §15.5 |
+| Program reuse & concurrency | §15.6 |
+| Versioning & backward compatibility | §15.7 |
+| Structured logging | §15.8 |
 
 ### Phase 4.5b — Modularity (Struct + Import)
 **Document**: [go-json-phase-4.5b-modularity.md](./go-json-phase-4.5b-modularity.md)
@@ -77,9 +82,11 @@ go-json can be used without bitcode — anyone can build automation, workflows, 
 |---|---|
 | Struct definition: fields, defaults, nested structs | §1 |
 | Struct methods: `self`, mutation vs immutable | §2 |
+| Frozen structs (opt-in immutability) | §2.3 |
 | Struct construction: `new` + `with` | §3 |
 | Nested property access + mutation: `set "a.b.c"` | §4 |
 | Import system: relative, stdlib, extension | §5 |
+| I/O module explicit import (`io:http`, `io:fs`) | §5.2 |
 | Import resolution rules | §5.3 |
 | Export rules: structs + functions exportable, steps not | §5.4 |
 | Circular import detection | §5.5 |
@@ -104,115 +111,59 @@ go-json can be used without bitcode — anyone can build automation, workflows, 
 | Code generation targets: Go, JavaScript, Python | §4.2 |
 | Standalone CLI runner: `go-json run program.json` | §5 |
 | REPL / playground | §5.2 |
+| Testing framework (`go-json test`) | §5.3 |
+| Migration tool (`go-json migrate`) | §5.4 |
 
 ---
 
 ## 3. Open Questions
 
-These are unresolved design decisions that need further discussion. Each is marked `[OPEN]` in the relevant phase document.
+All open questions have been resolved. See [brainstorming design doc](../plans/2026-04-28-go-json-brainstorming-design.md) for full analysis and rationale.
 
-### OQ-1: Return Computed Objects
+### OQ-1: Return Computed Objects — RESOLVED
 **Phase**: 4.5a §9
-**Problem**: Two keywords for return (`return` + `return_object`) is ugly.
-**Options**:
-- A: `{"return": "expr"}` + `{"return": {"with": {...}}}` — overloaded return
-- B: `{"return": "expr"}` + `{"return_object": {...}}` — separate keyword
-- C: `{"return": "{'key': value}"}` — object literal in expression (expr-lang supports this)
-**Current lean**: Option A — `return` with optional `with` sub-key.
+**Decision**: Use overloaded `return` supporting expression strings, `with`, and `value` forms.
+**Details**: See brainstorming design doc §3
 
-### OQ-2: Struct Mutability
+### OQ-2: Struct Mutability — RESOLVED
 **Phase**: 4.5b §2
-**Problem**: Mutable structs (`set: "self.age"`) complicate code generation to functional languages.
-**Options**:
-- A: Mutable by default (like Go) — simple, familiar
-- B: Immutable by default, explicit `mut` — safer, code-gen friendly
-- C: Hybrid — methods can return new struct or mutate, user chooses
-**Current lean**: Option A — mutable by default. Code generation to functional languages can auto-transform to copy-on-write.
+**Decision**: Structs are mutable by default with optional `frozen: true` for opt-in immutability.
+**Details**: See brainstorming design doc §3
 
-### OQ-3: Function Call Duality
+### OQ-3: Function Call Duality — RESOLVED
 **Phase**: 4.5a §7
-**Problem**: Two ways to call functions — step-level `call` and expression-level `factorial(n)`.
-**Rule needed**: When to use which?
-**Current lean**: Expression-level for pure functions (no side effects). Step-level `call` for functions that have steps/side effects or need `with` (computed input object).
+**Decision**: Support both expression-level and step-level calls, chosen by purity or complexity needs.
+**Details**: See brainstorming design doc §3
 
-### OQ-4: Error Types
+### OQ-4: Error Types — RESOLVED
 **Phase**: 4.5a §8
-**Problem**: Are errors just strings, or structured objects?
-**Options**:
-- A: String only — `{"error": "'something went wrong'"}`
-- B: Structured — `{"error": {"code": "'VALIDATION'", "message": "'invalid email'", "details": "errors"}}`
-- C: Both — string shorthand + structured form
-**Current lean**: Option C — string shorthand for simple cases, structured for complex.
+**Decision**: Support both string and structured throws, auto-normalized into a structured catch object.
+**Details**: See brainstorming design doc §3
 
-### OQ-5: Parallel Error Handling
+### OQ-5: Parallel Error Handling — RESOLVED
 **Phase**: 4.5b §7
-**Problem**: In parallel execution, if one branch fails, what happens to others?
-**Options**:
-- A: Cancel all on first failure
-- B: Wait for all, collect errors
-- C: Configurable via `on_error` field: `"cancel_all"` | `"continue"` | `"ignore"`
-**Current lean**: Option C — configurable, default `"cancel_all"`.
+**Decision**: Make parallel error handling configurable with `cancel_all` default plus `continue` and `collect` modes.
+**Details**: See brainstorming design doc §3
 
-### OQ-6: Namespace / Module Namespace for Struct Disambiguation
+### OQ-6: Namespace / Module Namespace for Struct Disambiguation — RESOLVED
 **Phase**: 4.5b §5
-**Problem**: Two different modules define struct with same name. E.g. `crm.Contact` vs `hrm.Contact`. How to disambiguate?
-**Context**: In Java it's `com.company.crm.Contact`. In Go it's `crm.Contact` (package-scoped). In Python it's `from crm.models import Contact`.
-**Sub-questions**:
-- Is the import alias sufficient? (`{"import": {"crm": "./crm/types.json", "hrm": "./hrm/types.json"}}` → `crm.Contact` vs `hrm.Contact`)
-- Or do we need explicit namespace declaration inside the JSON file itself? (`"namespace": "crm"`)
-- What about deeply nested namespaces? `company.division.module.Type`?
-- How does this interact with extensions? `ext:bitcode` already acts as a namespace.
-**Current lean**: Import alias IS the namespace. `crm.Contact` and `hrm.Contact` are disambiguated by their import alias. No need for explicit namespace declaration inside files. But needs further thought for large projects with deep module hierarchies.
+**Decision**: Import aliases are the namespace; no explicit namespace declaration is required inside program files.
+**Details**: See brainstorming design doc §3
 
-### OQ-7: Stdlib Function Call in Expressions — Chained / Namespaced
+### OQ-7: Stdlib Function Call in Expressions — Chained / Namespaced — RESOLVED
 **Phase**: 4.5a §11, 4.5b §6
-**Problem**: Can stdlib functions be called with namespace and chaining? E.g. `string.random(input.min, 20)` or `math.clamp(x, 0, 100)`.
-**Sub-questions**:
-- Are stdlib functions flat (`random(10, 20)`) or namespaced (`string.random(10, 20)`)?
-- Can they be chained? `"hello".upper().trim()` or `upper(trim("hello"))`?
-- If namespaced, does `string` conflict with the type conversion function `string(x)`?
-- How does expr-lang handle this? (expr-lang supports method calls on types and custom functions, but not arbitrary namespacing)
-**Current lean**: Flat by default (like Python built-ins: `len()`, `upper()`, `abs()`). Namespaced for disambiguation when needed (like `crypto.sha256()` vs potential user function `sha256()`). Method-style chaining NOT supported in Phase 4.5a — too complex for expr-lang integration. Revisit in later phase.
+**Decision**: Keep stdlib flat by default, use expr-lang pipe for chaining, and reserve namespaces for grouped modules like `crypto.*` and `regex.*`.
+**Details**: See brainstorming design doc §3
 
-### OQ-8: Undefined/Untyped Variables — Dynamic Type or Compile Error?
+### OQ-8: Undefined/Untyped Variables — Dynamic Type or Compile Error? — RESOLVED
 **Phase**: 4.5a §4
-**Problem**: What happens when a variable has no type annotation and receives values of different types at different points?
-**Example**:
-```json
-{"let": "x", "value": 42},
-{"set": "x", "value": "hello"}
-```
-**Sub-questions**:
-- Is this allowed? (dynamic typing like `interface{}` in Go / `Object` in Java / `any` in TypeScript)
-- Or is this a type error? (once `x` is `int`, it stays `int`)
-- What about variables that receive external/unknown data? (`{"let": "data", "expr": "input.payload"}` where payload could be anything)
-- How does `any` type interact with this? Is `any` explicit opt-in, or implicit default?
-**Options**:
-- A: **Strict after first assignment** — `let x = 42` locks `x` to `int`. `set x = "hello"` → type error. Use `any` explicitly for dynamic: `{"let": "x", "type": "any", "value": 42}`.
-- B: **Always dynamic** — variables can hold any type at any time (like Python/JS). Type annotations are hints, not enforced.
-- C: **Gradual** — untyped mode = dynamic (Option B). Typed mode (with input schema) = strict (Option A).
-**Current lean**: Option C — gradual. In untyped mode, variables are dynamic. In typed mode (input schema declared), variables are strict after first assignment. This matches the gradual typing philosophy already in the design.
+**Decision**: Default to strict-after-first-assignment, with explicit `any` for dynamic values and `?T` for nullable values.
+**Details**: See brainstorming design doc §3
 
-### OQ-9: Eval / Inline Code Execution in Other Languages
+### OQ-9: Eval / Inline Code Execution in Other Languages — RESOLVED
 **Phase**: 4.5c
-**Problem**: Should go-json support `eval` that executes code in Go, Python, or JavaScript?
-**Example**:
-```json
-{"let": "result", "eval": "go", "code": "return fmt.Sprintf(\"%d items\", len(items))"}
-{"let": "result", "eval": "js", "code": "return items.map(x => x.name).join(', ')"}
-{"let": "result", "eval": "python", "code": "return sum(x['price'] for x in items)"}
-```
-**Sub-questions**:
-- Does this break the "standalone" principle? (go-json would need yaegi/goja/python runtime as dependencies)
-- Is this a core feature or an extension? (host can inject eval capability via `WithExtension`)
-- Security implications? (eval is dangerous — code injection, sandbox escape)
-- Performance? (spinning up a JS/Python VM per eval is expensive)
-- Does this make code generation impossible? (eval blocks can't be transpiled)
-**Options**:
-- A: **No eval** — go-json is self-contained. If you need Go/JS/Python, use those runtimes directly via bitcode's script step.
-- B: **Eval as extension** — not built-in, but host can inject: `gojson.WithExtension("eval", evalExtension)`. Bitcode could provide this since it already has yaegi/goja.
-- C: **Built-in eval** — core feature with language selector.
-**Current lean**: Option B — eval as extension, NOT built-in. Keeps go-json standalone and clean. Bitcode can provide eval capability by injecting yaegi/goja/python as extensions. This way go-json itself has zero dependency on any script runtime.
+**Decision**: Keep eval out of the core language and expose it only as an opt-in host extension.
+**Details**: See brainstorming design doc §3
 
 ---
 
@@ -220,39 +171,48 @@ These are unresolved design decisions that need further discussion. Each is mark
 
 ```
 packages/go-json/
-├── go.mod                    # github.com/bitcode-framework/go-json
-├── lang/                     # Core language (Phase 4.5a)
-│   ├── ast.go                # AST node types
-│   ├── parser.go             # JSON → AST
-│   ├── compiler.go           # AST → validated program
-│   ├── vm.go                 # Tree-walk interpreter
-│   ├── scope.go              # Variable scoping (block scope)
-│   ├── types.go              # Type system (gradual)
-│   └── errors.go             # Error types with position info
-├── stdlib/                   # Built-in functions (Phase 4.5a + 4.5b)
-│   ├── math.go               # 14 functions
-│   ├── strings.go            # 20 functions
-│   ├── arrays.go             # 20 functions
-│   ├── types.go              # 6 type conversion functions
-│   ├── maps.go               # 8 functions (Phase 4.5b)
-│   ├── datetime.go           # 10 functions (Phase 4.5b)
-│   ├── encoding.go           # 6 functions (Phase 4.5b)
-│   ├── crypto.go             # 4 functions (Phase 4.5b)
-│   └── fmt.go                # 2 functions (Phase 4.5b)
-├── io/                       # I/O extensions (Phase 4.5c)
+├── go.mod                        # github.com/bitcode-framework/go-json
+├── lang/                         # Core language (Phase 4.5a)
+│   ├── ast.go                    # AST node types (with _c metadata)
+│   ├── preprocess.go             # JSONC → JSON (strip comments, trailing commas)
+│   ├── parser.go                 # JSON → AST
+│   ├── compiler.go               # AST → validated program (type inference, cycle detection)
+│   ├── vm.go                     # Tree-walk interpreter (with debug hooks)
+│   ├── scope.go                  # Variable scoping (block scope, isolation)
+│   ├── types.go                  # Type system (gradual)
+│   ├── errors.go                 # Error types with position info + enrichment
+│   ├── expr_engine.go            # ExprEngine interface + ExprLangEngine impl
+│   ├── program.go                # Immutable compiled Program (concurrent-safe)
+│   └── debugger.go               # Debugger interface + execution trace
+├── stdlib/                       # Layer 2 only — go-json additions (~28 functions)
+│   ├── math.go                   # ~7 functions
+│   ├── strings.go                # ~5 functions
+│   ├── arrays.go                 # ~3 functions
+│   ├── maps.go                   # ~4 functions
+│   ├── crypto.go                 # ~4 functions
+│   ├── regex.go                  # ~3 functions
+│   └── fmt.go                    # ~2 functions
+├── io/                           # I/O extensions (Phase 4.5c)
 │   ├── http.go
 │   ├── fs.go
 │   ├── sql.go
 │   └── exec.go
-├── runtime/                  # Runtime configuration
-│   ├── limits.go             # Resource limits
-│   ├── context.go            # Execution context
-│   └── hooks.go              # Extension hooks
-├── cmd/                      # CLI (Phase 4.5c)
+├── runtime/                      # Runtime configuration
+│   ├── runtime.go                # Runtime struct with program cache
+│   ├── limits.go                 # Resource limits
+│   ├── context.go                # Execution context
+│   ├── logger.go                 # Logger interface + default impl
+│   └── hooks.go                  # Extension hooks
+├── cmd/                          # CLI (Phase 4.5c)
 │   └── go-json/
-│       └── main.go           # `go-json run program.json`
-└── testdata/                 # Test programs
+│       └── main.go               # `go-json run/check/test/ast/codegen/migrate`
+├── codegen/                      # Code generation (Phase 4.5c)
+│   ├── golang.go                 # AST → Go code
+│   ├── javascript.go             # AST → JavaScript
+│   └── python.go                 # AST → Python
+└── testdata/                     # Test programs
     ├── hello.json
+    ├── hello.jsonc
     ├── factorial.json
     └── ...
 ```
@@ -321,6 +281,7 @@ Phase 4.5c MUST complete before Phase 7 (go-json replaces current process engine
 ```json
 {
   "name": "program_name",
+  "go_json": "1",
   "import": { ... },
   "structs": { ... },
   "functions": { ... },
@@ -363,6 +324,8 @@ All top-level keys are optional except `name`.
 | Computed object | `"with": {"k": "expr"}` | Each field value is expression |
 
 Only one of `value`/`expr`/`with` allowed per step. Multiple = compile error.
+
+Nested `with` values are evaluated recursively at all nesting levels: every nested string is treated as an expression, while non-string values remain literal.
 
 ### 6.4 Type Vocabulary
 

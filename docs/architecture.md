@@ -425,16 +425,16 @@ All three protocols (REST, GraphQL, WebSocket) share the same permission enforce
 
 ## Plugin System
 
-External code execution via JSON-RPC over stdin/stdout:
+External code execution via bidirectional JSON-RPC over stdin/stdout:
 
 | Runtime | Language | Entry Point |
 |---------|----------|-------------|
-| TypeScript | Node.js | `plugins/typescript/index.js` |
+| Node.js | JavaScript/TypeScript | `plugins/node/runtime.js` |
 | Python | Python 3 | `plugins/python/runtime.py` |
+| goja | JavaScript (ES6+) | Embedded (no child process) |
+| yaegi | Go | Embedded (no child process) |
 
-Plugins are invoked by the `script` step in processes. The Plugin Manager spawns child processes and communicates via JSON-RPC.
-
-A gRPC protocol is also defined (`pkg/plugin/proto/plugin.proto`) for high-throughput scenarios.
+Plugins are invoked by the `script` step in processes. The Plugin Manager spawns a pool of Node.js child processes and communicates via bidirectional JSON-RPC — scripts can call `bitcode.*` bridge methods that execute real operations (DB, HTTP, email, etc.) in the Go engine.
 
 ---
 

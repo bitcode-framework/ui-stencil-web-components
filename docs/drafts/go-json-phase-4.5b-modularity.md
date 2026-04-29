@@ -150,7 +150,7 @@ Field definition formats:
 
 ### 2.3 Mutation Methods
 
-**[OPEN: OQ-2]** Current design: mutable by default (like Go).
+Structs are mutable by default. For opt-in immutability, set `frozen: true` on the struct definition.
 
 ```json
 {
@@ -165,6 +165,34 @@ Field definition formats:
 ```
 
 Calling `person.birthday()` modifies the `person` instance in-place.
+
+Frozen struct example:
+
+```json
+{
+  "structs": {
+    "Config": {
+      "frozen": true,
+      "fields": {
+        "db_host": "string",
+        "db_port": "int"
+      }
+    }
+  }
+}
+
+{"let": "cfg", "new": "Config", "with": {
+  "db_host": "'localhost'",
+  "db_port": 5432
+}}
+{"set": "cfg.db_host", "expr": "'db.internal'"}
+// Compile error: cannot mutate frozen struct "Config"
+```
+
+Rules:
+- Default: mutable — `set "self.field"` and `set "var.field"` are allowed
+- `frozen: true` — any mutation attempt is a compile error
+- Immutable-style APIs can still return new instances via methods
 
 ### 2.4 Method Returning New Instance
 
@@ -349,17 +377,21 @@ This is pragmatic — forcing `"age": "30"` (string containing number) would be 
 | `"./file.json"` | Relative to current file | `"./validators.json"` |
 | `"../dir/file.json"` | Relative parent | `"../shared/types.json"` |
 | `"stdlib:name"` | Built-in stdlib module | `"stdlib:math"` |
+| `"io:name"` | I/O module | `"io:http"`, `"io:fs"`, `"io:sql"`, `"io:exec"` |
 | `"ext:name"` | Host-injected extension | `"ext:bitcode"` |
+
+I/O modules are explicitly imported, not magically available in every file.
 
 ### 5.3 Import Resolution Rules
 
 1. Parse import path
 2. If `stdlib:` → load from built-in registry
-3. If `ext:` → load from host-injected extensions
-4. If relative path → resolve against current file's directory
-5. Read and parse the target JSON file
-6. Extract exportable items (structs + functions, NOT steps)
-7. Register under the alias in current scope
+3. If `io:` → load from I/O module registry
+4. If `ext:` → load from host-injected extensions
+5. If relative path → resolve against current file's directory
+6. Read and parse the target JSON file
+7. Extract exportable items (structs + functions, NOT steps)
+8. Register under the alias in current scope
 
 ### 5.4 What Gets Exported
 
@@ -446,44 +478,34 @@ Instead of importing each file separately.
 
 ---
 
-## §6. Stdlib — Tier 2 (30 Functions)
+## §6. Stdlib — Tier 2 (15 Functions)
 
-### 6.1 Map/Object (8 functions)
+Layer 2 only contains functions not already provided by expr-lang Layer 1. Functions such as `keys`, `values`, `toPairs`, `fromPairs`, `now`, `date`, `duration`, `timezone`, `toJSON`, `fromJSON`, `toBase64`, and `fromBase64` stay in Layer 1 and are not reimplemented here.
+
+### 6.1 Map/Object (5 functions)
 
 | Function | Signature | Description |
 |---|---|---|
-| `keys(obj)` | `map → []string` | Get all keys |
-| `values(obj)` | `map → []any` | Get all values |
-| `entries(obj)` | `map → [][]any` | Get [key, value] pairs |
-| `fromEntries(arr)` | `[][]any → map` | Create map from pairs |
 | `has(obj, key)` | `map, string → bool` | Check key exists |
 | `get(obj, path)` | `map, string → any` | Get by dot path: `get(obj, "a.b.c")` |
 | `merge(a, b)` | `map, map → map` | Shallow merge (b overrides a) |
 | `pick(obj, keys)` | `map, []string → map` | Pick subset of keys |
+| `omit(obj, keys)` | `map, []string → map` | Drop specified keys |
 
-### 6.2 DateTime (10 functions)
+### 6.2 DateTime (3 functions)
 
 | Function | Signature | Description |
 |---|---|---|
-| `now()` | `→ datetime` | Current datetime |
-| `date(str, format?)` | `string, string? → datetime` | Parse date string |
 | `formatDate(dt, format)` | `datetime, string → string` | Format datetime |
-| `year(dt)` | `datetime → int` | Extract year |
-| `month(dt)` | `datetime → int` | Extract month (1-12) |
-| `day(dt)` | `datetime → int` | Extract day |
-| `hour(dt)` | `datetime → int` | Extract hour |
-| `minute(dt)` | `datetime → int` | Extract minute |
 | `addDuration(dt, dur)` | `datetime, string → datetime` | Add duration: `"2h30m"`, `"7d"` |
 | `diffDates(a, b)` | `datetime, datetime → duration` | Difference between dates |
 
-### 6.3 Encoding (6 functions)
+expr-lang date objects already expose `.Year()`, `.Month()`, `.Day()`, `.Hour()`, and `.Minute()` methods, so those accessors do not need separate Tier 2 helpers.
+
+### 6.3 Encoding (2 functions)
 
 | Function | Signature | Description |
 |---|---|---|
-| `toJSON(val)` | `any → string` | Serialize to JSON string |
-| `fromJSON(str)` | `string → any` | Parse JSON string |
-| `toBase64(str)` | `string → string` | Base64 encode |
-| `fromBase64(str)` | `string → string` | Base64 decode |
 | `urlEncode(str)` | `string → string` | URL encode |
 | `urlDecode(str)` | `string → string` | URL decode |
 
@@ -491,17 +513,18 @@ Instead of importing each file separately.
 
 | Function | Signature | Description |
 |---|---|---|
-| `md5(str)` | `string → string` | MD5 hash (hex) |
-| `sha256(str)` | `string → string` | SHA-256 hash (hex) |
-| `uuid()` | `→ string` | Generate UUID v4 |
-| `hmac(str, key, algo?)` | `string, string, string? → string` | HMAC (default SHA-256) |
+| `crypto.md5(str)` | `string → string` | MD5 hash (hex) |
+| `crypto.sha256(str)` | `string → string` | SHA-256 hash (hex) |
+| `crypto.uuid()` | `→ string` | Generate UUID v4 |
+| `crypto.hmac(str, key, algo?)` | `string, string, string? → string` | HMAC (default SHA-256) |
 
-### 6.5 Format (2 functions)
+### 6.5 Format (1 function)
 
 | Function | Signature | Description |
 |---|---|---|
 | `sprintf(fmt, args...)` | `string, ...any → string` | Printf-style formatting |
-| `printf(fmt, args...)` | `string, ...any → void` | Print formatted (debug) |
+
+Use the `log` step for output/debug printing instead of a `printf` stdlib function.
 
 ---
 
@@ -536,11 +559,11 @@ Instead of importing each file separately.
 
 ### 7.2 Branch Scope Isolation
 
-Each branch gets its own scope. Branches CANNOT access each other's variables. After join, only the return values are available via `into`.
+Each branch gets its own scope. Branches CANNOT access each other's variables. Parallel branches CAN read parent scope variables as read-only, but they CANNOT write or `set` parent scope variables — that is a compile error. After join, branch output is exposed only via `into`.
 
 ### 7.3 Error Handling in Parallel
 
-**[OPEN: OQ-5]** Current design: configurable via `on_error`.
+Parallel error handling is configurable via `on_error`. Default: `cancel_all`.
 
 ```json
 {
@@ -554,8 +577,10 @@ Each branch gets its own scope. Branches CANNOT access each other's variables. A
 | `on_error` | Behavior |
 |---|---|
 | `"cancel_all"` (default) | First branch error cancels all others. Error propagated. |
-| `"continue"` | Other branches continue. Failed branch result = error object. |
-| `"ignore"` | Errors silently ignored. Failed branch result = nil. |
+| `"continue"` | Other branches continue. Failed branch result = `nil` (error logged). |
+| `"collect"` | Other branches continue. Failed branch result = normalized error object. |
+
+Implementation note: `cancel_all` maps cleanly to Go `context.Context` cancellation so in-flight branches and I/O operations can stop promptly.
 
 ### 7.4 Timeout in Parallel
 
@@ -604,24 +629,27 @@ If `person.address` is nil → returns nil (no error).
 | 4 | Struct field access (dot notation) | Medium | Must |
 | 5 | Struct method definition + `self` binding | Large | Must |
 | 6 | Struct method invocation (expression + step level) | Medium | Must |
-| 7 | Nested property mutation (`set "a.b.c"`) | Medium | Must |
-| 8 | Import system — file resolution | Medium | Must |
-| 9 | Import system — struct/function extraction | Medium | Must |
-| 10 | Import system — alias scoping | Medium | Must |
-| 11 | Circular import detection | Small | Must |
-| 12 | Re-export / barrel files | Small | Should |
-| 13 | Stdlib: map functions (8) | Medium | Must |
-| 14 | Stdlib: datetime functions (10) | Medium | Must |
-| 15 | Stdlib: encoding functions (6) | Small | Must |
-| 16 | Stdlib: crypto functions (4) | Small | Must |
-| 17 | Stdlib: format functions (2) | Small | Must |
-| 18 | Parallel execution engine | Large | Must |
-| 19 | Parallel scope isolation | Medium | Must |
-| 20 | Parallel error handling (on_error modes) | Medium | Must |
-| 21 | Nullable type support + optional chaining | Medium | Must |
-| 22 | Tests: struct CRUD (create, read, update fields) | Medium | Must |
-| 23 | Tests: struct methods + self | Medium | Must |
-| 24 | Tests: import system (relative, stdlib, circular) | Large | Must |
-| 25 | Tests: parallel execution | Medium | Must |
-| 26 | Tests: nullable + optional chaining | Medium | Must |
-| 27 | Tests: stdlib tier 2 functions | Large | Must |
+| 7 | Frozen struct support (`frozen: true`) + compile-time mutation checks | Medium | Must |
+| 8 | Nested property mutation (`set "a.b.c"`) | Medium | Must |
+| 9 | Import system — file resolution | Medium | Must |
+| 10 | Import system — struct/function extraction | Medium | Must |
+| 11 | Import system — alias scoping | Medium | Must |
+| 12 | Circular import detection | Small | Must |
+| 13 | Re-export / barrel files | Small | Should |
+| 14 | Stdlib: map functions (5) | Small | Must |
+| 15 | Stdlib: datetime functions (3) | Small | Must |
+| 16 | Stdlib: encoding functions (2) | Small | Must |
+| 17 | Stdlib: crypto functions (4) | Small | Must |
+| 18 | Stdlib: format functions (1) | Small | Must |
+| 19 | Parallel execution engine | Large | Must |
+| 20 | Parallel scope isolation | Medium | Must |
+| 21 | Parallel error handling (`cancel_all`, `continue`, `collect`) | Medium | Must |
+| 22 | Nullable type support + optional chaining | Medium | Must |
+| 23 | Tests: struct CRUD (create, read, update fields) | Medium | Must |
+| 24 | Tests: struct methods + self + frozen mutation rejection | Medium | Must |
+| 25 | Tests: import system (relative, stdlib, io, circular) | Large | Must |
+| 26 | Tests: parallel execution | Medium | Must |
+| 27 | Tests: nullable + optional chaining | Medium | Must |
+| 28 | Tests: stdlib tier 2 functions (reduced Layer 2 scope) | Medium | Must |
+
+Tier 2 scope is intentionally reduced because Layer 1 already comes from expr-lang. Implementation work should not duplicate built-ins.

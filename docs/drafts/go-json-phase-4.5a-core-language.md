@@ -13,32 +13,39 @@ packages/go-json/
 ├── go.mod                    # module github.com/bitcode-framework/go-json
 ├── lang/
 │   ├── ast.go                # AST node types (all step types)
+│   ├── preprocess.go         # JSONC → JSON strip (comments, trailing commas)
 │   ├── parser.go             # JSON → AST (validate structure, resolve types)
 │   ├── compiler.go           # AST → validated Program (type check, limit check)
 │   ├── vm.go                 # Tree-walk interpreter
 │   ├── scope.go              # Variable scoping (block scope per if/loop/function)
 │   ├── types.go              # Type system (gradual: untyped → schema → full)
 │   ├── errors.go             # Error types with step position info
+│   ├── expr_engine.go        # ExprEngine interface + ExprLangEngine implementation with caching
+│   ├── debugger.go           # Debugger interface + execution trace
 │   └── program.go            # Program struct (compiled, ready to run)
 ├── stdlib/
 │   ├── registry.go           # Function registry + All() helper
-│   ├── math.go               # 14 math functions
-│   ├── strings.go            # 20 string functions
-│   ├── arrays.go             # 20 array functions
-│   └── types.go              # 6 type conversion functions
+│   ├── math.go               # 7 math functions
+│   ├── strings.go            # 5 string functions
+│   ├── arrays.go             # 5 array functions
+│   └── types.go              # 2 type conversion functions
 ├── runtime/
 │   ├── limits.go             # Resource limits struct + defaults
 │   ├── context.go            # Execution context (session, metadata)
+│   ├── logger.go             # Logger interface + structured logging
 │   └── runtime.go            # NewRuntime(), Execute(), options
 └── testdata/
     ├── hello.json
+    ├── hello.jsonc
     ├── variables.json
+    ├── variables.jsonc
     ├── control_flow.json
     ├── loops.json
     ├── functions.json
     ├── recursion.json
     ├── error_handling.json
-    └── stdlib_test.json
+    ├── stdlib_test.json
+    └── stdlib_test.jsonc
 ```
 
 ---
@@ -74,17 +81,64 @@ go-json uses [expr-lang/expr](https://github.com/expr-lang/expr) as its expressi
 - Struct definitions → go-json type system
 - Import/module system → go-json import system
 
-### 2.3 Integration Point
+### 2.3 Abstraction Layer
 
-Every `"expr"` field in a step is evaluated by expr-lang:
+go-json does not call expr-lang directly from the VM. All expression work goes through an abstraction layer:
 
 ```go
-// In go-json VM
-program, err := expr.Compile(exprString, expr.Env(currentScope))
-result, err := expr.Run(program, currentScope)
+type ExprEngine interface {
+    Compile(expr string, env map[string]any) (CompiledExpr, error)
+    Run(compiled CompiledExpr, env map[string]any) (any, error)
+    Eval(expr string, env map[string]any) (any, error)
+    Validate(expr string, env map[string]any) error
+    ReturnType(expr string, env map[string]any) (string, error)
+}
+
+type ExprLangEngine struct {
+    cache map[string]*vm.Program
+    mu    sync.RWMutex
+}
 ```
 
-The scope (variables, functions) is passed as expr-lang environment.
+**Why this exists:**
+- Testability — VM tests can mock expression evaluation.
+- Future-proofing — expr-lang can be swapped without rewriting runtime flow.
+- Editor support — `Validate()` and `ReturnType()` are needed by visual tooling.
+- Performance — `ExprLangEngine` caches compiled expressions and reuses them across executions.
+
+### 2.4 expr-lang Configuration
+
+go-json configures expr-lang explicitly rather than accepting library defaults blindly.
+
+| Option | Purpose in go-json |
+|---|---|
+| `WithContext("ctx")` | Propagates timeout/cancellation into expression evaluation and custom functions |
+| `MaxNodes(n)` | Caps expression complexity to prevent pathological expressions / DoS |
+| `Timezone(...)` | Ensures consistent date/time behavior across environments |
+| `Function(...)` | Registers go-json stdlib functions with explicit type signatures |
+| `Operator(...)` | Reserved for future operator customization such as domain types |
+| `Patch(...)` | Enables AST rewrites for security, normalization, and future transforms |
+| `ConstExpr(...)` | Allows constant-folding / compile-time optimization for safe pure helpers |
+| `DisableBuiltin(...)` | Allows sandboxing or per-program builtin restrictions |
+
+go-json uses `WithContext`, `MaxNodes`, `Timezone`, and `Function` from day 1. `Operator`, `Patch`, `ConstExpr`, and `DisableBuiltin` are part of the abstraction so the runtime can evolve without redesign.
+
+### 2.5 expr-lang Features Available in Expressions
+
+These features are already available inside go-json expressions and should NOT be reimplemented in go-json itself:
+
+| Feature | Example |
+|---|---|
+| `let` variables inside one expression | `let x = price * qty; x - discount` |
+| Pipe operator | `name \| trim() \| upper()` |
+| Multiline `if` | `if score >= 90 { 'A' } else { 'B' }` |
+| Range | `1..10` |
+| Optional chaining | `user?.address?.city` |
+| Nil coalescing | `nickname ?? name` |
+| Predicates | `filter(items, .price > 100)` |
+| `$env` | `'user_id' in $env` |
+| Map literals | `{'status': 'ok', 'count': len(items)}` |
+| Backtick strings | `` `multi\nline raw string` `` |
 
 ---
 
@@ -156,9 +210,9 @@ This eliminates the `"= "` prefix problem entirely.
 
 ## §4. Type System — Gradual Typing
 
-### 4.1 Level 1: Untyped (Default)
+### 4.1 Level 1: Inferred + Strict After First Assignment (Default)
 
-No type annotations. Types inferred at runtime.
+No type annotations are required, but variables are **not** dynamically typed by default. Type is inferred from the first assignment and becomes strict after that.
 
 ```json
 {
@@ -171,9 +225,62 @@ No type annotations. Types inferred at runtime.
 }
 ```
 
-Type errors caught at runtime with clear messages:
+Examples:
+
+```json
+[
+  {"let": "x", "value": 42},
+  {"set": "x", "value": 100}
+]
 ```
-TypeError at step 2: cannot add int(42) + string("hello")
+
+This is valid because `x` was inferred as `int` and stays `int`.
+
+```json
+[
+  {"let": "x", "value": 42},
+  {"set": "x", "value": "hello"}
+]
+```
+
+This is a compile error:
+
+```
+cannot assign string to variable 'x' (type int)
+```
+
+`any` is explicit opt-in for dynamic behavior:
+
+```json
+[
+  {"let": "payload", "type": "any", "value": 42},
+  {"set": "payload", "value": "hello"},
+  {"set": "payload", "value": {"status": "ok"}}
+]
+```
+
+Nullable types are also explicit:
+
+```json
+[
+  {"let": "name", "type": "?string", "value": "Alice"},
+  {"set": "name", "value": null}
+]
+```
+
+But non-nullable inferred variables reject `null`:
+
+```json
+[
+  {"let": "name", "value": "Alice"},
+  {"set": "name", "value": null}
+]
+```
+
+Compile error:
+
+```
+cannot assign nil to non-nullable string variable 'name'
 ```
 
 ### 4.2 Level 2: Input Schema
@@ -435,9 +542,30 @@ For simple pure functions, callable directly in expressions:
 {"if": "isValid(email)", "then": [...]}
 ```
 
-**[OPEN: OQ-3]** Rule for when to use step-level vs expression-level:
-- Expression-level: pure functions, simple args, no `with` needed
-- Step-level: functions with complex computed inputs, need `with`
+**Resolved rule:**
+- Expression-level: pure functions with simple arguments, especially inside `expr`, `if`, `while`, and other computed contexts.
+- Step-level: functions with complex computed input, side effects, or explicit error handling / control-flow needs.
+
+**Parameter mapping rule:** parameter order in function definition = positional order in expression calls.
+
+```json
+{
+  "functions": {
+    "createUser": {
+      "params": {
+        "name": "string",
+        "age": "int"
+      },
+      "returns": "map",
+      "steps": [
+        {"return": {"with": {"name": "name", "age": "age"}}}
+      ]
+    }
+  }
+}
+```
+
+`createUser('Alice', 30)` maps to `name='Alice'`, `age=30`.
 
 ### 7.4 Recursion
 
@@ -519,7 +647,7 @@ Functions receive input via `with`. They CANNOT access parent scope variables di
 {"error": "'Invalid input: name is required'"}
 ```
 
-**[OPEN: OQ-4]** Structured errors:
+Structured errors are also supported:
 
 ```json
 // Simple (string)
@@ -533,12 +661,23 @@ Functions receive input via `with`. They CANNOT access parent scope variables di
 }}
 ```
 
+**Auto-normalization rules:**
+
+| Throw form | Normalized runtime error |
+|---|---|
+| `{"error": "'msg'"}` | `{code: "ERROR", message: "msg", details: nil, step: N, stack: [...]}` |
+| `{"error": {"code": "'X'", "message": "'msg'"}}` | `{code: "X", message: "msg", details: nil, step: N, stack: [...]}` |
+| `{"error": {"code": "'X'", "message": "'msg'", "details": "data"}}` | `{code: "X", message: "msg", details: data, step: N, stack: [...]}` |
+
+`catch.as` always receives the normalized object shape, regardless of how the error was thrown.
+
 ### 8.3 Error Object Shape
 
 ```json
 {
   "message": "string — human-readable error message",
   "code": "string — error code (optional, 'ERROR' if not set)",
+  "details": "any — optional structured payload (object, array, string, nil)",
   "step": "int — step index where error occurred",
   "function": "string — function name (if inside function)",
   "stack": ["string — call stack trace"]
@@ -564,11 +703,14 @@ Functions receive input via `with`. They CANNOT access parent scope variables di
 
 ### 9.2 Return Computed Object
 
-**[OPEN: OQ-1]** Current design — overloaded `return`:
+Current design — overloaded `return`:
 
 ```json
 // Return expression
 {"return": "candidate"}
+
+// Return object literal directly in expression
+{"return": "{'status': 'ok', 'count': len(items)}"}
 
 // Return computed object — use "with" sub-key
 {"return": {"with": {
@@ -582,7 +724,7 @@ Functions receive input via `with`. They CANNOT access parent scope variables di
 ```
 
 This follows the same `value`/`expr`/`with` pattern as `let`/`set`:
-- `{"return": "expr"}` — shorthand for expression (most common)
+- `{"return": "expr"}` — shorthand for expression (most common), including object literals
 - `{"return": {"expr": "..."}}` — explicit expression
 - `{"return": {"value": ...}}` — literal value
 - `{"return": {"with": {...}}}` — computed object
@@ -605,6 +747,7 @@ type Limits struct {
     MaxDepth          int           // max recursion/call depth. Default: 1000, hard: 10000
     MaxSteps          int           // max total step executions. Default: 10000, hard: 100000
     MaxLoopIterations int           // max iterations per single loop. Default: 10000, hard: 100000
+    MaxNodes          int           // max expr-lang AST nodes per expression. Default: 1000
     MaxVariables      int           // max variables in scope. Default: 1000
     MaxVariableSize   int           // max single variable size in bytes. Default: 10MB
     MaxOutputSize     int           // max program output size in bytes. Default: 50MB
@@ -620,6 +763,7 @@ Per-execution memory limiting is not possible in Go (shared heap, no per-gorouti
 |---|---|
 | `MaxSteps` | Runaway execution (each step allocates memory) |
 | `MaxLoopIterations` | Infinite/huge loops |
+| `MaxNodes` | Pathologically complex expressions during expr-lang compilation/evaluation |
 | `MaxVariables` | Variable accumulation |
 | `MaxVariableSize` | Single huge variable (e.g. 1GB query result) |
 | `MaxDepth` | Stack overflow from recursion |
@@ -666,90 +810,63 @@ When process A (timeout 60s) calls function B at t=20s:
 
 ---
 
-## §11. Stdlib — Tier 1 (60 Functions)
+## §11. Stdlib — Layer 2 (go-json Additions)
 
-All stdlib functions are pure (no side effects) and available in expressions.
+### 11.0 Three-Layer Architecture
 
-### 11.1 Math (14 functions)
+go-json stdlib is split into three layers:
+
+| Layer | Contents | Ownership |
+|---|---|---|
+| Layer 1 | expr-lang built-ins (~68 functions) | Already provided by expr-lang |
+| Layer 2 | go-json additions | Implemented in `packages/go-json/stdlib/` |
+| Layer 3 | I/O / host modules | Added in later phases / host integrations |
+
+**Important:** Layer 1 functions are already available in expressions and should **not** be reimplemented in go-json. This includes common helpers like `abs`, `ceil`, `floor`, `round`, `min`, `max`, `sum`, `len`, `upper`, `lower`, `trim`, `split`, `join`, `filter`, `map`, `reduce`, `find`, `groupBy`, `int`, `float`, `string`, and `type`.
+
+All Layer 2 functions are pure (no side effects) and available in expressions unless later promoted into a namespaced module.
+
+### 11.1 Math (7 functions)
 
 | Function | Signature | Description |
 |---|---|---|
-| `abs(x)` | `number → number` | Absolute value |
-| `ceil(x)` | `number → int` | Round up |
-| `floor(x)` | `number → int` | Round down |
-| `round(x, precision?)` | `number, int? → number` | Round to precision |
-| `min(args...)` | `...number → number` | Minimum value. Also accepts array. |
-| `max(args...)` | `...number → number` | Maximum value. Also accepts array. |
-| `sum(arr)` | `[]number → number` | Sum of array |
-| `avg(arr)` | `[]number → float` | Average of array |
+| `clamp(x, min, max)` | `number, number, number → number` | Clamp to range |
 | `pow(base, exp)` | `number, number → number` | Power |
 | `sqrt(x)` | `number → float` | Square root |
 | `mod(a, b)` | `number, number → number` | Modulo |
-| `clamp(x, min, max)` | `number, number, number → number` | Clamp to range |
 | `randomInt(min, max)` | `int, int → int` | Random integer in range |
+| `randomFloat(min, max)` | `number, number → float` | Random float in range |
 | `sign(x)` | `number → int` | -1, 0, or 1 |
 
-### 11.2 String (20 functions)
+### 11.2 String (5 functions)
 
 | Function | Signature | Description |
 |---|---|---|
-| `len(s)` | `string → int` | String length (also works on arrays) |
-| `upper(s)` | `string → string` | Uppercase |
-| `lower(s)` | `string → string` | Lowercase |
-| `trim(s)` | `string → string` | Trim whitespace |
-| `trimLeft(s, chars?)` | `string, string? → string` | Trim left |
-| `trimRight(s, chars?)` | `string, string? → string` | Trim right |
-| `contains(s, sub)` | `string, string → bool` | Contains substring |
-| `startsWith(s, prefix)` | `string, string → bool` | Starts with |
-| `endsWith(s, suffix)` | `string, string → bool` | Ends with |
-| `indexOf(s, sub)` | `string, string → int` | First index of substring (-1 if not found) |
-| `lastIndexOf(s, sub)` | `string, string → int` | Last index of substring |
-| `replace(s, old, new, n?)` | `string, string, string, int? → string` | Replace first n (default all) |
-| `split(s, sep)` | `string, string → []string` | Split string |
-| `join(arr, sep)` | `[]string, string → string` | Join array to string |
-| `substring(s, start, end?)` | `string, int, int? → string` | Substring |
-| `repeat(s, n)` | `string, int → string` | Repeat string |
 | `padLeft(s, n, char?)` | `string, int, string? → string` | Pad left |
 | `padRight(s, n, char?)` | `string, int, string? → string` | Pad right |
-| `matches(s, pattern)` | `string, string → bool` | Regex match |
+| `substring(s, start, end?)` | `string, int, int? → string` | Substring |
 | `format(template, args...)` | `string, ...any → string` | String formatting (`%s`, `%d`, etc.) |
+| `matches(s, pattern)` | `string, string → bool` | Regex match |
 
-### 11.3 Array (20 functions)
+`hasPrefix()` and `hasSuffix()` already exist in expr-lang and should be used with expr-lang naming rather than draft aliases like `startsWith()` / `endsWith()`.
+
+### 11.3 Array (5 functions)
 
 | Function | Signature | Description |
 |---|---|---|
-| `len(arr)` | `[]any → int` | Array length |
-| `first(arr)` | `[]any → any` | First element (nil if empty) |
-| `last(arr)` | `[]any → any` | Last element (nil if empty) |
-| `get(arr, i)` | `[]any, int → any` | Get by index (nil if out of bounds) |
 | `append(arr, item)` | `[]any, any → []any` | Append (returns new array) |
 | `prepend(arr, item)` | `[]any, any → []any` | Prepend (returns new array) |
-| `concat(a, b)` | `[]any, []any → []any` | Concatenate arrays |
 | `slice(arr, start, end?)` | `[]any, int, int? → []any` | Slice |
-| `reverse(arr)` | `[]any → []any` | Reverse (returns new array) |
-| `sort(arr)` | `[]any → []any` | Sort ascending |
-| `sortBy(arr, field)` | `[]any, string → []any` | Sort by field |
-| `unique(arr)` | `[]any → []any` | Remove duplicates |
-| `flatten(arr)` | `[][]any → []any` | Flatten one level |
-| `contains(arr, item)` | `[]any, any → bool` | Contains element |
-| `indexOf(arr, item)` | `[]any, any → int` | Index of element (-1 if not found) |
-| `filter(arr, pred)` | `[]any, predicate → []any` | Filter by predicate |
-| `map(arr, pred)` | `[]any, predicate → []any` | Transform each element |
-| `reduce(arr, pred, init)` | `[]any, predicate, any → any` | Reduce to single value |
-| `find(arr, pred)` | `[]any, predicate → any` | Find first matching |
-| `groupBy(arr, pred)` | `[]any, predicate → map` | Group by key |
+| `chunk(arr, size)` | `[]any, int → [][]any` | Split array into fixed-size chunks |
+| `zip(a, b)` | `[]any, []any → []any` | Pair two arrays element-by-element |
 
-Predicates use expr-lang lambda syntax: `filter(items, .age > 18)` or `map(items, .name)`.
+Helpers such as `len`, `first`, `last`, `get`, `concat`, `reverse`, `sort`, `sortBy`, `uniq`, `flatten`, `filter`, `map`, `reduce`, `find`, and `groupBy` are already provided by expr-lang.
 
-### 11.4 Type Conversion (6 functions)
+### 11.4 Type Conversion (2 functions)
 
 | Function | Signature | Description |
 |---|---|---|
-| `int(x)` | `any → int` | Convert to int |
-| `float(x)` | `any → float` | Convert to float |
-| `string(x)` | `any → string` | Convert to string |
 | `bool(x)` | `any → bool` | Convert to bool |
-| `type(x)` | `any → string` | Get type name |
 | `isNil(x)` | `any → bool` | Check if nil |
 
 ---
@@ -913,6 +1030,37 @@ Each loop iteration gets a fresh scope for `item`/`index`:
 | Wrong argument type to function | Compile error (if typed) or runtime error |
 | Wrong number of arguments | Compile error: "function 'X' expects 3 arguments, got 2" |
 
+### 14.5 JSONC Support
+
+go-json supports a hybrid JSON/JSONC source format.
+
+**File extensions:** both `.json` and `.jsonc` are accepted.
+
+**Pre-processing pipeline:** input is first normalized by `lang/preprocess.go`, which strips:
+- `//` line comments
+- `/* ... */` block comments
+- trailing commas
+
+The output of the pre-processor is strict JSON, then parsed by the standard Go JSON parser.
+
+**Comment mechanisms:**
+
+| Mechanism | Meaning |
+|---|---|
+| `//` / `/* */` | Cosmetic comments only — removed before parsing |
+| `_c` inline | Semantic comment attached to a step |
+| `_c` standalone | Comment-only step; parser skips execution semantics |
+| `_c` multi-line array | Semantic multi-line documentation preserved as metadata |
+
+Examples:
+
+```jsonc
+// Cosmetic comment
+{"_c": "Inline semantic comment", "let": "x", "value": 42}
+{"_c": "=== Phase 2 ==="}
+{"_c": ["Business rule A", "Requirement: JIRA-123"], "return": "x"}
+```
+
 ---
 
 ## §15. Implementation Tasks
@@ -921,24 +1069,104 @@ Each loop iteration gets a fresh scope for `item`/`index`:
 |---|---|---|---|
 | 1 | Create `packages/go-json/` with go.mod | Small | Must |
 | 2 | Define AST node types (`lang/ast.go`) | Medium | Must |
-| 3 | JSON parser → AST (`lang/parser.go`) | Large | Must |
-| 4 | Expression integration with expr-lang (`lang/compiler.go`) | Large | Must |
-| 5 | Tree-walk VM (`lang/vm.go`) | Large | Must |
-| 6 | Variable scoping (`lang/scope.go`) | Medium | Must |
-| 7 | Type system — inference + gradual (`lang/types.go`) | Medium | Must |
-| 8 | Error types with position info (`lang/errors.go`) | Small | Must |
-| 9 | Resource limits (`runtime/limits.go`) | Medium | Must |
-| 10 | Runtime API — NewRuntime, Execute, options (`runtime/runtime.go`) | Medium | Must |
-| 11 | Execution context — session, metadata (`runtime/context.go`) | Small | Must |
-| 12 | Stdlib: math (14 functions) | Medium | Must |
-| 13 | Stdlib: strings (20 functions) | Medium | Must |
-| 14 | Stdlib: arrays (20 functions) | Large | Must |
-| 15 | Stdlib: type conversion (6 functions) | Small | Must |
-| 16 | Tests: variable let/set/scoping | Medium | Must |
-| 17 | Tests: control flow (if/elif/else/switch) | Medium | Must |
-| 18 | Tests: loops (for/while/range/break/continue) | Medium | Must |
-| 19 | Tests: functions + recursion | Medium | Must |
-| 20 | Tests: error handling (try/catch/finally) | Medium | Must |
-| 21 | Tests: resource limits | Medium | Must |
-| 22 | Tests: stdlib functions | Large | Must |
-| 23 | Tests: edge cases (type errors, nil, overflow) | Medium | Must |
+| 3 | JSONC pre-processor (`lang/preprocess.go`) | Small | Must |
+| 4 | JSON parser → AST (`lang/parser.go`) | Large | Must |
+| 5 | Expression engine abstraction + expr-lang implementation (`lang/expr_engine.go`) | Large | Must |
+| 6 | Expression integration in compiler/VM (`lang/compiler.go`) | Large | Must |
+| 7 | Tree-walk VM (`lang/vm.go`) | Large | Must |
+| 8 | Variable scoping (`lang/scope.go`) | Medium | Must |
+| 9 | Type system — inference + gradual (`lang/types.go`) | Medium | Must |
+| 10 | Error types with position info (`lang/errors.go`) | Small | Must |
+| 11 | Debugger interface + trace capture (`lang/debugger.go`) | Medium | Must |
+| 12 | Resource limits (`runtime/limits.go`) | Medium | Must |
+| 13 | Runtime API — NewRuntime, Execute, options (`runtime/runtime.go`) | Medium | Must |
+| 14 | Execution context — session, metadata (`runtime/context.go`) | Small | Must |
+| 15 | Structured logger interface + runtime wiring (`runtime/logger.go`) | Small | Must |
+| 16 | Stdlib: math Layer 2 additions (7 functions) | Medium | Must |
+| 17 | Stdlib: strings Layer 2 additions (5 functions) | Medium | Must |
+| 18 | Stdlib: arrays Layer 2 additions (5 functions) | Medium | Must |
+| 19 | Stdlib: type conversion Layer 2 additions (2 functions) | Small | Must |
+| 20 | Tests: variable let/set/scoping | Medium | Must |
+| 21 | Tests: control flow (if/elif/else/switch) | Medium | Must |
+| 22 | Tests: loops (for/while/range/break/continue) | Medium | Must |
+| 23 | Tests: functions + recursion | Medium | Must |
+| 24 | Tests: error handling (try/catch/finally) | Medium | Must |
+| 25 | Tests: resource limits + expression node limits | Medium | Must |
+| 26 | Tests: JSONC preprocess + `.jsonc` fixtures | Medium | Must |
+| 27 | Tests: debugger / trace / logger hooks | Medium | Must |
+| 28 | Tests: Layer 2 stdlib functions | Medium | Must |
+| 29 | Tests: edge cases (type errors, nil, overflow) | Medium | Must |
+
+### 15.5 Debugging & Observability
+
+The runtime should support execution tracing from the first VM implementation.
+
+**Trace format:**
+
+```json
+{
+  "trace": [
+    {"step": 0, "type": "let", "var": "x", "value": 42, "duration_us": 5},
+    {"step": 1, "type": "if", "condition": "x > 0", "result": true, "duration_us": 2},
+    {"step": 2, "type": "return", "value": "ok", "duration_us": 1}
+  ],
+  "total_steps": 3,
+  "total_duration_us": 8
+}
+```
+
+`lang/debugger.go` defines the `Debugger` interface and execution-trace support. Runtime options should include:
+- `WithDebugger(debugger)` — step/function/error callbacks
+- `WithTrace(true)` — capture execution trace for inspection
+
+### 15.6 Program Reuse & Concurrency
+
+go-json follows a **compile-once, run-many** pattern.
+
+- `Program` is immutable after compilation.
+- Each execution gets a fresh scope and execution context.
+- Multiple goroutines can run the same compiled program concurrently.
+- Runtime maintains a program cache to avoid recompiling identical program content.
+
+This architecture aligns with expr-lang's concurrent-safe compiled programs and is required for production reuse.
+
+### 15.7 Versioning
+
+Programs may declare a language version field:
+
+```json
+{
+  "name": "my_program",
+  "go_json": "1",
+  "steps": []
+}
+```
+
+Versioning rules:
+- `go_json` declares the language version the program targets.
+- Deprecated syntax/functions should emit warnings first, not immediate hard failures.
+- A migration tool should convert old syntax to new syntax across versions.
+
+This provides a compatibility path as the language evolves.
+
+### 15.8 Structured Logging
+
+The `log` step should support both backward-compatible string logging and enhanced structured logging.
+
+```json
+{"log": "'Processing order'"}
+
+{"log": {
+  "message": "'Order processed'",
+  "level": "info",
+  "data": {
+    "order_id": "order.id",
+    "total": "order.total"
+  }
+}}
+```
+
+`runtime/logger.go` defines a `Logger` interface for host-provided structured logging. Runtime option:
+- `WithLogger(logger)` — inject structured logger implementation
+
+Default levels: `debug`, `info`, `warn`, `error`.

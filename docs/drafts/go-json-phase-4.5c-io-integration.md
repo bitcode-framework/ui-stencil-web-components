@@ -144,6 +144,27 @@ rt := gojson.NewRuntime(
 )
 ```
 
+I/O modules must also be **explicitly imported** in the program. They are not magically available just because the host enabled them at runtime.
+
+```json
+{
+  "import": {
+    "http": "io:http",
+    "fs": "io:fs",
+    "sql": "io:sql",
+    "exec": "io:exec",
+    "regex": "io:regex"
+  }
+}
+```
+
+Runtime enable/disable and program imports are separate gates:
+
+- Program import decides what the script is allowed to reference.
+- Runtime configuration decides what the host actually exposes.
+- Imported but disabled I/O → compile error.
+- Enabled but not imported I/O → symbol not found.
+
 Host application controls which I/O modules are available. Programs that call disabled I/O → compile error: `"function 'http.get' not available (I/O disabled)"`.
 
 ---
@@ -482,6 +503,9 @@ go-json run program.json --timeout 60s --max-depth 500
 # Validate (compile check, no execution)
 go-json check program.json
 
+# Run tests
+go-json test tests/
+
 # Export AST
 go-json ast program.json --output ast.json
 
@@ -489,6 +513,9 @@ go-json ast program.json --output ast.json
 go-json codegen program.json --target go --output program.go
 go-json codegen program.json --target js --output program.js
 go-json codegen program.json --target python --output program.py
+
+# Migrate deprecated syntax
+go-json migrate program.json --from v1 --to v2
 ```
 
 ### 5.2 REPL (Future)
@@ -509,6 +536,74 @@ go-json repl
 ```
 
 This is a nice-to-have, not a must for Phase 4.5c.
+
+### 5.3 Testing Framework
+
+Phase 4.5c includes a built-in test runner for go-json programs. Test files use normal go-json structure plus `"test": true` and a `"cases"` array.
+
+**Test file format:**
+
+```json
+{
+  "name": "test_discount",
+  "test": true,
+  "import": {
+    "calc": "../functions/discount.json"
+  },
+  "cases": [
+    {
+      "_c": "Gold tier gets 15% discount",
+      "call": "calc.calculateDiscount",
+      "with": {
+        "price": "100.0",
+        "quantity": "5",
+        "tier": "'gold'"
+      },
+      "expect": 75.0
+    },
+    {
+      "_c": "Unknown tier gets 5% discount",
+      "call": "calc.calculateDiscount",
+      "with": {
+        "price": "200.0",
+        "quantity": "2",
+        "tier": "'bronze'"
+      },
+      "expect": 20.0
+    }
+  ]
+}
+```
+
+**CLI:**
+
+```bash
+go-json test tests/
+```
+
+**Expected output:**
+
+```bash
+# ✓ test_discount: Gold tier gets 15% discount (2ms)
+# ✗ test_discount: Unknown tier gets 5% discount
+#   Expected: 20.0
+#   Got: 10.0
+# 1 passed, 1 failed
+```
+
+This is a Phase 4.5c feature, but the file format is designed now for consistency across CLI, editor, and future CI integration.
+
+### 5.4 Migration Tool
+
+Language evolution needs an official upgrade path for deprecated syntax.
+
+```bash
+go-json migrate program.json --from v1 --to v2
+```
+
+The migration tool auto-transforms deprecated syntax to the target version where a safe rewrite is known. Typical examples include renamed stdlib functions, deprecated aliases, and structural syntax that has a deterministic replacement.
+
+The migrated output should remain valid go-json source, preserve non-conflicting program structure, and report any constructs that require manual review.
 
 ---
 
@@ -537,15 +632,20 @@ This is a nice-to-have, not a must for Phase 4.5c.
 | **CLI** | | | |
 | 16 | `go-json run` command | Medium | Must |
 | 17 | `go-json check` command (validate) | Small | Must |
-| 18 | `go-json ast` command (export AST) | Small | Should |
-| 19 | `go-json codegen` command | Medium | Should |
+| 18 | `go-json test` command | Medium | Must |
+| 19 | `go-json ast` command (export AST) | Small | Should |
+| 20 | `go-json codegen` command | Medium | Should |
+| 21 | `go-json migrate` command | Medium | Should |
 | **Tests** | | | |
-| 20 | Tests: HTTP module | Medium | Must |
-| 21 | Tests: FS module | Medium | Must |
-| 22 | Tests: SQL module | Medium | Must |
-| 23 | Tests: Extension API | Medium | Must |
-| 24 | Tests: Bitcode bridge integration | Large | Must |
-| 25 | Tests: .json script detection in bitcode | Small | Must |
-| 26 | Tests: AST export | Medium | Must |
-| 27 | Tests: Code generation (Go/JS/Python) | Large | Should |
-| 28 | Tests: CLI commands | Medium | Must |
+| 22 | Tests: HTTP module | Medium | Must |
+| 23 | Tests: FS module | Medium | Must |
+| 24 | Tests: SQL module | Medium | Must |
+| 25 | Tests: Extension API | Medium | Must |
+| 26 | Tests: Bitcode bridge integration | Large | Must |
+| 27 | Tests: .json script detection in bitcode | Small | Must |
+| 28 | Tests: AST export | Medium | Must |
+| 29 | Tests: Code generation (Go/JS/Python) | Large | Should |
+| 30 | Tests: CLI commands | Medium | Must |
+| **Additional Phase 4.5c Tools** | | | |
+| 31 | Test runner implementation | Medium | Must |
+| 32 | Migration tool implementation | Medium | Must |
