@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/bitcode-framework/go-json/lang"
 	"github.com/bitcode-framework/go-json/runtime"
@@ -13,6 +14,11 @@ import (
 func BuildHandler(rt *runtime.Runtime, compiled *lang.CompiledProgram, route FlatRoute) adapters.HandlerFunc {
 	return func(ctx *adapters.RequestContext) *adapters.Response {
 		requestMap := BuildRequestMap(ctx)
+
+		tempFiles := collectTempFiles(requestMap)
+		if len(tempFiles) > 0 {
+			defer cleanupTempFiles(tempFiles)
+		}
 
 		args := map[string]any{
 			"request": requestMap,
@@ -33,6 +39,47 @@ func BuildHandler(rt *runtime.Runtime, compiled *lang.CompiledProgram, route Fla
 		}
 
 		return ConvertToResponse(result, route)
+	}
+}
+
+func collectTempFiles(requestMap map[string]any) []string {
+	body, ok := requestMap["body"]
+	if !ok {
+		return nil
+	}
+	bodyMap, ok := body.(map[string]any)
+	if !ok {
+		return nil
+	}
+	var paths []string
+	for _, v := range bodyMap {
+		switch f := v.(type) {
+		case map[string]any:
+			if isFile, _ := f["_file"].(bool); isFile {
+				if p, ok := f["temp_path"].(string); ok && p != "" {
+					paths = append(paths, p)
+				}
+			}
+		case []any:
+			for _, item := range f {
+				if fm, ok := item.(map[string]any); ok {
+					if isFile, _ := fm["_file"].(bool); isFile {
+						if p, ok := fm["temp_path"].(string); ok && p != "" {
+							paths = append(paths, p)
+						}
+					}
+				}
+			}
+		}
+	}
+	return paths
+}
+
+func cleanupTempFiles(paths []string) {
+	for _, p := range paths {
+		if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
+			log.Printf("[go-json] failed to cleanup temp file %s: %v", p, err)
+		}
 	}
 }
 
@@ -92,6 +139,23 @@ func ConvertToResponse(result any, route FlatRoute) *adapters.Response {
 			resp.Status = 200
 		}
 		return resp
+	}
+
+	if errVal, ok := resultMap["error"]; ok {
+		switch e := errVal.(type) {
+		case string:
+			if resp.Status == 0 {
+				resp.Status = 500
+			}
+			resp.Body = map[string]any{"error": e}
+			return resp
+		case map[string]any:
+			if resp.Status == 0 {
+				resp.Status = 500
+			}
+			resp.Body = map[string]any{"error": e}
+			return resp
+		}
 	}
 
 	if body, ok := resultMap["body"]; ok {

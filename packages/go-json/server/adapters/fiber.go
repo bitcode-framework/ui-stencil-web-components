@@ -3,6 +3,10 @@ package adapters
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"mime/multipart"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -123,6 +127,8 @@ func fiberToRequestContext(c *fiber.Ctx) *RequestContext {
 			formData[string(key)] = string(value)
 		})
 		body = formData
+	} else if strings.HasPrefix(contentType, "text/") {
+		body = string(c.Body())
 	} else if strings.HasPrefix(contentType, "multipart/form-data") {
 		formData := make(map[string]any)
 		if form, err := c.MultipartForm(); err == nil {
@@ -136,20 +142,24 @@ func fiberToRequestContext(c *fiber.Ctx) *RequestContext {
 			for key, files := range form.File {
 				if len(files) == 1 {
 					f := files[0]
+					tempPath := saveTempFile(f)
 					formData[key] = map[string]any{
 						"_file":        true,
 						"filename":     f.Filename,
 						"size":         f.Size,
 						"content_type": f.Header.Get("Content-Type"),
+						"temp_path":    tempPath,
 					}
 				} else {
 					fileList := make([]map[string]any, len(files))
 					for i, f := range files {
+						tempPath := saveTempFile(f)
 						fileList[i] = map[string]any{
 							"_file":        true,
 							"filename":     f.Filename,
 							"size":         f.Size,
 							"content_type": f.Header.Get("Content-Type"),
+							"temp_path":    tempPath,
 						}
 					}
 					formData[key] = fileList
@@ -223,4 +233,26 @@ func executeMiddlewareChain(ctx *RequestContext, middleware []MiddlewareFunc, ha
 		return mw(ctx, next)
 	}
 	return next()
+}
+
+func saveTempFile(fh *multipart.FileHeader) string {
+	src, err := fh.Open()
+	if err != nil {
+		return ""
+	}
+	defer src.Close()
+
+	tmpDir := os.TempDir()
+	tmpFile, err := os.CreateTemp(tmpDir, "gojson-upload-*"+filepath.Ext(fh.Filename))
+	if err != nil {
+		return ""
+	}
+	defer tmpFile.Close()
+
+	if _, err := io.Copy(tmpFile, src); err != nil {
+		os.Remove(tmpFile.Name())
+		return ""
+	}
+
+	return tmpFile.Name()
 }
