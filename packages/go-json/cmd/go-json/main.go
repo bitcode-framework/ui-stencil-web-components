@@ -10,6 +10,7 @@ import (
 	"time"
 
 	cg "github.com/bitcode-framework/go-json/codegen"
+	"github.com/bitcode-framework/go-json/generate"
 	goio "github.com/bitcode-framework/go-json/io"
 	"github.com/bitcode-framework/go-json/lang"
 	"github.com/bitcode-framework/go-json/runtime"
@@ -38,6 +39,8 @@ func main() {
 		cmdAST(os.Args[2:])
 	case "codegen":
 		cmdCodegen(os.Args[2:])
+	case "generate":
+		cmdGenerate(os.Args[2:])
 	case "openapi":
 		cmdOpenAPI(os.Args[2:])
 	case "migrate":
@@ -554,4 +557,135 @@ func cmdOpenAPI(args []string) {
 	} else {
 		fmt.Println(string(data))
 	}
+}
+
+func cmdGenerate(args []string) {
+	if len(args) < 1 {
+		fmt.Fprintln(os.Stderr, "Usage: go-json generate <crud|auth|project> [options]")
+		os.Exit(1)
+	}
+
+	switch args[0] {
+	case "crud":
+		cmdGenerateCRUD(args[1:])
+	case "auth":
+		cmdGenerateAuth(args[1:])
+	case "project":
+		cmdGenerateProject(args[1:])
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown generate subcommand: %s\n", args[0])
+		os.Exit(1)
+	}
+}
+
+func cmdGenerateCRUD(args []string) {
+	fs := flag.NewFlagSet("generate crud", flag.ExitOnError)
+	table := fs.String("table", "", "Table name")
+	fields := fs.String("fields", "", "Manual fields (name:type,name:type)")
+	dsn := fs.String("dsn", "", "Database DSN for introspection")
+	auth := fs.Bool("auth", false, "Add JWT auth middleware to write routes")
+	output := fs.String("output", "", "Output file (default: stdout)")
+	dryRun := fs.Bool("dry-run", false, "Print without writing")
+	fs.Parse(args)
+
+	if *table == "" {
+		fmt.Fprintln(os.Stderr, "Error: --table is required")
+		os.Exit(1)
+	}
+
+	var info *generate.TableInfo
+	if *fields != "" {
+		info = generate.ParseManualFields(*table, *fields)
+	} else if *dsn != "" {
+		tables, err := generate.IntrospectDB(*dsn, []string{*table})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		if len(tables) == 0 {
+			fmt.Fprintf(os.Stderr, "Error: table %q not found\n", *table)
+			os.Exit(1)
+		}
+		info = tables[0]
+	} else {
+		fmt.Fprintln(os.Stderr, "Error: --fields or --dsn is required")
+		os.Exit(1)
+	}
+
+	result, err := generate.GenerateCRUDJSON(info, generate.CRUDOptions{
+		TableName: *table,
+		Auth:      *auth,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if *dryRun || *output == "" {
+		fmt.Println(result)
+	} else {
+		if err := os.WriteFile(*output, []byte(result), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "Generated CRUD for %s → %s\n", *table, *output)
+	}
+}
+
+func cmdGenerateAuth(args []string) {
+	fs := flag.NewFlagSet("generate auth", flag.ExitOnError)
+	output := fs.String("output", "", "Output file (default: stdout)")
+	fs.Parse(args)
+
+	result, err := generate.GenerateAuth()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if *output == "" {
+		fmt.Println(result)
+		fmt.Fprintln(os.Stderr, "\n-- SQL Migration --")
+		fmt.Fprintln(os.Stderr, generate.GenerateAuthSQL())
+	} else {
+		if err := os.WriteFile(*output, []byte(result), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "Generated auth scaffold → %s\n", *output)
+	}
+}
+
+func cmdGenerateProject(args []string) {
+	fs := flag.NewFlagSet("generate project", flag.ExitOnError)
+	name := fs.String("name", "my-app", "Project name")
+	auth := fs.Bool("auth", false, "Include auth scaffold")
+	output := fs.String("output", "", "Output directory (default: ./<name>)")
+	fs.Parse(args)
+
+	if fs.NArg() > 0 {
+		*name = fs.Arg(0)
+	}
+
+	dir := *output
+	if dir == "" {
+		dir = *name
+	}
+
+	files := generate.GenerateProject(*name, *auth)
+
+	for path, content := range files {
+		fullPath := dir + "/" + path
+		dirPath := fullPath[:strings.LastIndex(fullPath, "/")]
+		if err := os.MkdirAll(dirPath, 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating directory: %v\n", err)
+			os.Exit(1)
+		}
+		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing %s: %v\n", path, err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "  created %s\n", path)
+	}
+	fmt.Fprintf(os.Stderr, "\nProject %q created in %s/\n", *name, dir)
 }
