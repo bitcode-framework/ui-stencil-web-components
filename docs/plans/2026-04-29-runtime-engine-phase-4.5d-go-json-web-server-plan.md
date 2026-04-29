@@ -56,11 +56,14 @@ Batch 9: OpenAPI/Swagger        │
 Batch 10: SQL Query Params      │
   Task 34-35 (translator + integration)
                                 │
-Batch 11: Tests                 │
-  Task 36-43 (all test suites)
+Batch 11: FS Enhancement        │
+  Task 36 (fs.stat/copy/move/glob) ──► Task 37 (path stdlib)
                                 │
-Batch 12: Docs                  │
-  Task 44 (AGENTS.md + docs)
+Batch 12: Tests                 │
+  Task 38-45 (all test suites)
+                                │
+Batch 13: Docs                  │
+  Task 46 (AGENTS.md + docs)
 ```
 
 ---
@@ -818,9 +821,52 @@ go-json openapi api.json  # stdout
 
 ---
 
-## Batch 11: Tests
+## Batch 11: FS Enhancement + Path Utilities
 
-### Task 36: Server Config Tests
+### Task 36: `fs.stat`, `fs.copy`, `fs.move`, `fs.glob`
+
+**Files:**
+- Modify: `packages/go-json/io/fs.go`
+- Test: `packages/go-json/io/fs_test.go`
+
+**Step 1:** Add new functions to FSModule:
+- `fs.stat(path)` → `{name, size, is_dir, is_file, ext, modified, permissions}`
+- `fs.copy(src, dst)` → copy file, validate both paths
+- `fs.move(src, dst)` → rename/move, validate both paths
+- `fs.glob(pattern)` → `filepath.Glob`, validate results against security config
+
+**Step 2:** Enhance `fs.list` — add optional `detail` parameter. When `true`, return `[]FileInfo` instead of `[]string`. Backward compatible (default `false`).
+
+**Step 3:** Write tests for all new functions + enhanced list.
+
+**Step 4:** Commit: `feat(go-json): fs.stat, fs.copy, fs.move, fs.glob and enhanced fs.list`
+
+---
+
+### Task 37: Path Utility Stdlib Functions
+
+**Files:**
+- Create: `packages/go-json/stdlib/path.go`
+- Modify: `packages/go-json/stdlib/registry.go` (register path functions)
+- Test: `packages/go-json/stdlib/path_test.go`
+
+**Step 1:** Implement stdlib path functions (pure string operations, no I/O):
+- `basename(path)` → `filepath.Base`
+- `dirname(path)` → `filepath.Dir`
+- `extname(path)` → `filepath.Ext`
+- `joinpath(parts...)` → `filepath.Join`
+
+**Step 2:** Register in `DefaultRegistry()`.
+
+**Step 3:** Write tests — edge cases: empty path, no extension, trailing slash, Windows paths.
+
+**Step 4:** Commit: `feat(go-json): path utility stdlib — basename, dirname, extname, joinpath`
+
+---
+
+## Batch 12: Tests
+
+### Task 38: Server Config Tests
 
 **Files:**
 - Create: `packages/go-json/server/config_test.go`
@@ -831,7 +877,7 @@ Tests: default config, validation, parsing from JSON, invalid config errors, aut
 
 ---
 
-### Task 37: Route Parsing Tests
+### Task 39: Route Parsing Tests
 
 **Files:**
 - Create: `packages/go-json/server/router_test.go`
@@ -842,7 +888,7 @@ Tests: basic routes, groups, nested groups, middleware merging, duplicate detect
 
 ---
 
-### Task 38: Handler Bridge Tests
+### Task 40: Handler Bridge Tests
 
 **Files:**
 - Create: `packages/go-json/server/handler_test.go`
@@ -853,7 +899,7 @@ Tests: request object construction, file upload handling, response conversion (J
 
 ---
 
-### Task 39: Middleware + Auth Tests
+### Task 41: Middleware + Auth Tests
 
 **Files:**
 - Create: `packages/go-json/server/middleware_test.go`
@@ -865,7 +911,7 @@ Tests: chain execution order, short-circuit, built-in middleware, custom middlew
 
 ---
 
-### Task 40: Template + Static Tests
+### Task 42: Template + Static Tests
 
 **Files:**
 - Create: `packages/go-json/server/template_test.go`
@@ -877,7 +923,7 @@ Tests: template rendering, layouts, partials, custom functions, static file serv
 
 ---
 
-### Task 41: OpenAPI Tests
+### Task 43: OpenAPI Tests
 
 **Files:**
 - Create: `packages/go-json/server/openapi_test.go`
@@ -888,13 +934,13 @@ Tests: spec generation from routes, security scheme mapping, api annotation pars
 
 ---
 
-### Task 42: SQL Parameter Translation Tests
+### Task 44: SQL Parameter Translation Tests
 
 Already covered in Task 34 (`packages/go-json/io/sql_params_test.go`).
 
 ---
 
-### Task 43: Server Codegen Tests
+### Task 45: Server Codegen Tests
 
 **Files:**
 - Create: `packages/go-json/codegen/server_test.go`
@@ -905,9 +951,9 @@ Tests: Go+Fiber output, Go+net/http output, JS+Express output, Python+FastAPI ou
 
 ---
 
-## Batch 12: Documentation
+## Batch 13: Documentation
 
-### Task 44: Update Documentation
+### Task 46: Update Documentation
 
 **Files:**
 - Modify: `packages/go-json/AGENTS.md`
@@ -940,6 +986,7 @@ Tests: Go+Fiber output, Go+net/http output, JS+Express output, Python+FastAPI ou
 | 8: Plugable Auth | 26-30 | Auth interface, Bearer/JWT, API key, Basic, Custom strategies |
 | 9: OpenAPI/Swagger | 31-33 | Spec generator, Swagger UI, CLI command |
 | 10: SQL Query Params | 34-35 | Unified `?`/`:name` translation across drivers |
-| 11: Tests | 36-43 | Config, routing, handler, auth, middleware, template, OpenAPI, codegen tests |
-| 12: Docs | 44 | AGENTS.md update |
-| **Total** | **44 tasks** | |
+| 11: FS Enhancement | 36-37 | fs.stat/copy/move/glob, path stdlib (basename/dirname/extname/joinpath) |
+| 12: Tests | 38-45 | Config, routing, handler, auth, middleware, template, OpenAPI, codegen tests |
+| 13: Docs | 46 | AGENTS.md update |
+| **Total** | **46 tasks** | |

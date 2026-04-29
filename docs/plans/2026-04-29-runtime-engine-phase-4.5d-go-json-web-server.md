@@ -1579,7 +1579,136 @@ Custom middleware that returns with `status`/`body`/`redirect` = short-circuit.
 
 ---
 
-## §21. Implementation Scope
+## §21. FS Module Enhancement + File Upload Integration
+
+### 21.1 Missing FS Operations
+
+The Phase 4.5c FS module provides basic CRUD (`read`, `write`, `append`, `exists`, `list`, `mkdir`, `remove`). Web server use cases (file uploads, exports, backups) require additional operations:
+
+| Function | Input | Returns | Description |
+|---|---|---|---|
+| `fs.stat(path)` | path | `{name, size, is_dir, is_file, ext, modified, permissions}` | File/directory metadata |
+| `fs.copy(src, dst)` | source, destination | `void` | Copy file or directory |
+| `fs.move(src, dst)` | source, destination | `void` | Move/rename file or directory |
+| `fs.glob(pattern)` | glob pattern | `[]string` | Find files matching pattern |
+| `fs.list(path, detail?)` | path, optional detail flag | `[]string` or `[]FileInfo` | Enhanced: return metadata when `detail: true` |
+
+### 21.2 Path Utility Functions (Stdlib)
+
+These are pure string operations (no disk I/O), so they belong in stdlib, not the FS module:
+
+| Function | Input | Returns | Example |
+|---|---|---|---|
+| `basename(path)` | path string | filename | `basename("/a/b/c.txt")` → `"c.txt"` |
+| `dirname(path)` | path string | directory | `dirname("/a/b/c.txt")` → `"/a/b"` |
+| `extname(path)` | path string | extension | `extname("photo.jpg")` → `".jpg"` |
+| `joinpath(parts...)` | path segments | joined path | `joinpath("/a", "b", "c.txt")` → `"/a/b/c.txt"` |
+
+### 21.3 `fs.stat` Return Shape
+
+```json
+{"let": "info", "call": "fs.stat", "with": {"path": "'data.json'"}}
+// info = {
+//   "name": "data.json",
+//   "size": 1024,
+//   "is_dir": false,
+//   "is_file": true,
+//   "ext": ".json",
+//   "modified": "2026-04-29T10:30:00Z",
+//   "permissions": "0644"
+// }
+```
+
+### 21.4 `fs.list` Enhanced Mode
+
+```json
+// Simple mode (backward compatible)
+{"let": "names", "call": "fs.list", "with": {"path": "'./data'"}}
+// names = ["a.txt", "b.txt", "subdir"]
+
+// Detailed mode
+{"let": "entries", "call": "fs.list", "with": {"path": "'./data'", "detail": true}}
+// entries = [
+//   {"name": "a.txt", "size": 512, "is_dir": false, "ext": ".txt", "modified": "2026-04-29T10:00:00Z"},
+//   {"name": "subdir", "size": 0, "is_dir": true, "modified": "2026-04-28T09:00:00Z"}
+// ]
+```
+
+### 21.5 File Upload → FS Integration Flow
+
+File uploads (§4.3) produce temp files. FS operations are the primary way handlers process uploaded files:
+
+```
+HTTP multipart request
+  → Server saves to temp dir → {_file: true, temp_path: "/tmp/xxx"}
+    → Handler uses FS operations:
+        fs.stat(file.temp_path)           ← check size, validate
+        extname(file.filename)            ← check extension
+        fs.copy(file.temp_path, dest)     ← save to permanent location
+        fs.move(file.temp_path, dest)     ← or move (more efficient)
+    → Server auto-deletes temp file after handler completes
+```
+
+**Complete file upload example:**
+
+```json
+{
+  "functions": {
+    "uploadDocument": {
+      "steps": [
+        {"let": "file", "expr": "request.body.document"},
+        {"if": "file._file != true", "then": [
+          {"return": {"status": 400, "body": {"error": "document file required"}}}
+        ]},
+
+        {"_c": "Validate extension"},
+        {"let": "ext", "expr": "extname(file.filename)"},
+        {"if": "ext != '.pdf' && ext != '.docx' && ext != '.xlsx'", "then": [
+          {"return": {"status": 400, "body": {"error": "only pdf/docx/xlsx allowed"}}}
+        ]},
+
+        {"_c": "Validate size (10MB max)"},
+        {"if": "file.size > 10485760", "then": [
+          {"return": {"status": 400, "body": {"error": "file too large (max 10MB)"}}}
+        ]},
+
+        {"_c": "Generate unique filename and save"},
+        {"let": "unique_name", "expr": "crypto.uuid() + ext"},
+        {"let": "dest", "expr": "joinpath('./uploads/documents', unique_name)"},
+        {"call": "fs.mkdir", "with": {"path": "'./uploads/documents'"}},
+        {"call": "fs.copy", "with": {"src": "file.temp_path", "dst": "dest"}},
+
+        {"_c": "Save record to database"},
+        {"let": "result", "call": "sql.execute", "with": {
+          "query": "INSERT INTO documents (filename, original_name, size, path, user_id) VALUES (?, ?, ?, ?, ?)",
+          "args": ["unique_name", "file.filename", "file.size", "dest", "request.user.sub"]
+        }},
+
+        {"return": {"status": 201, "body": {"id": "result.last_insert_id", "filename": "unique_name"}}}
+      ]
+    }
+  }
+}
+```
+
+### 21.6 Codegen Translation
+
+All FS operations and path utilities have direct equivalents in target languages:
+
+| go-json | Go | JavaScript (Node.js) | Python |
+|---|---|---|---|
+| `fs.stat(path)` | `os.Stat(path)` | `fs.statSync(path)` | `Path(path).stat()` |
+| `fs.copy(src, dst)` | `io.Copy(dst, src)` | `fs.copyFileSync(src, dst)` | `shutil.copy2(src, dst)` |
+| `fs.move(src, dst)` | `os.Rename(src, dst)` | `fs.renameSync(src, dst)` | `Path(src).rename(dst)` |
+| `fs.glob(pattern)` | `filepath.Glob(pattern)` | `glob.sync(pattern)` | `list(Path('.').glob(pattern))` |
+| `basename(path)` | `filepath.Base(path)` | `path.basename(path)` | `Path(path).name` |
+| `dirname(path)` | `filepath.Dir(path)` | `path.dirname(path)` | `str(Path(path).parent)` |
+| `extname(path)` | `filepath.Ext(path)` | `path.extname(path)` | `Path(path).suffix` |
+| `joinpath(a, b)` | `filepath.Join(a, b)` | `path.join(a, b)` | `str(Path(a) / b)` |
+
+---
+
+## §22. Implementation Scope
 
 ### Package Structure
 
