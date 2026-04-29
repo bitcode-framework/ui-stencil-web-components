@@ -18,11 +18,14 @@ Standalone JSON/JSONC programming language engine. Embeddable in Go applications
 ```
 packages/go-json/
 ├── lang/           Core language engine (AST, parser, compiler, VM, scope, types, errors, expr engine, debugger, import resolver)
-├── stdlib/         Layer 2 stdlib (34 functions + crypto namespace + regex with LRU cache). Layer 1 = expr-lang built-ins (~68 functions, zero work)
-├── runtime/        Runtime API: NewRuntime(), Execute(), CompileFile(), Close(), program cache, limits, logger, session, extensions
-├── io/             I/O modules: HTTP, FS, SQL, Exec, MongoDB, Redis with security layer (Phase 4.5c)
-├── codegen/        Code generation: Go, JavaScript, Python generators (Phase 4.5c)
-├── cmd/go-json/    CLI: run, check, test, ast, codegen, migrate commands (Phase 4.5c)
+├── stdlib/         Layer 2 stdlib (42+ functions + crypto namespace + regex + path + JSON). Layer 1 = expr-lang built-ins (~68 functions)
+├── runtime/        Runtime API: NewRuntime(), Execute(), ExecuteFunction(), CompileFile(), Close(), program cache, limits, logger, session, extensions
+├── io/             I/O modules: HTTP, FS, SQL, Exec, MongoDB, Redis with security layer + unified SQL param translation (Phase 4.5c-d)
+├── codegen/        Code generation: Go/JS/Python generators + server codegen (Fiber/net-http/Express/FastAPI) + dependency management (Phase 4.5c-d)
+├── server/         Web server execution mode: adapters (Fiber/net-http/Echo/Gin/Chi), middleware, JWT, auth, templates, static, OpenAPI (Phase 4.5d)
+├── server/adapters/ Framework adapter implementations (ServerAdapter interface)
+├── generate/       CRUD generator, auth scaffold, project scaffold, pattern templates, DB introspection (Phase 4.5d)
+├── cmd/go-json/    CLI: run, serve, check, test, ast, codegen, generate, openapi, migrate commands
 └── testdata/       Test fixture programs (.json, .jsonc)
 ```
 
@@ -76,8 +79,8 @@ packages/go-json/
 | Layer | Contents | Ownership |
 |-------|----------|-----------|
 | Layer 1 | expr-lang built-ins (~68 functions: abs, ceil, floor, round, min, max, len, upper, lower, trim, split, filter, map, reduce, find, sort, int, float, string, type, etc.) | expr-lang — DO NOT reimplement |
-| Layer 2 | go-json additions (34 functions + crypto namespace). Phase 4.5a: clamp, sign, randomInt, randomFloat, pow, sqrt, mod, padLeft, padRight, substring, format, matches, append, prepend, slice, chunk, zip, bool, isNil. Phase 4.5b: has, get, merge, pick, omit, formatDate, addDuration, diffDates, urlEncode, urlDecode, sprintf, crypto.sha256, crypto.md5, crypto.uuid, crypto.hmac | `stdlib/` package |
-| Layer 3 | I/O modules (HTTP, FS, SQL, Exec, MongoDB, Redis) with two-layer security gating. Regex stdlib (match, findAll, replace with LRU caching). | `io/` and `stdlib/regex.go` |
+| Layer 2 | go-json additions (42+ functions + crypto namespace). Phase 4.5a: clamp, sign, randomInt, randomFloat, pow, sqrt, mod, padLeft, padRight, substring, format, matches, append, prepend, slice, chunk, zip, bool, isNil. Phase 4.5b: has, get, merge, pick, omit, formatDate (universal format), addDuration, diffDates, urlEncode, urlDecode, sprintf, crypto.sha256, crypto.md5, crypto.uuid, crypto.hmac. Phase 4.5d: toJSON, fromJSON, basename, dirname, extname, joinpath, cleanpath, isabs, stemname, pathsep | `stdlib/` package |
+| Layer 3 | I/O modules (HTTP, FS, SQL, Exec, MongoDB, Redis) with two-layer security gating. Regex stdlib (match, findAll, replace with LRU caching). FS enhancements: stat, copy, move, glob. SQL unified query parameter translation (?/:name across drivers). | `io/` and `stdlib/regex.go` |
 
 ## Conventions
 
@@ -90,17 +93,18 @@ packages/go-json/
 
 ```bash
 cd packages/go-json
-go test ./... -v          # All tests (184)
+go test ./... -v          # All tests (221)
 go test ./lang/ -v        # Language engine tests
 go test ./lang/ -run TestStruct -v       # Struct tests
 go test ./lang/ -run TestMethod -v       # Method tests
 go test ./lang/ -run TestParallel -v     # Parallel tests
 go test ./lang/ -run TestImport -v       # Import tests
 go test ./lang/ -run TestIntegration -v  # Integration tests
-go test ./stdlib/ -v                     # Stdlib tests (including regex)
-go test ./io/ -v                         # I/O security tests
+go test ./stdlib/ -v                     # Stdlib tests (including regex, path, JSON)
+go test ./io/ -v                         # I/O + SQL param translation tests
 go test ./runtime/ -v                    # Runtime + extension tests
 go test ./codegen/ -v                    # Code generation tests
+go test ./server/ -v                     # Server config, routing, handler tests
 ```
 
 ## What's Done (Phase 4.5b)
@@ -137,8 +141,41 @@ go test ./codegen/ -v                    # Code generation tests
 - Windows path security: case-insensitive matching, directory boundary checks
 - 184 tests total (131 from Phase 4.5a/b + 53 new)
 
+## What's Done (Phase 4.5d)
+
+- **Server execution mode** (`go-json serve`): declarative routing, plugable framework adapters, middleware, template rendering, static files
+- **ServerAdapter interface**: framework-agnostic abstraction with `RequestContext`/`Response` types, adapter registry
+- **Framework adapters**: Fiber (default), net/http (stdlib), Echo (build-tagged), Gin (build-tagged), Chi (build-tagged)
+- **Route system**: declarative routes with groups, prefix nesting, middleware merging, route flattening, validation
+- **Handler bridge**: `BuildHandler` converts HTTP→go-json function→HTTP. `ExecuteFunction` added to Runtime and VM for direct function invocation
+- **Request object**: full body parsing (JSON, form, multipart, text), file upload with temp file handling + cleanup, path params, query, headers, cookies, IP, store
+- **Response convention**: status+body (JSON), data+render (template), redirect, cookies, headers, error field, 204 for nil
+- **Middleware chain engine**: built-in (logger, recover, CORS, secure headers, request_id, compress, rate_limit) + custom go-json functions with short-circuit
+- **JWT module**: middleware (header + cookie extraction, validation) + callable functions (sign, verify, decode, refresh)
+- **Plugable auth system**: `AuthStrategy` interface with Bearer/JWT, API Key, Basic Auth, Custom (go-json function) strategies. `auth` and `auth:name` middleware resolution
+- **Template engine**: Go html/template with 20+ built-in functions (json, formatDate, upper, lower, truncate, default, safeHTML, urlEncode, add/sub/mul/div/mod, seq, etc.), layouts, partials, dev-mode reload
+- **Static file serving**: configurable directory + prefix, path traversal protection, hidden file blocking
+- **OpenAPI/Swagger**: auto-generated OpenAPI 3.0 spec from routes, `api` annotation support (body/query/responses), security scheme mapping, Swagger UI at `/docs`, `go-json openapi` CLI command
+- **Server codegen**: `ServerCodegenAdapter` interface with language×framework registry. Implementations: Go+Fiber, Go+net/http, JS+Express, Python+FastAPI
+- **Codegen dependency management**: feature detection, go.mod/package.json/requirements.txt/.env.example generation
+- **SQL unified query parameters**: `TranslateQuery` converts `?` and `:name` placeholders to driver-specific syntax (postgres $1, sqlserver @p1, oracle :1, sqlite/mysql ?). Integrated into SQL module
+- **FS enhancements**: fs.stat, fs.copy, fs.move, fs.glob + enhanced fs.list
+- **Path stdlib**: basename, dirname, extname, joinpath, cleanpath, isabs, stemname, pathsep
+- **Stdlib additions**: toJSON/fromJSON, formatDate universal format (YYYY-MM-DD → Go layout translation)
+- **CRUD generator**: database introspection (SQLite, PostgreSQL, MySQL), type mapping (DB→go-json→OpenAPI), manual fields mode, CRUD route+handler generation with validation
+- **Auth scaffold generator**: register, login, refresh, me, change-password endpoints with JWT
+- **Project scaffold generator**: full project structure (api.json, templates/, public/, migrations/, .env.example, README.md)
+- **Pattern template engine**: built-in patterns (simple, service-layer, DDD, hexagonal), custom template support, per-model file generation
+- **CLI commands**: `go-json serve` (--dev, --port, --host, --docs, --io), `go-json generate` (crud/auth/project with --table/--fields/--dsn/--auth/--output), `go-json openapi` (--output)
+- **Server mode detection**: `IsServerProgram()` checks for routes key
+- **Health endpoint**: built-in `/health` with status, name, uptime (bypasses middleware)
+- **Graceful shutdown**: SIGINT/SIGTERM handling with configurable timeout
+- 221 tests total (184 from Phase 4.5a/b/c + 37 new)
+
 ## What's NOT Done
 
 - Expression-level compile-time type validation (deferred to runtime)
 - MongoDB/Redis require external driver dependencies (stubbed until drivers added to go.mod)
 - REPL mode (future)
+- Dev mode file watching (fsnotify — optional dependency, not yet added)
+- Interactive mode for `go-json generate` (--interactive flag)
