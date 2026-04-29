@@ -684,10 +684,13 @@ func TestExecuteWhenNodeNotAvailable(t *testing.T) {
 // --- Test 35: Script timeout (vm.timeout) ---
 
 func TestIntegrationScriptTimeout(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping 30s timeout test in short mode")
+	}
 	tp := startTestNode(t)
 	// vm.runInNewContext timeout only covers synchronous module-level code
 	script := writeScript(t, "timeout.js", `
-		while(true) {} // infinite loop at module level — vm.timeout catches this
+		while(true) {}
 		module.exports = { execute: function() {} };
 	`)
 	tp.sendExecute(1, script, map[string]any{})
