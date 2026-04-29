@@ -1,6 +1,6 @@
 # Phase 4.5a — go-json Core Language + Stdlib (Draft)
 
-**Status**: Approved
+**Status**: ✅ Done
 **Date**: 28 April 2026
 **Design Decisions**: See [brainstorming design doc](./2026-04-28-go-json-brainstorming-design.md) for rationale
 **Depends on**: None (foundational)
