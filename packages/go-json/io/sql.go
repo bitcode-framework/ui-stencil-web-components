@@ -135,6 +135,16 @@ func (m *SQLModule) sqlQuery(params ...any) (any, error) {
 		return nil, err
 	}
 
+	effectiveDSN := dsn
+	if effectiveDSN == "" {
+		effectiveDSN = m.security.SQL.DefaultDSN
+	}
+	driver := detectDriverFromDSN(effectiveDSN)
+	query, translatedArgs, translateErr := TranslateQuery(query, driver, args)
+	if translateErr != nil {
+		return nil, fmt.Errorf("sql.query: %w", translateErr)
+	}
+
 	timeout := time.Duration(m.security.SQL.MaxQueryTime) * time.Second
 	if timeout <= 0 {
 		timeout = 30 * time.Second
@@ -145,9 +155,9 @@ func (m *SQLModule) sqlQuery(params ...any) (any, error) {
 	var rows *sql.Rows
 	m.mu.Lock()
 	if m.tx != nil {
-		rows, err = m.tx.QueryContext(ctx, query, args...)
+		rows, err = m.tx.QueryContext(ctx, query, translatedArgs...)
 	} else {
-		rows, err = db.QueryContext(ctx, query, args...)
+		rows, err = db.QueryContext(ctx, query, translatedArgs...)
 	}
 	m.mu.Unlock()
 
@@ -230,6 +240,16 @@ func (m *SQLModule) sqlExecute(params ...any) (any, error) {
 		return nil, err
 	}
 
+	effectiveDSN := dsn
+	if effectiveDSN == "" {
+		effectiveDSN = m.security.SQL.DefaultDSN
+	}
+	driver := detectDriverFromDSN(effectiveDSN)
+	query, translatedArgs, translateErr := TranslateQuery(query, driver, args)
+	if translateErr != nil {
+		return nil, fmt.Errorf("sql.execute: %w", translateErr)
+	}
+
 	timeout := time.Duration(m.security.SQL.MaxQueryTime) * time.Second
 	if timeout <= 0 {
 		timeout = 30 * time.Second
@@ -240,9 +260,9 @@ func (m *SQLModule) sqlExecute(params ...any) (any, error) {
 	var res sql.Result
 	m.mu.Lock()
 	if m.tx != nil {
-		res, err = m.tx.ExecContext(ctx, query, args...)
+		res, err = m.tx.ExecContext(ctx, query, translatedArgs...)
 	} else {
-		res, err = db.ExecContext(ctx, query, args...)
+		res, err = db.ExecContext(ctx, query, translatedArgs...)
 	}
 	m.mu.Unlock()
 
@@ -342,13 +362,13 @@ func (m *SQLModule) sqlRollback(params ...any) (any, error) {
 	return nil, nil
 }
 
-func (m *SQLModule) parseQueryParams(params []any) (string, []any, string, error) {
+func (m *SQLModule) parseQueryParams(params []any) (string, any, string, error) {
 	query, ok := params[0].(string)
 	if !ok {
 		return "", nil, "", fmt.Errorf("sql: query must be a string")
 	}
 
-	var args []any
+	var args any
 	var dsn string
 
 	for i := 1; i < len(params); i++ {
@@ -359,8 +379,10 @@ func (m *SQLModule) parseQueryParams(params []any) (string, []any, string, error
 			if d, ok := v["dsn"].(string); ok {
 				dsn = d
 			}
-			if a, ok := v["args"].([]any); ok {
+			if a, ok := v["args"]; ok {
 				args = a
+			} else {
+				args = v
 			}
 		case string:
 			dsn = v
