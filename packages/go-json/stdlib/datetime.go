@@ -2,6 +2,7 @@ package stdlib
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/expr-lang/expr"
@@ -18,7 +19,7 @@ func RegisterDateTime(r *Registry) {
 		if !ok {
 			return nil, fmt.Errorf("formatDate: second argument must be a format string")
 		}
-		return dt.Format(format), nil
+		return dt.Format(translateUniversalDateFormat(format)), nil
 	}))
 
 	r.Register(expr.Function("addDuration", func(params ...any) (any, error) {
@@ -69,4 +70,26 @@ func toTime(v any) (time.Time, error) {
 	default:
 		return time.Time{}, fmt.Errorf("expected time or string, got %T", v)
 	}
+}
+
+func translateUniversalDateFormat(layout string) string {
+	if strings.Contains(layout, "2006") {
+		return layout
+	}
+	if !strings.ContainsAny(layout, "YMDHhms") {
+		return layout
+	}
+	replacer := strings.NewReplacer(
+		"YYYY", "2006",
+		"YY", "06",
+		"MM", "01",
+		"DD", "02",
+		"HH", "15",
+		"hh", "03",
+		"mm", "04",
+		"ss", "05",
+		"SSS", "000",
+		"TT", "PM",
+	)
+	return replacer.Replace(layout)
 }

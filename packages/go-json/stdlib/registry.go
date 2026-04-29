@@ -46,6 +46,7 @@ func DefaultRegistry() *Registry {
 	RegisterFormat(r)
 	RegisterRegex(r)
 	RegisterPath(r)
+	RegisterJSON(r)
 	r.RegisterEnv("crypto", CryptoNamespace())
 	return r
 }
