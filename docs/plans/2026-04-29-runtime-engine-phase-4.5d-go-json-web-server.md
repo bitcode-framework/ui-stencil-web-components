@@ -240,8 +240,102 @@ Body is auto-parsed based on Content-Type:
 |---|---|
 | `application/json` | `map[string]any` or `[]any` |
 | `application/x-www-form-urlencoded` | `map[string]string` |
-| `multipart/form-data` | `map[string]any` (files as metadata) |
+| `multipart/form-data` | `map[string]any` (see §4.3 File Uploads) |
 | other / missing | raw `string` |
+
+### 4.3 File Uploads
+
+For `multipart/form-data` requests, `request.body` contains both field values and file metadata:
+
+```json
+{
+  "request": {
+    "body": {
+      "name": "Alice",
+      "avatar": {
+        "_file": true,
+        "filename": "photo.jpg",
+        "size": 245760,
+        "content_type": "image/jpeg",
+        "temp_path": "/tmp/go-json-upload-abc123.jpg"
+      }
+    }
+  }
+}
+```
+
+File handling:
+- Files saved to temp directory automatically before handler executes
+- `temp_path` is the path to the temp file (readable via `fs.read` if FS module enabled)
+- `max_body_size` in server config limits total upload size
+- Temp files cleaned up after handler completes
+- Multiple files: each file field gets its own `_file` object
+- File arrays (multiple files same field): `"photos": [{"_file": true, ...}, {"_file": true, ...}]`
+
+Handler example:
+```json
+{
+  "steps": [
+    {"let": "file", "expr": "request.body.avatar"},
+    {"if": "file._file != true", "then": [
+      {"return": {"status": 400, "body": {"error": "avatar file required"}}}
+    ]},
+    {"if": "file.size > 5242880", "then": [
+      {"return": {"status": 400, "body": {"error": "file too large (max 5MB)"}}}
+    ]},
+    {"let": "content", "call": "fs.read", "with": {"path": "file.temp_path", "encoding": "'base64'"}},
+    {"let": "result", "call": "storage.upload", "with": {"filename": "file.filename", "content": "content"}},
+    {"return": {"status": 200, "body": {"url": "result.url"}}}
+  ]
+}
+```
+
+### 4.4 Request Validation
+
+go-json does not include a built-in JSON schema validator. Validation is done in handler steps using conditional logic:
+
+```json
+{
+  "steps": [
+    {"let": "body", "expr": "request.body"},
+    {"if": "body.email == nil || !matches(body.email, '^[^@]+@[^@]+$')", "then": [
+      {"return": {"status": 400, "body": {"error": "valid email required"}}}
+    ]},
+    {"if": "body.name == nil || len(body.name) < 2", "then": [
+      {"return": {"status": 400, "body": {"error": "name must be at least 2 characters"}}}
+    ]}
+  ]
+}
+```
+
+For reusable validation, define a validation function:
+
+```json
+{
+  "functions": {
+    "validateUser": {
+      "params": {"body": "map"},
+      "steps": [
+        {"if": "body.email == nil", "then": [
+          {"return": {"status": 400, "body": {"error": "email required"}}}
+        ]},
+        {"if": "body.name == nil", "then": [
+          {"return": {"status": 400, "body": {"error": "name required"}}}
+        ]}
+      ]
+    },
+    "createUser": {
+      "steps": [
+        {"let": "body", "expr": "request.body"},
+        {"let": "err", "call": "validateUser", "with": {"body": "body"}},
+        {"if": "err != nil", "then": [{"return": "err"}]}
+      ]
+    }
+  }
+}
+```
+
+A dedicated `validate` middleware or JSON schema support may be added in a future phase.
 
 ---
 
@@ -919,7 +1013,22 @@ If `go-json serve` is called on a program without `"routes"`:
 If `go-json run` is called on a program with `"routes"`:
 → Routes are ignored, `"steps"` executed normally (backward compatible)
 
-### 15.2 Validation at Startup
+### 15.2 Built-in Health Check
+
+Every server automatically registers `GET /health` that returns:
+
+```json
+{"status": "ok", "name": "my-api", "uptime": 3600}
+```
+
+This endpoint:
+- Bypasses all middleware (no auth, no rate limit)
+- Always returns 200 if server is running
+- Useful for load balancer health checks, Kubernetes probes
+- Can be disabled: `"server": {"health": false}`
+- Can be customized: `"server": {"health": "/custom-health"}` changes the path
+
+### 15.3 Validation at Startup
 
 Before starting the server, validate:
 1. All `handler` references point to existing functions
