@@ -19,6 +19,7 @@ type Context struct {
 	Result     any
 	UserID     string
 	Locale     string
+	ModuleName string
 	Events     []Event
 	Translator Translator
 	depth      int

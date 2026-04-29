@@ -417,16 +417,8 @@ func NewApp(cfg AppConfig) (*App, error) {
 }
 
 func (a *App) startPluginRuntimes() {
-	if err := a.PluginManager.StartTypescript(""); err != nil {
-		log.Printf("[PLUGIN] TypeScript runtime not available: %v", err)
-	} else {
-		log.Println("[PLUGIN] TypeScript runtime started")
-	}
-
-	if err := a.PluginManager.StartPython(""); err != nil {
-		log.Printf("[PLUGIN] Python runtime not available: %v", err)
-	} else {
-		log.Println("[PLUGIN] Python runtime started")
+	if err := a.PluginManager.StartNodePool(); err != nil {
+		log.Printf("[PLUGIN] Node.js runtime not available: %v", err)
 	}
 }
 
@@ -472,6 +464,7 @@ func (a *App) registerStepHandlers() {
 	})
 	a.Executor.RegisterHandler(parser.StepScript, &steps.ScriptHandler{
 		Runner:         a.PluginManager,
+		BridgeRunner:   a.PluginManager,
 		EmbeddedRunner: embeddedRunner,
 	})
 	a.Executor.RegisterHandler(parser.StepCall, &steps.CallHandler{Executor: a.Executor, Loader: a.ProcessRegistry})
