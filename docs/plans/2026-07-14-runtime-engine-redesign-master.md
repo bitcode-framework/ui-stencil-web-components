@@ -472,6 +472,7 @@ Step 1 → Python **background** pool (step-level override).
 | **4.5c** | go-json I/O + Integration | Phase 4.5b | ✅ Done | HTTP/FS/SQL/exec I/O (explicit import), bitcode bridge integration, scripts/*.json, AST export, CLI runner, test framework, migration tool, regex stdlib, code generation (Go/JS/Python) |
 | **4.5c-fix** | go-json I/O Fixes + Extensions | Phase 4.5c | ✅ Done | 25 bug/gap fixes, MongoDB module, Redis module, multi-driver SQL, connection pooling, two-layer security enforcement |
 | **4.5d** | go-json Web Server | Phase 4.5c-fix | 📋 Planned | Built-in web server (`go-json serve`), declarative routing, plugable framework adapters (Fiber default), plugable auth (JWT/API key/Basic/Custom), middleware, template engine, static files, OpenAPI/Swagger, unified SQL query params, FS enhancements, CRUD generator with DB introspection, architecture patterns (simple/service-layer/DDD/hexagonal), custom templates, codegen dependency management |
+| **4.5e** | Unified Expression Engine | Phase 4.5c | 📋 Planned | Replace 3 hand-rolled evaluators with go-json ExprEngine (expr-lang/expr), public `EvalExpr()` API, fix `" > "` bug, upgrade record rules to expr-lang with `ctx.*` namespace + AST-to-WHERE conversion, reserved namespace validation |
 | **2** | Fix Node.js Child Process | Phase 1, 1.5 | 🔲 Pending | 6 TS scripts in samples/erp work with real bridge |
 | **3** | Fix Python Child Process | Phase 1, 1.5 | 🔲 Pending | 6 PY scripts in samples/erp work with real bridge |
 | **6B** | Polymorphic Relations | Phase 6A | 🔲 Pending | morph_to, morph_one, morph_many, morph_to_many, morph_by_many |
@@ -497,18 +498,23 @@ Phase 1 (Bridge API Design)
        │         │                  │
        │         ├──► Phase 4.5c-fix (Fixes + MongoDB/Redis)
        │         │    │             │
-       │         │    └──► Phase 4.5d (Web Server)
-       │         │         │        │
-       │         │         │  Includes: serve, generate, openapi commands
-       │         │         │  Includes: plugable auth, OpenAPI, CRUD generator
-       │         │         │  Includes: architecture patterns, custom templates
-       │         │         │        │
+        │         │    └──► Phase 4.5d (Web Server)
+        │         │    │    │
+        │         │    │    Includes: serve, generate, openapi commands
+        │         │    │    Includes: plugable auth, OpenAPI, CRUD generator
+        │         │    │    Includes: architecture patterns, custom templates
+        │         │    │    │
+        │         │    └──► Phase 4.5e (Unified Expression Engine)
+        │         │         │
+        │         │         Includes: replace 3 evaluators, EvalExpr API
+        │         │         Includes: record rules with ctx.* + AST-to-WHERE
+        │         │         │
 Phase 6A (Schema Compat) ──────────┤ (independent, can start anytime)
                                     │
                                     ├──► Phase 6B (Polymorphic Relations)
                                     ├──► Phase 6C (Engine Enhancements)
                                     └──► Phase 7 (Module "setting")
-                                         requires Phase 4.5d
+                                         requires Phase 4.5d + 4.5e
 ```
 
 Phase 1.5 must complete before Phase 2-3 (runtime implementations need correct tenant behavior).
@@ -518,7 +524,8 @@ Phase 6B depends on Phase 6A (new field types needed for morph columns).
 Phase 6C depends on Phase 6A (display_field, title_field format, etc.).
 Phase 4.5c-fix depends on Phase 4.5c (fixes bugs and adds MongoDB/Redis/multi-driver SQL).
 Phase 4.5d depends on Phase 4.5c-fix (web server needs working I/O modules).
-Phase 7 needs Phase 4.5d complete — it uses go-json web server as the process engine for module "setting".
+Phase 4.5e depends on Phase 4.5c (unified expression engine needs go-json ExprEngine). Can run in parallel with Phase 4.5d.
+Phase 7 needs Phase 4.5d + 4.5e complete — it uses go-json web server as the process engine and unified expression engine for module "setting".
 
 ---
 
@@ -551,6 +558,8 @@ Phase 7 needs Phase 4.5d complete — it uses go-json web server as the process 
 | Phase 4.5c-fix (Plan) | `2026-04-29-runtime-engine-phase-4.5c-fixes-and-extensions-plan.md` |
 | Phase 4.5d (Design) | `2026-04-29-runtime-engine-phase-4.5d-go-json-web-server.md` |
 | Phase 4.5d (Plan) | `2026-04-29-runtime-engine-phase-4.5d-go-json-web-server-plan.md` |
+| Phase 4.5e (Design) | `2026-07-14-runtime-engine-phase-4.5e-unified-expression-engine.md` |
+| Phase 4.5e (Plan) | `2026-07-14-runtime-engine-phase-4.5e-unified-expression-engine-plan.md` |
 | Phase 4.5 (Decisions) | `2026-04-28-go-json-brainstorming-design.md` |
 | Phase 5 | `2026-07-14-runtime-engine-phase-5-yaegi.md` |
 | Phase 6A | `2026-07-14-runtime-engine-phase-6a-schema-compatibility.md` |
