@@ -263,6 +263,13 @@ Plus bridge: `bitcode.meta.models()`, `bitcode.meta.model("name")`, etc.
 - Call `r.loadWithRelations(ctx, query, results)` after cursor loop in `FindAll`/`FindAllActive`
 - Support `WithClause.Conditions`, `Select`, `OrderBy`, `Limit` for MongoDB queries
 
+**File**: `internal/presentation/api/crud_handler.go`
+
+- Add `?with=` query param support on Read endpoint (`GET /:id`)
+  - Parse `with` param (comma-separated relation names or JSON array)
+  - After `FindByID`, call `loadWithRelations` on the single-record result
+  - Works for all relation types: many2one, one2many, many2many, all 5 morph types
+
 ---
 
 ## Stream 9: Project Config
