@@ -13,18 +13,19 @@ import (
 )
 
 type MongoRepository struct {
-	conn           *MongoConnection
-	collection     string
-	modelDef       *parser.ModelDefinition
-	modelName      string
-	currentUser    string
-	tenantID       string
-	refLoader      func(modelName string, id string) (string, error)
-	hookDispatcher HookDispatcher
-	validator      FieldValidator
-	sanitizer      FieldSanitizer
-	eventBus       EventPublisher
-	locale         string
+	conn              *MongoConnection
+	collection        string
+	modelDef          *parser.ModelDefinition
+	modelName         string
+	currentUser       string
+	tenantID          string
+	refLoader         func(modelName string, id string) (string, error)
+	hookDispatcher    HookDispatcher
+	validator         FieldValidator
+	sanitizer         FieldSanitizer
+	eventBus          EventPublisher
+	locale            string
+	morphTypeResolver MorphTypeResolver
 }
 
 func NewMongoRepository(conn *MongoConnection, collection string) *MongoRepository {
@@ -76,6 +77,17 @@ func (r *MongoRepository) SetEventBus(bus EventPublisher) {
 
 func (r *MongoRepository) SetLocale(locale string) {
 	r.locale = locale
+}
+
+func (r *MongoRepository) SetMorphTypeResolver(resolver MorphTypeResolver) {
+	r.morphTypeResolver = resolver
+}
+
+func (r *MongoRepository) mongoMorphType() string {
+	if r.morphTypeResolver != nil {
+		return r.morphTypeResolver.MorphType(r.modelName)
+	}
+	return r.modelName
 }
 
 func (r *MongoRepository) GetTableName() string {
@@ -786,7 +798,7 @@ func (r *MongoRepository) LoadMany2Many(ctx context.Context, id string, field st
 func (r *MongoRepository) MorphAttach(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
 	collName := morphName + "s"
 	coll := r.conn.Collection(collName)
-	parentType := r.modelName
+	parentType := r.mongoMorphType()
 	relatedCol := relatedModel + "_id"
 
 	for _, relID := range relatedIDs {
@@ -811,7 +823,7 @@ func (r *MongoRepository) MorphAttach(ctx context.Context, morphName string, rel
 func (r *MongoRepository) MorphDetach(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
 	collName := morphName + "s"
 	coll := r.conn.Collection(collName)
-	parentType := r.modelName
+	parentType := r.mongoMorphType()
 	relatedCol := relatedModel + "_id"
 
 	for _, relID := range relatedIDs {
@@ -828,7 +840,7 @@ func (r *MongoRepository) MorphDetach(ctx context.Context, morphName string, rel
 func (r *MongoRepository) MorphSync(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
 	collName := morphName + "s"
 	coll := r.conn.Collection(collName)
-	parentType := r.modelName
+	parentType := r.mongoMorphType()
 	relatedCol := relatedModel + "_id"
 
 	coll.DeleteMany(ctx, bson.M{
@@ -850,7 +862,7 @@ func (r *MongoRepository) MorphSync(ctx context.Context, morphName string, relat
 func (r *MongoRepository) LoadMorphToMany(ctx context.Context, id string, morphName string, relatedModel string) ([]map[string]any, error) {
 	collName := morphName + "s"
 	coll := r.conn.Collection(collName)
-	parentType := r.modelName
+	parentType := r.mongoMorphType()
 	relatedCol := relatedModel + "_id"
 
 	filter := bson.M{

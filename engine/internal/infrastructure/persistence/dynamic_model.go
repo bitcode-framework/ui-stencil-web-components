@@ -31,6 +31,11 @@ type TableNameResolver interface {
 	TableName(modelName string) string
 }
 
+type MorphTypeResolver interface {
+	MorphType(modelName string) string
+	MorphModel(morphType string) string
+}
+
 func MigrateModel(db *gorm.DB, model *parser.ModelDefinition, resolver TableNameResolver, tenantEnabled ...bool) error {
 	dialect := DetectDialect(db)
 	isTenantEnabled := len(tenantEnabled) > 0 && tenantEnabled[0]

@@ -47,6 +47,7 @@ type GenericRepository struct {
 	currentUser       string
 	encryptor         *security.FieldEncryptor
 	tableNameResolver TableNameResolver
+	morphTypeResolver MorphTypeResolver
 	hookDispatcher    HookDispatcher
 	validator         FieldValidator
 	sanitizer         FieldSanitizer
@@ -100,6 +101,10 @@ func (r *GenericRepository) SetEncryptor(enc *security.FieldEncryptor) {
 
 func (r *GenericRepository) SetTableNameResolver(resolver TableNameResolver) {
 	r.tableNameResolver = resolver
+}
+
+func (r *GenericRepository) SetMorphTypeResolver(resolver MorphTypeResolver) {
+	r.morphTypeResolver = resolver
 }
 
 func (r *GenericRepository) SetHookDispatcher(d HookDispatcher) {
@@ -1363,7 +1368,7 @@ func (r *GenericRepository) RemoveMany2Many(ctx context.Context, id string, fiel
 
 func (r *GenericRepository) MorphAttach(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
 	junctionTable := morphName + "s"
-	parentType := r.modelName
+	parentType := r.morphType()
 	relatedCol := relatedModel + "_id"
 
 	for _, relID := range relatedIDs {
@@ -1385,7 +1390,7 @@ func (r *GenericRepository) MorphAttach(ctx context.Context, morphName string, r
 
 func (r *GenericRepository) MorphDetach(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
 	junctionTable := morphName + "s"
-	parentType := r.modelName
+	parentType := r.morphType()
 	relatedCol := relatedModel + "_id"
 
 	for _, relID := range relatedIDs {
@@ -1398,7 +1403,7 @@ func (r *GenericRepository) MorphDetach(ctx context.Context, morphName string, r
 
 func (r *GenericRepository) MorphSync(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
 	junctionTable := morphName + "s"
-	parentType := r.modelName
+	parentType := r.morphType()
 	relatedCol := relatedModel + "_id"
 
 	r.db.WithContext(ctx).Table(junctionTable).
@@ -1903,7 +1908,8 @@ func (r *GenericRepository) loadMorphToRelation(ctx context.Context, w WithClaus
 	}
 
 	relatedByType := make(map[string]map[string]map[string]any)
-	for modelName, ids := range typeGroups {
+	for morphType, ids := range typeGroups {
+		modelName := r.morphModel(morphType)
 		table := r.resolveTableName(modelName)
 		uniqueIDs := uniqueStrings(ids)
 		var related []map[string]any
@@ -1916,7 +1922,7 @@ func (r *GenericRepository) loadMorphToRelation(ctx context.Context, w WithClaus
 				relatedMap[fmt.Sprintf("%v", id)] = rel
 			}
 		}
-		relatedByType[modelName] = relatedMap
+		relatedByType[morphType] = relatedMap
 	}
 
 	for _, rec := range results {
@@ -1947,7 +1953,7 @@ func (r *GenericRepository) loadMorphOneRelation(ctx context.Context, w WithClau
 	}
 
 	morphName := fieldDef.Morph
-	parentType := r.modelName
+	parentType := r.morphType()
 
 	relatedTable := r.resolveTableName(fieldDef.Model)
 	var related []map[string]any
@@ -1989,7 +1995,7 @@ func (r *GenericRepository) loadMorphManyRelation(ctx context.Context, w WithCla
 	}
 
 	morphName := fieldDef.Morph
-	parentType := r.modelName
+	parentType := r.morphType()
 
 	relatedTable := r.resolveTableName(fieldDef.Model)
 	relQ := r.db.WithContext(ctx).Table(relatedTable).
@@ -2049,7 +2055,7 @@ func (r *GenericRepository) loadMorphToManyRelation(ctx context.Context, w WithC
 
 	morphName := fieldDef.Morph
 	junctionTable := morphName + "s"
-	parentType := r.modelName
+	parentType := r.morphType()
 	relatedCol := fieldDef.Model + "_id"
 
 	var junctionRecords []map[string]any
@@ -2131,8 +2137,11 @@ func (r *GenericRepository) loadMorphByManyRelation(ctx context.Context, w WithC
 
 	morphName := fieldDef.Morph
 	junctionTable := morphName + "s"
-	targetType := fieldDef.Model
 	selfCol := r.modelName + "_id"
+	targetType := fieldDef.Model
+	if r.morphTypeResolver != nil {
+		targetType = r.morphTypeResolver.MorphType(fieldDef.Model)
+	}
 
 	var junctionRecords []map[string]any
 	if err := r.db.WithContext(ctx).Table(junctionTable).
@@ -2206,6 +2215,20 @@ func uniqueStrings(input []string) []string {
 		}
 	}
 	return result
+}
+
+func (r *GenericRepository) morphType() string {
+	if r.morphTypeResolver != nil {
+		return r.morphTypeResolver.MorphType(r.modelName)
+	}
+	return r.modelName
+}
+
+func (r *GenericRepository) morphModel(morphType string) string {
+	if r.morphTypeResolver != nil {
+		return r.morphTypeResolver.MorphModel(morphType)
+	}
+	return morphType
 }
 
 func (r *GenericRepository) saveRevision(action string, recordID string, before, after map[string]any) {
