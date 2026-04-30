@@ -523,7 +523,7 @@ Returns:
 
 ## MongoDB Module (`io:mongo`)
 
-> **Status: Functional** — Uses `MongoDriver` interface with built-in `InMemoryMongoDriver` for development/testing. For production, inject a real driver via `WithMongoDriver(driver)` (e.g., wrapping `go.mongodb.org/mongo-driver/v2`).
+> **Status: Production-ready** — Uses `go.mongodb.org/mongo-driver/v2`. Connection is lazy (established on first operation). Configure via `security.Mongo.DefaultURI`.
 
 **Import:** `"mongo": "io:mongo"`
 **Enable:** `goio.Mongo()`
@@ -606,7 +606,7 @@ Returns:
 
 ## Redis Module (`io:redis`)
 
-> **Status: Functional** — Uses `RedisDriver` interface with built-in `InMemoryRedisDriver` for development/testing. For production, inject a real driver via `WithRedisDriver(driver)` (e.g., wrapping `github.com/redis/go-redis/v9`).
+> **Status: Production-ready** — Uses `github.com/redis/go-redis/v9`. Connection is lazy (established on first operation). Configure via `security.Redis.DefaultURI`.
 
 **Import:** `"redis": "io:redis"`
 **Enable:** `goio.Redis()`

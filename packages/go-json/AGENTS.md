@@ -147,8 +147,8 @@ go test ./server/ -v                     # Server config, routing, handler tests
 - Windows path security: case-insensitive matching, directory boundary checks, `filepath.Rel`-based AllowedPaths validation
 - Security: AllowedHosts explicitly override BlockedHosts (explicitly allowed hosts skip blocked check)
 - Exec timeout: context deadline check prioritized over ExitError for reliable timeout detection
-- MongoDB driver interface: `MongoDriver` interface + `InMemoryMongoDriver` (functional without external deps, production drivers injectable via `WithMongoDriver()`)
-- Redis driver interface: `RedisDriver` interface + `InMemoryRedisDriver` (functional without external deps, production drivers injectable via `WithRedisDriver()`)
+- MongoDB module: real driver (`go.mongodb.org/mongo-driver/v2`), lazy connection, full CRUD + aggregation
+- Redis module: real driver (`github.com/redis/go-redis/v9`), lazy connection, 16 commands, auto JSON serialize
 - CLI: `go-json ast --format` flag (forward-compatible, json only for now)
 - 579 tests total across 9 packages (lang: 177, io: 132, stdlib: 103, runtime: 79, cmd: 45, server: 25, codegen: 18)
 
@@ -186,7 +186,7 @@ go test ./server/ -v                     # Server config, routing, handler tests
 ## What's NOT Done
 
 - Expression-level compile-time type validation (deferred to runtime)
-- MongoDB/Redis production drivers (interface defined, in-memory mock works — add `go.mongodb.org/mongo-driver/v2` and `github.com/redis/go-redis/v9` for production use via `WithMongoDriver()`/`WithRedisDriver()`)
+- MongoDB/Redis require running servers for actual I/O (tests use miniredis for Redis, security-only tests for MongoDB)
 - REPL mode (future)
 - Dev mode file watching (fsnotify — optional dependency, not yet added)
 - Interactive mode for `go-json generate` (--interactive flag)

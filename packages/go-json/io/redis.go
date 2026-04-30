@@ -1,349 +1,34 @@
 package io
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/redis/go-redis/v9"
 )
-
-// RedisDriver is the interface for Redis operations.
-// Implement this with github.com/redis/go-redis/v9 for production.
-type RedisDriver interface {
-	Get(key string) (string, error)
-	Set(key, value string, ttl int) error
-	Del(keys ...string) (int64, error)
-	Exists(keys ...string) (int64, error)
-	Expire(key string, seconds int) (bool, error)
-	TTL(key string) (int, error)
-	Incr(key string) (int64, error)
-	Decr(key string) (int64, error)
-	HGet(key, field string) (string, error)
-	HSet(key string, values map[string]string) error
-	HGetAll(key string) (map[string]string, error)
-	LPush(key string, values ...string) (int64, error)
-	RPush(key string, values ...string) (int64, error)
-	LRange(key string, start, stop int64) ([]string, error)
-	SAdd(key string, members ...string) (int64, error)
-	SMembers(key string) ([]string, error)
-	Publish(channel, message string) error
-	Close() error
-}
-
-// InMemoryRedisDriver is a simple in-memory implementation for testing and development.
-type InMemoryRedisDriver struct {
-	mu      sync.Mutex
-	strings map[string]string
-	hashes  map[string]map[string]string
-	lists   map[string][]string
-	sets    map[string]map[string]bool
-	ttls    map[string]int
-}
-
-// NewInMemoryRedisDriver creates a new in-memory Redis driver.
-func NewInMemoryRedisDriver() *InMemoryRedisDriver {
-	return &InMemoryRedisDriver{
-		strings: make(map[string]string),
-		hashes:  make(map[string]map[string]string),
-		lists:   make(map[string][]string),
-		sets:    make(map[string]map[string]bool),
-		ttls:    make(map[string]int),
-	}
-}
-
-func (d *InMemoryRedisDriver) Get(key string) (string, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	val, exists := d.strings[key]
-	if !exists {
-		return "", nil
-	}
-	return val, nil
-}
-
-func (d *InMemoryRedisDriver) Set(key, value string, ttl int) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	d.strings[key] = value
-	if ttl > 0 {
-		d.ttls[key] = ttl
-	} else {
-		d.ttls[key] = -1
-	}
-	return nil
-}
-
-func (d *InMemoryRedisDriver) Del(keys ...string) (int64, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	deleted := int64(0)
-	for _, key := range keys {
-		if _, exists := d.strings[key]; exists {
-			delete(d.strings, key)
-			delete(d.ttls, key)
-			deleted++
-		}
-		if _, exists := d.hashes[key]; exists {
-			delete(d.hashes, key)
-			delete(d.ttls, key)
-			deleted++
-		}
-		if _, exists := d.lists[key]; exists {
-			delete(d.lists, key)
-			delete(d.ttls, key)
-			deleted++
-		}
-		if _, exists := d.sets[key]; exists {
-			delete(d.sets, key)
-			delete(d.ttls, key)
-			deleted++
-		}
-	}
-	return deleted, nil
-}
-
-func (d *InMemoryRedisDriver) Exists(keys ...string) (int64, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	count := int64(0)
-	for _, key := range keys {
-		if _, exists := d.strings[key]; exists {
-			count++
-		} else if _, exists := d.hashes[key]; exists {
-			count++
-		} else if _, exists := d.lists[key]; exists {
-			count++
-		} else if _, exists := d.sets[key]; exists {
-			count++
-		}
-	}
-	return count, nil
-}
-
-func (d *InMemoryRedisDriver) Expire(key string, seconds int) (bool, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	if _, exists := d.strings[key]; exists {
-		d.ttls[key] = seconds
-		return true, nil
-	}
-	return false, nil
-}
-
-func (d *InMemoryRedisDriver) TTL(key string) (int, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	ttl, exists := d.ttls[key]
-	if !exists {
-		return -2, nil
-	}
-	return ttl, nil
-}
-
-func (d *InMemoryRedisDriver) Incr(key string) (int64, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	val := int64(0)
-	if str, exists := d.strings[key]; exists {
-		fmt.Sscanf(str, "%d", &val)
-	}
-	val++
-	d.strings[key] = fmt.Sprintf("%d", val)
-	return val, nil
-}
-
-func (d *InMemoryRedisDriver) Decr(key string) (int64, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	val := int64(0)
-	if str, exists := d.strings[key]; exists {
-		fmt.Sscanf(str, "%d", &val)
-	}
-	val--
-	d.strings[key] = fmt.Sprintf("%d", val)
-	return val, nil
-}
-
-func (d *InMemoryRedisDriver) HGet(key, field string) (string, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	hash, exists := d.hashes[key]
-	if !exists {
-		return "", fmt.Errorf("key not found")
-	}
-	val, exists := hash[field]
-	if !exists {
-		return "", fmt.Errorf("field not found")
-	}
-	return val, nil
-}
-
-func (d *InMemoryRedisDriver) HSet(key string, values map[string]string) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	if d.hashes[key] == nil {
-		d.hashes[key] = make(map[string]string)
-	}
-	for field, val := range values {
-		d.hashes[key][field] = val
-	}
-	return nil
-}
-
-func (d *InMemoryRedisDriver) HGetAll(key string) (map[string]string, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	hash, exists := d.hashes[key]
-	if !exists {
-		return make(map[string]string), nil
-	}
-	
-	result := make(map[string]string)
-	for k, v := range hash {
-		result[k] = v
-	}
-	return result, nil
-}
-
-func (d *InMemoryRedisDriver) LPush(key string, values ...string) (int64, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	list := d.lists[key]
-	list = append(values, list...)
-	d.lists[key] = list
-	return int64(len(list)), nil
-}
-
-func (d *InMemoryRedisDriver) RPush(key string, values ...string) (int64, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	list := d.lists[key]
-	list = append(list, values...)
-	d.lists[key] = list
-	return int64(len(list)), nil
-}
-
-func (d *InMemoryRedisDriver) LRange(key string, start, stop int64) ([]string, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	list, exists := d.lists[key]
-	if !exists {
-		return []string{}, nil
-	}
-	
-	length := int64(len(list))
-	if start < 0 {
-		start = length + start
-	}
-	if stop < 0 {
-		stop = length + stop
-	}
-	if start < 0 {
-		start = 0
-	}
-	if stop >= length {
-		stop = length - 1
-	}
-	if start > stop {
-		return []string{}, nil
-	}
-	
-	return list[start : stop+1], nil
-}
-
-func (d *InMemoryRedisDriver) SAdd(key string, members ...string) (int64, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	if d.sets[key] == nil {
-		d.sets[key] = make(map[string]bool)
-	}
-	added := int64(0)
-	for _, member := range members {
-		if !d.sets[key][member] {
-			d.sets[key][member] = true
-			added++
-		}
-	}
-	return added, nil
-}
-
-func (d *InMemoryRedisDriver) SMembers(key string) ([]string, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	set, exists := d.sets[key]
-	if !exists {
-		return []string{}, nil
-	}
-	
-	var members []string
-	for member := range set {
-		members = append(members, member)
-	}
-	return members, nil
-}
-
-func (d *InMemoryRedisDriver) Publish(channel, message string) error {
-	return nil
-}
-
-func (d *InMemoryRedisDriver) Close() error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.strings = make(map[string]string)
-	d.hashes = make(map[string]map[string]string)
-	d.lists = make(map[string][]string)
-	d.sets = make(map[string]map[string]bool)
-	d.ttls = make(map[string]int)
-	return nil
-}
 
 // RedisModule provides Redis functions for go-json programs.
 type RedisModule struct {
 	security *SecurityConfig
 	config   map[string]any
-	driver   RedisDriver
+	client   *redis.Client
 	mu       sync.Mutex
-}
-
-// RedisOption is a functional option for RedisModule.
-type RedisOption func(*RedisModule)
-
-// WithRedisDriver sets a custom Redis driver.
-func WithRedisDriver(d RedisDriver) RedisOption {
-	return func(m *RedisModule) { m.driver = d }
+	closed   bool
 }
 
 // NewRedisModule creates a new Redis I/O module.
-func NewRedisModule(security *SecurityConfig, opts ...RedisOption) *RedisModule {
+// Connection is lazy — established on first operation using security.Redis.DefaultURI.
+func NewRedisModule(security *SecurityConfig) *RedisModule {
 	if security == nil {
 		security = DefaultSecurityConfig()
 	}
-	m := &RedisModule{
+	return &RedisModule{
 		security: security,
 	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	if m.driver == nil {
-		m.driver = NewInMemoryRedisDriver()
-	}
-	return m
 }
 
 func (m *RedisModule) Name() string { return "redis" }
@@ -353,10 +38,47 @@ func (m *RedisModule) SetConfig(cfg map[string]any) { m.config = cfg }
 func (m *RedisModule) Close() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if m.driver != nil {
-		return m.driver.Close()
+	m.closed = true
+	if m.client != nil {
+		err := m.client.Close()
+		m.client = nil
+		return err
 	}
 	return nil
+}
+
+func (m *RedisModule) getClient() (*redis.Client, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.closed {
+		return nil, fmt.Errorf("redis: module is closed")
+	}
+	if m.client != nil {
+		return m.client, nil
+	}
+
+	uri := m.security.Redis.DefaultURI
+	if uri == "" {
+		uri = "redis://localhost:6379"
+	}
+
+	opts, err := redis.ParseURL(uri)
+	if err != nil {
+		return nil, fmt.Errorf("redis: invalid URI: %s", err.Error())
+	}
+
+	m.client = redis.NewClient(opts)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := m.client.Ping(ctx).Err(); err != nil {
+		m.client.Close()
+		m.client = nil
+		return nil, fmt.Errorf("redis: connection failed: %s", err.Error())
+	}
+
+	return m.client, nil
 }
 
 var defaultBlockedRedisCommands = []string{
@@ -445,15 +167,21 @@ func (m *RedisModule) redisGet(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	key = m.prefixKey(key)
-	val, err := m.driver.Get(key)
+
+	client, err := m.getClient()
 	if err != nil {
 		return nil, err
 	}
-	if val == "" {
+
+	key = m.prefixKey(key)
+	val, err := client.Get(context.Background(), key).Result()
+	if err == redis.Nil {
 		return nil, nil
 	}
+	if err != nil {
+		return nil, fmt.Errorf("redis.get: %s", err.Error())
+	}
+
 	return m.autoDeserialize(val), nil
 }
 
@@ -475,50 +203,67 @@ func (m *RedisModule) redisSet(params ...any) (any, error) {
 		return nil, fmt.Errorf("redis.set: value exceeds max size (%d bytes, max %d)", len(val), m.security.Redis.MaxValueSize)
 	}
 
-	ttl := 0
+	client, cErr := m.getClient()
+	if cErr != nil {
+		return nil, cErr
+	}
+
+	var ttl time.Duration
 	if len(params) > 2 {
-		if ttlFloat, ok := params[2].(float64); ok {
-			ttl = int(ttlFloat)
-		} else if ttlInt, ok := params[2].(int); ok {
-			ttl = ttlInt
+		if ttlVal, ok := toFloat64Val(params[2]); ok && ttlVal > 0 {
+			ttl = time.Duration(int(ttlVal)) * time.Second
 		}
 	}
 
 	key = m.prefixKey(key)
-	return "OK", m.driver.Set(key, val, ttl)
+	if err := client.Set(context.Background(), key, val, ttl).Err(); err != nil {
+		return nil, fmt.Errorf("redis.set: %s", err.Error())
+	}
+	return "OK", nil
 }
 
 func (m *RedisModule) redisDel(params ...any) (any, error) {
 	if len(params) < 1 {
 		return nil, fmt.Errorf("redis.del: key is required")
 	}
-	
-	var keys []string
-	for _, p := range params {
-		if key, ok := p.(string); ok {
-			if err := m.validateKey(key); err != nil {
-				return nil, err
-			}
-			keys = append(keys, m.prefixKey(key))
-		}
+	key, _ := params[0].(string)
+	if err := m.validateKey(key); err != nil {
+		return nil, err
 	}
-	
-	return m.driver.Del(keys...)
+
+	client, err := m.getClient()
+	if err != nil {
+		return nil, err
+	}
+
+	key = m.prefixKey(key)
+	n, err := client.Del(context.Background(), key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.del: %s", err.Error())
+	}
+	return n, nil
 }
 
 func (m *RedisModule) redisExists(params ...any) (any, error) {
 	if len(params) < 1 {
 		return nil, fmt.Errorf("redis.exists: key is required")
 	}
-	
-	var keys []string
-	for _, p := range params {
-		if key, ok := p.(string); ok {
-			keys = append(keys, m.prefixKey(key))
-		}
+	key, _ := params[0].(string)
+	if err := m.validateKey(key); err != nil {
+		return nil, err
 	}
-	
-	return m.driver.Exists(keys...)
+
+	client, err := m.getClient()
+	if err != nil {
+		return nil, err
+	}
+
+	key = m.prefixKey(key)
+	n, err := client.Exists(context.Background(), key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.exists: %s", err.Error())
+	}
+	return n > 0, nil
 }
 
 func (m *RedisModule) redisExpire(params ...any) (any, error) {
@@ -529,16 +274,19 @@ func (m *RedisModule) redisExpire(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	seconds := 0
-	if secFloat, ok := params[1].(float64); ok {
-		seconds = int(secFloat)
-	} else if secInt, ok := params[1].(int); ok {
-		seconds = secInt
+
+	client, err := m.getClient()
+	if err != nil {
+		return nil, err
 	}
-	
+
+	seconds, _ := toFloat64Val(params[1])
 	key = m.prefixKey(key)
-	return m.driver.Expire(key, seconds)
+	ok, err := client.Expire(context.Background(), key, time.Duration(int(seconds))*time.Second).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.expire: %s", err.Error())
+	}
+	return ok, nil
 }
 
 func (m *RedisModule) redisTTL(params ...any) (any, error) {
@@ -549,9 +297,18 @@ func (m *RedisModule) redisTTL(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
+
+	client, err := m.getClient()
+	if err != nil {
+		return nil, err
+	}
+
 	key = m.prefixKey(key)
-	return m.driver.TTL(key)
+	d, err := client.TTL(context.Background(), key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.ttl: %s", err.Error())
+	}
+	return int(d.Seconds()), nil
 }
 
 func (m *RedisModule) redisIncr(params ...any) (any, error) {
@@ -562,9 +319,18 @@ func (m *RedisModule) redisIncr(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
+
+	client, err := m.getClient()
+	if err != nil {
+		return nil, err
+	}
+
 	key = m.prefixKey(key)
-	return m.driver.Incr(key)
+	n, err := client.Incr(context.Background(), key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.incr: %s", err.Error())
+	}
+	return n, nil
 }
 
 func (m *RedisModule) redisDecr(params ...any) (any, error) {
@@ -575,9 +341,18 @@ func (m *RedisModule) redisDecr(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
+
+	client, err := m.getClient()
+	if err != nil {
+		return nil, err
+	}
+
 	key = m.prefixKey(key)
-	return m.driver.Decr(key)
+	n, err := client.Decr(context.Background(), key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.decr: %s", err.Error())
+	}
+	return n, nil
 }
 
 func (m *RedisModule) redisHGet(params ...any) (any, error) {
@@ -585,50 +360,52 @@ func (m *RedisModule) redisHGet(params ...any) (any, error) {
 		return nil, fmt.Errorf("redis.hget: key and field are required")
 	}
 	key, _ := params[0].(string)
-	field, _ := params[1].(string)
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	key = m.prefixKey(key)
-	val, err := m.driver.HGet(key, field)
+
+	client, err := m.getClient()
 	if err != nil {
 		return nil, err
+	}
+
+	field, _ := params[1].(string)
+	key = m.prefixKey(key)
+	val, err := client.HGet(context.Background(), key, field).Result()
+	if err == redis.Nil {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("redis.hget: %s", err.Error())
 	}
 	return m.autoDeserialize(val), nil
 }
 
 func (m *RedisModule) redisHSet(params ...any) (any, error) {
-	if len(params) < 2 {
-		return nil, fmt.Errorf("redis.hset: key and field-value pairs are required")
+	if len(params) < 3 {
+		return nil, fmt.Errorf("redis.hset: key, field, and value are required")
 	}
 	key, _ := params[0].(string)
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	values := make(map[string]string)
-	if len(params) == 3 {
-		field, _ := params[1].(string)
-		val, err := m.autoSerialize(params[2])
-		if err != nil {
-			return nil, err
-		}
-		values[field] = val
-	} else if len(params) == 2 {
-		if valMap, ok := params[1].(map[string]any); ok {
-			for field, v := range valMap {
-				val, err := m.autoSerialize(v)
-				if err != nil {
-					return nil, err
-				}
-				values[field] = val
-			}
-		}
+
+	client, cErr := m.getClient()
+	if cErr != nil {
+		return nil, cErr
 	}
-	
+
+	field, _ := params[1].(string)
+	val, err := m.autoSerialize(params[2])
+	if err != nil {
+		return nil, err
+	}
+
 	key = m.prefixKey(key)
-	return "OK", m.driver.HSet(key, values)
+	if err := client.HSet(context.Background(), key, field, val).Err(); err != nil {
+		return nil, fmt.Errorf("redis.hset: %s", err.Error())
+	}
+	return "OK", nil
 }
 
 func (m *RedisModule) redisHGetAll(params ...any) (any, error) {
@@ -639,14 +416,19 @@ func (m *RedisModule) redisHGetAll(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	key = m.prefixKey(key)
-	hash, err := m.driver.HGetAll(key)
+
+	client, err := m.getClient()
 	if err != nil {
 		return nil, err
 	}
-	
-	result := make(map[string]any)
+
+	key = m.prefixKey(key)
+	hash, err := client.HGetAll(context.Background(), key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.hgetall: %s", err.Error())
+	}
+
+	result := make(map[string]any, len(hash))
 	for k, v := range hash {
 		result[k] = m.autoDeserialize(v)
 	}
@@ -661,18 +443,23 @@ func (m *RedisModule) redisLPush(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	var values []string
-	for i := 1; i < len(params); i++ {
-		val, err := m.autoSerialize(params[i])
-		if err != nil {
-			return nil, err
-		}
-		values = append(values, val)
+
+	client, cErr := m.getClient()
+	if cErr != nil {
+		return nil, cErr
 	}
-	
+
+	val, err := m.autoSerialize(params[1])
+	if err != nil {
+		return nil, err
+	}
+
 	key = m.prefixKey(key)
-	return m.driver.LPush(key, values...)
+	n, err := client.LPush(context.Background(), key, val).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.lpush: %s", err.Error())
+	}
+	return n, nil
 }
 
 func (m *RedisModule) redisRPush(params ...any) (any, error) {
@@ -683,18 +470,23 @@ func (m *RedisModule) redisRPush(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	var values []string
-	for i := 1; i < len(params); i++ {
-		val, err := m.autoSerialize(params[i])
-		if err != nil {
-			return nil, err
-		}
-		values = append(values, val)
+
+	client, cErr := m.getClient()
+	if cErr != nil {
+		return nil, cErr
 	}
-	
+
+	val, err := m.autoSerialize(params[1])
+	if err != nil {
+		return nil, err
+	}
+
 	key = m.prefixKey(key)
-	return m.driver.RPush(key, values...)
+	n, err := client.RPush(context.Background(), key, val).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.rpush: %s", err.Error())
+	}
+	return n, nil
 }
 
 func (m *RedisModule) redisLRange(params ...any) (any, error) {
@@ -705,29 +497,23 @@ func (m *RedisModule) redisLRange(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	start := int64(0)
-	stop := int64(-1)
-	if startFloat, ok := params[1].(float64); ok {
-		start = int64(startFloat)
-	} else if startInt, ok := params[1].(int); ok {
-		start = int64(startInt)
-	}
-	if stopFloat, ok := params[2].(float64); ok {
-		stop = int64(stopFloat)
-	} else if stopInt, ok := params[2].(int); ok {
-		stop = int64(stopInt)
-	}
-	
-	key = m.prefixKey(key)
-	values, err := m.driver.LRange(key, start, stop)
+
+	client, err := m.getClient()
 	if err != nil {
 		return nil, err
 	}
-	
-	var result []any
-	for _, v := range values {
-		result = append(result, m.autoDeserialize(v))
+
+	start, _ := toFloat64Val(params[1])
+	stop, _ := toFloat64Val(params[2])
+	key = m.prefixKey(key)
+	vals, err := client.LRange(context.Background(), key, int64(start), int64(stop)).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.lrange: %s", err.Error())
+	}
+
+	result := make([]any, len(vals))
+	for i, v := range vals {
+		result[i] = m.autoDeserialize(v)
 	}
 	return result, nil
 }
@@ -740,18 +526,23 @@ func (m *RedisModule) redisSAdd(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	var members []string
-	for i := 1; i < len(params); i++ {
-		val, err := m.autoSerialize(params[i])
-		if err != nil {
-			return nil, err
-		}
-		members = append(members, val)
+
+	client, cErr := m.getClient()
+	if cErr != nil {
+		return nil, cErr
 	}
-	
+
+	val, err := m.autoSerialize(params[1])
+	if err != nil {
+		return nil, err
+	}
+
 	key = m.prefixKey(key)
-	return m.driver.SAdd(key, members...)
+	n, err := client.SAdd(context.Background(), key, val).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.sadd: %s", err.Error())
+	}
+	return n, nil
 }
 
 func (m *RedisModule) redisSMembers(params ...any) (any, error) {
@@ -762,16 +553,21 @@ func (m *RedisModule) redisSMembers(params ...any) (any, error) {
 	if err := m.validateKey(key); err != nil {
 		return nil, err
 	}
-	
-	key = m.prefixKey(key)
-	members, err := m.driver.SMembers(key)
+
+	client, err := m.getClient()
 	if err != nil {
 		return nil, err
 	}
-	
-	var result []any
-	for _, member := range members {
-		result = append(result, m.autoDeserialize(member))
+
+	key = m.prefixKey(key)
+	vals, err := client.SMembers(context.Background(), key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.smembers: %s", err.Error())
+	}
+
+	result := make([]any, len(vals))
+	for i, v := range vals {
+		result[i] = m.autoDeserialize(v)
 	}
 	return result, nil
 }
@@ -781,11 +577,22 @@ func (m *RedisModule) redisPublish(params ...any) (any, error) {
 		return nil, fmt.Errorf("redis.publish: channel and message are required")
 	}
 	channel, _ := params[0].(string)
-	
-	message, err := m.autoSerialize(params[1])
+	msg, _ := params[1].(string)
+
+	client, err := m.getClient()
 	if err != nil {
 		return nil, err
 	}
-	
-	return "OK", m.driver.Publish(channel, message)
+
+	if err := client.Publish(context.Background(), channel, msg).Err(); err != nil {
+		return nil, fmt.Errorf("redis.publish: %s", err.Error())
+	}
+	return "OK", nil
+}
+
+// SetClient allows injecting a pre-configured redis client (for testing with miniredis).
+func (m *RedisModule) SetClient(client *redis.Client) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.client = client
 }

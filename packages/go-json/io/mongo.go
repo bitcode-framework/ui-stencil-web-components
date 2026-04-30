@@ -1,337 +1,36 @@
 package io
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
+	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
-
-// MongoDriver is the interface for MongoDB operations.
-// Implement this with a real driver (go.mongodb.org/mongo-driver/v2) for production.
-type MongoDriver interface {
-	Find(db, collection string, filter map[string]any, opts map[string]any) ([]map[string]any, error)
-	FindOne(db, collection string, filter map[string]any) (map[string]any, error)
-	Insert(db, collection string, doc map[string]any) (map[string]any, error)
-	InsertMany(db, collection string, docs []map[string]any) (map[string]any, error)
-	Update(db, collection string, filter, update map[string]any) (map[string]any, error)
-	Delete(db, collection string, filter map[string]any) (map[string]any, error)
-	Count(db, collection string, filter map[string]any) (int64, error)
-	Aggregate(db, collection string, pipeline []any) ([]map[string]any, error)
-	Close() error
-}
-
-// InMemoryMongoDriver is a simple in-memory implementation for testing and development.
-type InMemoryMongoDriver struct {
-	mu          sync.Mutex
-	collections map[string][]map[string]any // key: "db.collection"
-	nextID      int
-}
-
-// NewInMemoryMongoDriver creates a new in-memory MongoDB driver.
-func NewInMemoryMongoDriver() *InMemoryMongoDriver {
-	return &InMemoryMongoDriver{
-		collections: make(map[string][]map[string]any),
-	}
-}
-
-func (d *InMemoryMongoDriver) collectionKey(db, collection string) string {
-	return db + "." + collection
-}
-
-func (d *InMemoryMongoDriver) matchesFilter(doc, filter map[string]any) bool {
-	if filter == nil || len(filter) == 0 {
-		return true
-	}
-	for key, filterVal := range filter {
-		docVal, exists := doc[key]
-		if !exists {
-			return false
-		}
-		
-		// Handle MongoDB operators
-		if filterMap, ok := filterVal.(map[string]any); ok {
-			for op, opVal := range filterMap {
-				switch op {
-				case "$gt":
-					if !d.compareValues(docVal, opVal, ">") {
-						return false
-					}
-				case "$gte":
-					if !d.compareValues(docVal, opVal, ">=") {
-						return false
-					}
-				case "$lt":
-					if !d.compareValues(docVal, opVal, "<") {
-						return false
-					}
-				case "$lte":
-					if !d.compareValues(docVal, opVal, "<=") {
-						return false
-					}
-				case "$ne":
-					if d.valuesEqual(docVal, opVal) {
-						return false
-					}
-				case "$in":
-					if arr, ok := opVal.([]any); ok {
-						found := false
-						for _, v := range arr {
-							if d.valuesEqual(docVal, v) {
-								found = true
-								break
-							}
-						}
-						if !found {
-							return false
-						}
-					}
-				}
-			}
-		} else {
-			// Simple equality
-			if !d.valuesEqual(docVal, filterVal) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func (d *InMemoryMongoDriver) valuesEqual(a, b any) bool {
-	aJSON, _ := json.Marshal(a)
-	bJSON, _ := json.Marshal(b)
-	return string(aJSON) == string(bJSON)
-}
-
-func (d *InMemoryMongoDriver) compareValues(a, b any, op string) bool {
-	aFloat, aOk := d.toFloat(a)
-	bFloat, bOk := d.toFloat(b)
-	if !aOk || !bOk {
-		return false
-	}
-	switch op {
-	case ">":
-		return aFloat > bFloat
-	case ">=":
-		return aFloat >= bFloat
-	case "<":
-		return aFloat < bFloat
-	case "<=":
-		return aFloat <= bFloat
-	}
-	return false
-}
-
-func (d *InMemoryMongoDriver) toFloat(v any) (float64, bool) {
-	switch val := v.(type) {
-	case float64:
-		return val, true
-	case int:
-		return float64(val), true
-	case int64:
-		return float64(val), true
-	case float32:
-		return float64(val), true
-	}
-	return 0, false
-}
-
-func (d *InMemoryMongoDriver) Find(db, collection string, filter map[string]any, opts map[string]any) ([]map[string]any, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	key := d.collectionKey(db, collection)
-	docs := d.collections[key]
-	
-	var result []map[string]any
-	for _, doc := range docs {
-		if d.matchesFilter(doc, filter) {
-			result = append(result, d.copyDoc(doc))
-		}
-	}
-	
-	return result, nil
-}
-
-func (d *InMemoryMongoDriver) FindOne(db, collection string, filter map[string]any) (map[string]any, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	key := d.collectionKey(db, collection)
-	docs := d.collections[key]
-	
-	for _, doc := range docs {
-		if d.matchesFilter(doc, filter) {
-			return d.copyDoc(doc), nil
-		}
-	}
-	
-	return nil, fmt.Errorf("document not found")
-}
-
-func (d *InMemoryMongoDriver) Insert(db, collection string, doc map[string]any) (map[string]any, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	key := d.collectionKey(db, collection)
-	
-	// Generate _id if not present
-	if _, hasID := doc["_id"]; !hasID {
-		d.nextID++
-		doc["_id"] = d.nextID
-	}
-	
-	newDoc := d.copyDoc(doc)
-	d.collections[key] = append(d.collections[key], newDoc)
-	
-	return map[string]any{"inserted_id": newDoc["_id"]}, nil
-}
-
-func (d *InMemoryMongoDriver) InsertMany(db, collection string, docs []map[string]any) (map[string]any, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	key := d.collectionKey(db, collection)
-	var insertedIDs []any
-	
-	for _, doc := range docs {
-		if _, hasID := doc["_id"]; !hasID {
-			d.nextID++
-			doc["_id"] = d.nextID
-		}
-		newDoc := d.copyDoc(doc)
-		d.collections[key] = append(d.collections[key], newDoc)
-		insertedIDs = append(insertedIDs, newDoc["_id"])
-	}
-	
-	return map[string]any{"inserted_ids": insertedIDs}, nil
-}
-
-func (d *InMemoryMongoDriver) Update(db, collection string, filter, update map[string]any) (map[string]any, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	key := d.collectionKey(db, collection)
-	docs := d.collections[key]
-	
-	modified := int64(0)
-	for i, doc := range docs {
-		if d.matchesFilter(doc, filter) {
-			// Apply $set updates
-			if setOps, ok := update["$set"].(map[string]any); ok {
-				for k, v := range setOps {
-					doc[k] = v
-				}
-				docs[i] = doc
-				modified++
-			}
-		}
-	}
-	
-	return map[string]any{"modified_count": modified}, nil
-}
-
-func (d *InMemoryMongoDriver) Delete(db, collection string, filter map[string]any) (map[string]any, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	key := d.collectionKey(db, collection)
-	docs := d.collections[key]
-	
-	var remaining []map[string]any
-	deleted := 0
-	for _, doc := range docs {
-		if d.matchesFilter(doc, filter) {
-			deleted++
-		} else {
-			remaining = append(remaining, doc)
-		}
-	}
-	
-	d.collections[key] = remaining
-	return map[string]any{"deleted_count": deleted}, nil
-}
-
-func (d *InMemoryMongoDriver) Count(db, collection string, filter map[string]any) (int64, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	key := d.collectionKey(db, collection)
-	docs := d.collections[key]
-	
-	count := int64(0)
-	for _, doc := range docs {
-		if d.matchesFilter(doc, filter) {
-			count++
-		}
-	}
-	
-	return count, nil
-}
-
-func (d *InMemoryMongoDriver) Aggregate(db, collection string, pipeline []any) ([]map[string]any, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	
-	key := d.collectionKey(db, collection)
-	docs := d.collections[key]
-	
-	// Basic support: just return all documents
-	var result []map[string]any
-	for _, doc := range docs {
-		result = append(result, d.copyDoc(doc))
-	}
-	
-	return result, nil
-}
-
-func (d *InMemoryMongoDriver) Close() error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.collections = make(map[string][]map[string]any)
-	return nil
-}
-
-func (d *InMemoryMongoDriver) copyDoc(doc map[string]any) map[string]any {
-	result := make(map[string]any)
-	for k, v := range doc {
-		result[k] = v
-	}
-	return result
-}
 
 // MongoModule provides MongoDB functions for go-json programs.
 type MongoModule struct {
 	security *SecurityConfig
 	config   map[string]any
-	driver   MongoDriver
+	client   *mongo.Client
 	mu       sync.Mutex
-}
-
-// MongoOption is a functional option for MongoModule.
-type MongoOption func(*MongoModule)
-
-// WithMongoDriver sets a custom MongoDB driver.
-func WithMongoDriver(d MongoDriver) MongoOption {
-	return func(m *MongoModule) { m.driver = d }
+	closed   bool
 }
 
 // NewMongoModule creates a new MongoDB I/O module.
-func NewMongoModule(security *SecurityConfig, opts ...MongoOption) *MongoModule {
+// Connection is lazy — established on first operation using security.Mongo.DefaultURI.
+func NewMongoModule(security *SecurityConfig) *MongoModule {
 	if security == nil {
 		security = DefaultSecurityConfig()
 	}
-	m := &MongoModule{
+	return &MongoModule{
 		security: security,
 	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	if m.driver == nil {
-		m.driver = NewInMemoryMongoDriver()
-	}
-	return m
 }
 
 func (m *MongoModule) Name() string { return "mongo" }
@@ -341,34 +40,77 @@ func (m *MongoModule) SetConfig(cfg map[string]any) { m.config = cfg }
 func (m *MongoModule) Close() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if m.driver != nil {
-		return m.driver.Close()
+	m.closed = true
+	if m.client != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := m.client.Disconnect(ctx)
+		m.client = nil
+		return err
 	}
 	return nil
 }
 
-func (m *MongoModule) Functions() map[string]any {
-	return map[string]any{
-		"find":       m.mongoFind,
-		"findOne":    m.mongoFindOne,
-		"insert":     m.mongoInsert,
-		"insertMany": m.mongoInsertMany,
-		"update":     m.mongoUpdate,
-		"delete":     m.mongoDelete,
-		"count":      m.mongoCount,
-		"aggregate":  m.mongoAggregate,
+func (m *MongoModule) getClient() (*mongo.Client, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.closed {
+		return nil, fmt.Errorf("mongo: module is closed")
 	}
+	if m.client != nil {
+		return m.client, nil
+	}
+
+	uri := m.security.Mongo.DefaultURI
+	if uri == "" {
+		uri = "mongodb://localhost:27017"
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(options.Client().ApplyURI(uri))
+	if err != nil {
+		return nil, fmt.Errorf("mongo: connection failed: %s", err.Error())
+	}
+
+	if err := client.Ping(ctx, nil); err != nil {
+		client.Disconnect(ctx)
+		return nil, fmt.Errorf("mongo: ping failed: %s", err.Error())
+	}
+
+	m.client = client
+	return m.client, nil
 }
 
-func (m *MongoModule) getURI(params []any) string {
-	for _, p := range params {
-		if opts, ok := p.(map[string]any); ok {
-			if uri, ok := opts["uri"].(string); ok {
-				return uri
-			}
-		}
+func (m *MongoModule) getCollection(params []any) (*mongo.Collection, string, error) {
+	if len(params) < 1 {
+		return nil, "", fmt.Errorf("mongo: collection is required")
 	}
-	return m.security.Mongo.DefaultURI
+	collection, ok := params[0].(string)
+	if !ok {
+		return nil, "", fmt.Errorf("mongo: collection must be a string")
+	}
+
+	db := "default"
+	coll := collection
+	parts := strings.SplitN(collection, ".", 2)
+	if len(parts) == 2 {
+		db = parts[0]
+		coll = parts[1]
+	}
+
+	if err := m.validateDatabase(db); err != nil {
+		return nil, "", err
+	}
+
+	client, err := m.getClient()
+	if err != nil {
+		return nil, "", err
+	}
+
+	return client.Database(db).Collection(coll), coll, nil
 }
 
 func (m *MongoModule) validateDatabase(db string) error {
@@ -414,45 +156,33 @@ func checkBlockedOps(v any, blocked []string) error {
 	return nil
 }
 
-func (m *MongoModule) parseCollectionParams(params []any) (string, string, error) {
-	if len(params) < 1 {
-		return "", "", fmt.Errorf("mongo: collection is required")
+func (m *MongoModule) Functions() map[string]any {
+	return map[string]any{
+		"find":       m.mongoFind,
+		"findOne":    m.mongoFindOne,
+		"insert":     m.mongoInsert,
+		"insertMany": m.mongoInsertMany,
+		"update":     m.mongoUpdate,
+		"delete":     m.mongoDelete,
+		"count":      m.mongoCount,
+		"aggregate":  m.mongoAggregate,
 	}
-	collection, ok := params[0].(string)
-	if !ok {
-		return "", "", fmt.Errorf("mongo: collection must be a string")
-	}
-
-	parts := strings.SplitN(collection, ".", 2)
-	if len(parts) == 2 {
-		return parts[0], parts[1], nil
-	}
-
-	db := "default"
-	if opts := m.getOptsFromParams(params); opts != nil {
-		if d, ok := opts["database"].(string); ok {
-			db = d
-		}
-	}
-	return db, collection, nil
 }
 
-func (m *MongoModule) getOptsFromParams(params []any) map[string]any {
-	for i := 1; i < len(params); i++ {
-		if opts, ok := params[i].(map[string]any); ok {
-			return opts
-		}
+func toBsonDoc(m map[string]any) bson.D {
+	if m == nil {
+		return bson.D{}
 	}
-	return nil
+	doc := bson.D{}
+	for k, v := range m {
+		doc = append(doc, bson.E{Key: k, Value: v})
+	}
+	return doc
 }
 
 func (m *MongoModule) mongoFind(params ...any) (any, error) {
-	db, coll, err := m.parseCollectionParams(params)
+	coll, _, err := m.getCollection(params)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := m.validateDatabase(db); err != nil {
 		return nil, err
 	}
 
@@ -466,49 +196,79 @@ func (m *MongoModule) mongoFind(params ...any) (any, error) {
 		}
 	}
 
-	opts := m.getOptsFromParams(params)
-	docs, err := m.driver.Find(db, coll, filter, opts)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	findOpts := options.Find()
+	if len(params) > 2 {
+		if opts, ok := params[2].(map[string]any); ok {
+			if limit, ok := opts["limit"]; ok {
+				if lf, ok := toFloat64Val(limit); ok {
+					findOpts.SetLimit(int64(lf))
+				}
+			}
+			if skip, ok := opts["skip"]; ok {
+				if sf, ok := toFloat64Val(skip); ok {
+					findOpts.SetSkip(int64(sf))
+				}
+			}
+		}
+	}
+
+	maxResults := m.security.Mongo.MaxResults
+	if maxResults > 0 {
+		findOpts.SetLimit(int64(maxResults))
+	}
+
+	cursor, err := coll.Find(ctx, toBsonDoc(filter), findOpts)
+	if err != nil {
+		return nil, fmt.Errorf("mongo.find: %s", err.Error())
+	}
+	defer cursor.Close(ctx)
+
+	var results []map[string]any
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("mongo.find: %s", err.Error())
+	}
+	if results == nil {
+		results = []map[string]any{}
+	}
+	return results, nil
+}
+
+func (m *MongoModule) mongoFindOne(params ...any) (any, error) {
+	coll, _, err := m.getCollection(params)
 	if err != nil {
 		return nil, err
 	}
-	
-	result := make([]any, len(docs))
-	for i, doc := range docs {
-		result[i] = doc
+
+	var filter map[string]any
+	if len(params) > 1 {
+		filter, _ = params[1].(map[string]any)
+	}
+	if filter != nil {
+		if err := m.validateOperation(filter); err != nil {
+			return nil, err
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var result map[string]any
+	err = coll.FindOne(ctx, toBsonDoc(filter)).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("mongo.findOne: %s", err.Error())
 	}
 	return result, nil
 }
 
-func (m *MongoModule) mongoFindOne(params ...any) (any, error) {
-	db, coll, err := m.parseCollectionParams(params)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := m.validateDatabase(db); err != nil {
-		return nil, err
-	}
-
-	var filter map[string]any
-	if len(params) > 1 {
-		filter, _ = params[1].(map[string]any)
-	}
-	if filter != nil {
-		if err := m.validateOperation(filter); err != nil {
-			return nil, err
-		}
-	}
-
-	return m.driver.FindOne(db, coll, filter)
-}
-
 func (m *MongoModule) mongoInsert(params ...any) (any, error) {
-	db, coll, err := m.parseCollectionParams(params)
+	coll, _, err := m.getCollection(params)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := m.validateDatabase(db); err != nil {
 		return nil, err
 	}
 
@@ -516,48 +276,54 @@ func (m *MongoModule) mongoInsert(params ...any) (any, error) {
 	if len(params) > 1 {
 		doc, _ = params[1].(map[string]any)
 	}
+	if doc == nil {
+		return nil, fmt.Errorf("mongo.insert: document is required")
+	}
 
-	if m.security.Mongo.MaxDocumentSize > 0 && doc != nil {
+	if m.security.Mongo.MaxDocumentSize > 0 {
 		data, _ := json.Marshal(doc)
 		if int64(len(data)) > m.security.Mongo.MaxDocumentSize {
 			return nil, fmt.Errorf("mongo.insert: document exceeds max size (%d bytes, max %d)", len(data), m.security.Mongo.MaxDocumentSize)
 		}
 	}
 
-	return m.driver.Insert(db, coll, doc)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	result, err := coll.InsertOne(ctx, doc)
+	if err != nil {
+		return nil, fmt.Errorf("mongo.insert: %s", err.Error())
+	}
+	return map[string]any{"inserted_id": result.InsertedID}, nil
 }
 
 func (m *MongoModule) mongoInsertMany(params ...any) (any, error) {
-	db, coll, err := m.parseCollectionParams(params)
+	coll, _, err := m.getCollection(params)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := m.validateDatabase(db); err != nil {
-		return nil, err
-	}
-
-	var docs []map[string]any
+	var docs []any
 	if len(params) > 1 {
-		if docsAny, ok := params[1].([]any); ok {
-			for _, d := range docsAny {
-				if docMap, ok := d.(map[string]any); ok {
-					docs = append(docs, docMap)
-				}
-			}
-		}
+		docs, _ = params[1].([]any)
+	}
+	if len(docs) == 0 {
+		return nil, fmt.Errorf("mongo.insertMany: documents array is required")
 	}
 
-	return m.driver.InsertMany(db, coll, docs)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	result, err := coll.InsertMany(ctx, docs)
+	if err != nil {
+		return nil, fmt.Errorf("mongo.insertMany: %s", err.Error())
+	}
+	return map[string]any{"inserted_ids": result.InsertedIDs}, nil
 }
 
 func (m *MongoModule) mongoUpdate(params ...any) (any, error) {
-	db, coll, err := m.parseCollectionParams(params)
+	coll, _, err := m.getCollection(params)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := m.validateDatabase(db); err != nil {
 		return nil, err
 	}
 
@@ -568,23 +334,23 @@ func (m *MongoModule) mongoUpdate(params ...any) (any, error) {
 	if len(params) > 2 {
 		update, _ = params[2].(map[string]any)
 	}
-
-	if filter != nil {
-		if err := m.validateOperation(filter); err != nil {
-			return nil, err
-		}
+	if update == nil {
+		return nil, fmt.Errorf("mongo.update: update document is required")
 	}
 
-	return m.driver.Update(db, coll, filter, update)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	result, err := coll.UpdateMany(ctx, toBsonDoc(filter), toBsonDoc(update))
+	if err != nil {
+		return nil, fmt.Errorf("mongo.update: %s", err.Error())
+	}
+	return map[string]any{"modified_count": result.ModifiedCount}, nil
 }
 
 func (m *MongoModule) mongoDelete(params ...any) (any, error) {
-	db, coll, err := m.parseCollectionParams(params)
+	coll, _, err := m.getCollection(params)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := m.validateDatabase(db); err != nil {
 		return nil, err
 	}
 
@@ -593,22 +359,19 @@ func (m *MongoModule) mongoDelete(params ...any) (any, error) {
 		filter, _ = params[1].(map[string]any)
 	}
 
-	if filter != nil {
-		if err := m.validateOperation(filter); err != nil {
-			return nil, err
-		}
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	return m.driver.Delete(db, coll, filter)
+	result, err := coll.DeleteMany(ctx, toBsonDoc(filter))
+	if err != nil {
+		return nil, fmt.Errorf("mongo.delete: %s", err.Error())
+	}
+	return map[string]any{"deleted_count": result.DeletedCount}, nil
 }
 
 func (m *MongoModule) mongoCount(params ...any) (any, error) {
-	db, coll, err := m.parseCollectionParams(params)
+	coll, _, err := m.getCollection(params)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := m.validateDatabase(db); err != nil {
 		return nil, err
 	}
 
@@ -617,22 +380,19 @@ func (m *MongoModule) mongoCount(params ...any) (any, error) {
 		filter, _ = params[1].(map[string]any)
 	}
 
-	if filter != nil {
-		if err := m.validateOperation(filter); err != nil {
-			return nil, err
-		}
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	return m.driver.Count(db, coll, filter)
+	count, err := coll.CountDocuments(ctx, toBsonDoc(filter))
+	if err != nil {
+		return nil, fmt.Errorf("mongo.count: %s", err.Error())
+	}
+	return count, nil
 }
 
 func (m *MongoModule) mongoAggregate(params ...any) (any, error) {
-	db, coll, err := m.parseCollectionParams(params)
+	coll, _, err := m.getCollection(params)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := m.validateDatabase(db); err != nil {
 		return nil, err
 	}
 
@@ -640,21 +400,36 @@ func (m *MongoModule) mongoAggregate(params ...any) (any, error) {
 	if len(params) > 1 {
 		pipeline, _ = params[1].([]any)
 	}
-
-	if pipeline != nil {
-		if err := m.validateOperation(map[string]any{"pipeline": pipeline}); err != nil {
-			return nil, err
-		}
+	if pipeline == nil {
+		return nil, fmt.Errorf("mongo.aggregate: pipeline is required")
 	}
 
-	docs, err := m.driver.Aggregate(db, coll, pipeline)
-	if err != nil {
+	if err := m.validateOperation(map[string]any{"pipeline": pipeline}); err != nil {
 		return nil, err
 	}
-	
-	result := make([]any, len(docs))
-	for i, doc := range docs {
-		result[i] = doc
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cursor, err := coll.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("mongo.aggregate: %s", err.Error())
 	}
-	return result, nil
+	defer cursor.Close(ctx)
+
+	var results []map[string]any
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("mongo.aggregate: %s", err.Error())
+	}
+	if results == nil {
+		results = []map[string]any{}
+	}
+	return results, nil
+}
+
+// SetClient allows injecting a pre-configured mongo client (for testing).
+func (m *MongoModule) SetClient(client *mongo.Client) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.client = client
 }

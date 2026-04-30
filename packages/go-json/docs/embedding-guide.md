@@ -377,20 +377,20 @@ defer rt.Close()
 
 > **Important:** Always call `rt.Close()` when you're done with a runtime that has I/O enabled, to release underlying resources.
 
-### Custom MongoDB/Redis Drivers
+### MongoDB & Redis
 
-By default, MongoDB and Redis modules use in-memory drivers (suitable for testing and development). For production, inject real drivers:
+MongoDB and Redis modules use real drivers (`go.mongodb.org/mongo-driver/v2` and `github.com/redis/go-redis/v9`). Connection is lazy — established on first operation using the URI from security config:
 
 ```go
-rt := gojson.NewRuntime(
-	gojson.WithIO(
-		goio.Mongo(sec, goio.WithMongoDriver(myMongoDriver)),
-		goio.Redis(sec, goio.WithRedisDriver(myRedisDriver)),
-	),
-)
-```
+sec := goio.DefaultSecurityConfig()
+sec.Mongo.DefaultURI = "mongodb://localhost:27017"
+sec.Redis.DefaultURI = "redis://localhost:6379"
 
-Implement the `MongoDriver` or `RedisDriver` interface to wrap your preferred client library.
+rt := gojson.NewRuntime(
+	gojson.WithIO(goio.Mongo(sec), goio.Redis(sec)),
+)
+defer rt.Close()
+```
 
 ---
 
