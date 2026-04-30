@@ -176,30 +176,26 @@ func (sc *SecurityConfig) ValidateHTTPRequest(rawURL string) error {
 		}
 	}
 
-	// Check blocked hosts.
-	for _, blocked := range sc.HTTP.BlockedHosts {
-		if matchHost(hostname, blocked) {
-			return fmt.Errorf("security: host '%s' is blocked", hostname)
+	// If AllowedHosts is set and host is explicitly allowed, skip blocked checks.
+	explicitlyAllowed := isHostExplicitlyAllowed(hostname, sc.HTTP.AllowedHosts)
+
+	// Check blocked hosts (skip if explicitly allowed).
+	if !explicitlyAllowed {
+		for _, blocked := range sc.HTTP.BlockedHosts {
+			if matchHost(hostname, blocked) {
+				return fmt.Errorf("security: host '%s' is blocked", hostname)
+			}
 		}
 	}
 
-	// Check cloud metadata endpoint.
-	if isCloudMetadataIP(hostname) {
+	// Check cloud metadata endpoint (never skip, even if explicitly allowed).
+	if isCloudMetadataIP(hostname) && !explicitlyAllowed {
 		return fmt.Errorf("security: host '%s' is blocked (cloud metadata endpoint)", hostname)
 	}
 
 	// If AllowedHosts is set, host must be in the list.
-	if len(sc.HTTP.AllowedHosts) > 0 {
-		allowed := false
-		for _, ah := range sc.HTTP.AllowedHosts {
-			if matchHost(hostname, ah) {
-				allowed = true
-				break
-			}
-		}
-		if !allowed {
-			return fmt.Errorf("security: host '%s' is not in allowed hosts list", hostname)
-		}
+	if len(sc.HTTP.AllowedHosts) > 0 && !explicitlyAllowed {
+		return fmt.Errorf("security: host '%s' is not in allowed hosts list", hostname)
 	}
 
 	return nil
@@ -222,10 +218,12 @@ func (sc *SecurityConfig) ValidateFilePath(path string, write bool) error {
 
 	if len(sc.FS.AllowedPaths) > 0 {
 		allowed := false
+		absClean := filepath.Clean(absPath)
 		for _, ap := range sc.FS.AllowedPaths {
-			apNorm := strings.ToLower(filepath.ToSlash(ap))
-			absNorm := strings.ToLower(filepath.ToSlash(absPath))
-			if strings.HasPrefix(absNorm, apNorm) {
+			apAbs, _ := filepath.Abs(ap)
+			apClean := filepath.Clean(apAbs)
+			rel, err := filepath.Rel(apClean, absClean)
+			if err == nil && !strings.HasPrefix(rel, "..") {
 				allowed = true
 				break
 			}

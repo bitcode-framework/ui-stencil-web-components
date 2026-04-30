@@ -298,10 +298,10 @@ func TestDetectDriverFromDSN(t *testing.T) {
 		{"mysql://localhost/db", "mysql"},
 		{"sqlserver://localhost/db", "sqlserver"},
 		{"oracle://localhost/db", "oracle"},
-		{"sqlite3://test.db", "sqlite3"},
-		{"sqlite://test.db", "sqlite3"},
-		{"file:test.db", "sqlite3"},
-		{"test.db", "sqlite3"},
+		{"sqlite3://test.db", "sqlite"},
+		{"sqlite://test.db", "sqlite"},
+		{"file:test.db", "sqlite"},
+		{"test.db", "sqlite"},
 	}
 
 	for _, tt := range tests {

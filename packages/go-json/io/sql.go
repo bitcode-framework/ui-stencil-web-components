@@ -453,9 +453,9 @@ func detectDriverFromDSN(dsn string) string {
 	case strings.HasPrefix(dsn, "oracle://"):
 		return "oracle"
 	case strings.HasPrefix(dsn, "sqlite3://"), strings.HasPrefix(dsn, "sqlite://"), strings.HasPrefix(dsn, "file:"):
-		return "sqlite3"
+		return "sqlite"
 	default:
-		return "sqlite3"
+		return "sqlite"
 	}
 }
 

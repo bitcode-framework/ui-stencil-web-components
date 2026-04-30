@@ -34,3 +34,13 @@ func SQL(security *SecurityConfig) IOModule {
 func Exec(security *SecurityConfig) IOModule {
 	return NewExecModule(security)
 }
+
+// Mongo returns just the Mongo module.
+func Mongo(security *SecurityConfig) IOModule {
+	return NewMongoModule(security)
+}
+
+// Redis returns just the Redis module.
+func Redis(security *SecurityConfig) IOModule {
+	return NewRedisModule(security)
+}

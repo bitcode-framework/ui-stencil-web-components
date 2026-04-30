@@ -143,9 +143,14 @@ go test ./server/ -v                     # Server config, routing, handler tests
 - Backward compatibility: `ProcessDefinition.Runtime` field, `IsGoJSON()` helper, old format unchanged
 - Process engine data step replacement: `GoJSONDataHandler` adapts old step types to bridge calls
 - CLI: run (--input/--input-file/--timeout/--io/--trace/stdin), check (--verbose), test (--filter/--verbose), ast (--output), codegen (--target/--output/--package), migrate (--from/--to/--dry-run, JSON-aware key renaming)
-- Code generation: `CodeGenerator` interface, Go/JavaScript/Python generators handling all step types including new/import/expression
-- Windows path security: case-insensitive matching, directory boundary checks
-- 184 tests total (131 from Phase 4.5a/b + 53 new)
+- Code generation: `CodeGenerator` interface, Go/JavaScript/Python generators handling all step types including new/import/expression/switch
+- Windows path security: case-insensitive matching, directory boundary checks, `filepath.Rel`-based AllowedPaths validation
+- Security: AllowedHosts explicitly override BlockedHosts (explicitly allowed hosts skip blocked check)
+- Exec timeout: context deadline check prioritized over ExitError for reliable timeout detection
+- MongoDB driver interface: `MongoDriver` interface + `InMemoryMongoDriver` (functional without external deps, production drivers injectable via `WithMongoDriver()`)
+- Redis driver interface: `RedisDriver` interface + `InMemoryRedisDriver` (functional without external deps, production drivers injectable via `WithRedisDriver()`)
+- CLI: `go-json ast --format` flag (forward-compatible, json only for now)
+- 578 tests total across 9 packages (io: 131, lang: 176, codegen: 18, cmd: 46, runtime: 30+, stdlib: 50+, server: 37)
 
 ## What's Done (Phase 4.5d)
 
@@ -176,12 +181,12 @@ go test ./server/ -v                     # Server config, routing, handler tests
 - **Server mode detection**: `IsServerProgram()` checks for routes key
 - **Health endpoint**: built-in `/health` with status, name, uptime (bypasses middleware)
 - **Graceful shutdown**: SIGINT/SIGTERM handling with configurable timeout
-- 221 tests total (184 from Phase 4.5a/b/c + 37 new)
+- 578 tests total (see Phase 4.5c count — Phase 4.5d adds server tests on top)
 
 ## What's NOT Done
 
 - Expression-level compile-time type validation (deferred to runtime)
-- MongoDB/Redis require external driver dependencies (stubbed until drivers added to go.mod)
+- MongoDB/Redis production drivers (interface defined, in-memory mock works — add `go.mongodb.org/mongo-driver/v2` and `github.com/redis/go-redis/v9` for production use via `WithMongoDriver()`/`WithRedisDriver()`)
 - REPL mode (future)
 - Dev mode file watching (fsnotify — optional dependency, not yet added)
 - Interactive mode for `go-json generate` (--interactive flag)

@@ -255,10 +255,16 @@ func cmdCheck(args []string) {
 func cmdAST(args []string) {
 	fs := flag.NewFlagSet("ast", flag.ExitOnError)
 	output := fs.String("output", "", "Write to file (default: stdout)")
+	format := fs.String("format", "json", "Output format (json)")
 	fs.Parse(args)
 
 	if fs.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "Usage: go-json ast <program.json> [--output ast.json]")
+		os.Exit(1)
+	}
+
+	if *format != "json" {
+		fmt.Fprintf(os.Stderr, "Error: unsupported format '%s' (only 'json' supported)\n", *format)
 		os.Exit(1)
 	}
 

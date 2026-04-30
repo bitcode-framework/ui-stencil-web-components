@@ -107,10 +107,10 @@ func (m *ExecModule) execRun(params ...any) (any, error) {
 
 	exitCode := 0
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			exitCode = exitErr.ExitCode()
-		} else if ctx.Err() == context.DeadlineExceeded {
+		if ctx.Err() == context.DeadlineExceeded {
 			return nil, fmt.Errorf("exec.run: command timed out after %d seconds", timeoutSec)
+		} else if exitErr, ok := err.(*exec.ExitError); ok {
+			exitCode = exitErr.ExitCode()
 		} else {
 			return nil, fmt.Errorf("exec.run: %s", err.Error())
 		}

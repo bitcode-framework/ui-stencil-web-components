@@ -59,7 +59,8 @@ func validateInputSize(input string) error {
 
 // RegisterRegex registers regex functions in the stdlib registry.
 // regex.match, regex.findAll, regex.replace are available without import (stdlib).
-// matches() is kept as backward-compatible alias for regex.match.
+// Note: expr-lang provides a built-in 'matches' operator (e.g., "str matches 'pattern'")
+// which serves the same purpose. No separate matches() function is registered.
 func RegisterRegex(r *Registry) {
 	regexMatch := func(params ...any) (any, error) {
 		if len(params) < 2 {

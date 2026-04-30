@@ -96,6 +96,27 @@ func (g *PythonGenerator) generateStep(b *strings.Builder, node lang.Node, level
 			g.generateSteps(b, n.Else, level+1)
 		}
 
+	case *lang.SwitchNode:
+		first := true
+		var defaultSteps []lang.Node
+		for key, steps := range n.Cases {
+			if key == "default" {
+				defaultSteps = steps
+				continue
+			}
+			if first {
+				b.WriteString(fmt.Sprintf("%sif %s == %q:\n", pyIndent(level), transformExpr(n.Expr, "python"), key))
+				first = false
+			} else {
+				b.WriteString(fmt.Sprintf("%selif %s == %q:\n", pyIndent(level), transformExpr(n.Expr, "python"), key))
+			}
+			g.generateSteps(b, steps, level+1)
+		}
+		if defaultSteps != nil {
+			b.WriteString(fmt.Sprintf("%selse:\n", pyIndent(level)))
+			g.generateSteps(b, defaultSteps, level+1)
+		}
+
 	case *lang.ForNode:
 		if n.In != "" {
 			if n.Index != "" {
