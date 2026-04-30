@@ -486,14 +486,25 @@ Log levels: `debug`, `info`, `warn`, `error`.
 - Each named branch runs concurrently.
 - Results are collected into the variable named by `"into"` as a map keyed by branch name.
 - Each branch gets an **isolated scope**: it can read parent variables but cannot write to them.
+- Writing to a parent variable from a parallel branch is a **compile error**.
 
-**Error modes:**
+**Join modes** (`"join"`):
 
 | Mode | Behavior |
 |------|----------|
-| `cancel_all` | (Default) Cancel all branches on first error |
-| `continue` | Let remaining branches finish; propagate error after |
-| `collect` | Collect all errors; never cancel |
+| `all` | (Default) Wait for all branches to complete |
+| `any` | First successful branch wins; cancel remaining |
+| `settled` | Wait for all branches regardless of errors; errors collected as `{"error": true, "message": "..."}` |
+
+**Error modes** (`"on_error"`, applies when `join` is `all`):
+
+| Mode | Behavior |
+|------|----------|
+| `cancel_all` | (Default) Cancel all branches on first error, propagate error |
+| `continue` | Let remaining branches finish; failed branch = `nil` in results |
+| `collect` | Let remaining branches finish; failed branch = error object in results |
+
+When `join` is `settled`, the `on_error` mode is ignored — all branches always run to completion and errors are always collected as objects.
 
 ---
 
@@ -686,6 +697,17 @@ Structs are defined under the top-level `"structs"` key.
 { "let": "p", "new": "Person", "with": { "name": "'Alice'", "age": "30" } }
 ```
 
+Nested construction is supported:
+
+```json
+{ "let": "p", "new": "Person", "with": {
+  "name": "'Alice'",
+  "address": { "new": "Address", "with": { "city": "'Jakarta'" } }
+}}
+```
+
+Field values are **type-checked at runtime** — assigning a string to an `int` field produces a `TYPE_MISMATCH` error. Nullable fields (`?T`) accept `nil`; non-nullable fields reject it.
+
 ### Methods
 
 - Methods are defined inside `"methods"` with the same shape as functions.
@@ -733,8 +755,9 @@ Each key is a local alias; the value is the import path.
 
 ### Import Resolution
 
-- **Circular imports** are detected at compile time and rejected.
+- **Circular imports** are detected at compile time and rejected (direct and indirect cycles).
 - **Diamond imports** are handled correctly — each module is loaded exactly once.
+- **Alias collisions** are detected — importing two modules that produce the same namespaced name (e.g. two files both exporting `Item` under the same alias) is a compile error.
 
 ---
 

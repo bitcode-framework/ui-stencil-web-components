@@ -23,17 +23,21 @@ go-json is a general-purpose programming language where programs are valid JSON 
 | | Optional chaining (`a?.b`), nil coalescing (`??`) | Done |
 | | Pipe operator, string interpolation | Done |
 | **Structs** | Struct definitions with typed fields and defaults | Done |
+| | Runtime type-checking on construction | Done |
 | | Methods with implicit `self` binding | Done |
 | | Frozen (immutable) structs | Done |
 | | Nested struct construction | Done |
 | | Nested property access and mutation (`a.b.c`, `a[0].b`) | Done |
 | **Modularity** | Import system (relative, stdlib, I/O, extension) | Done |
-| | Circular import detection | Done |
+| | Circular import detection (direct and indirect) | Done |
+| | Import alias collision detection | Done |
 | | Re-export / barrel files | Done |
 | | Diamond import handling | Done |
 | **Parallel Execution** | Parallel branches with isolated scope | Done |
+| | 3 join modes (`all`, `any`, `settled`) | Done |
 | | 3 error modes (`cancel_all`, `continue`, `collect`) | Done |
 | | Compile-time parent write check | Done |
+| | Shared step counter across branches (prevents limit bypass) | Done |
 | **Standard Library** | 110+ built-in functions across 3 layers | Done |
 | | Math, string, array, map, datetime, encoding, crypto, regex, path, JSON | Done |
 | | See [Built-in Functions](docs/built-in-functions.md) for complete reference | |
@@ -207,6 +211,7 @@ Define data structures with typed fields, defaults, and methods:
 - Methods have implicit `self` — no need to declare it in params
 - Structs are **mutable by default** — methods can modify `self.field`
 - Add `"frozen": true` to make a struct immutable (compile error on any `set "self.*"`)
+- **Runtime type-checking** on construction — assigning wrong type to a field produces `TYPE_MISMATCH` error
 - Nested construction: `{"let": "p", "new": "Person", "with": {"name": "'Alice'", "address": {"new": "Address", "with": {...}}}}`
 - Method chaining works naturally: `person.withName('Bob').withAge(30).greet('Hello')`
 - No inheritance — use **composition** instead
@@ -236,7 +241,7 @@ Define data structures with typed fields, defaults, and methods:
 
 **What gets exported:** Structs and functions. Steps, input, and limits are NOT exported.
 
-**Safety:** Circular imports are detected at compile time. Diamond imports (A→B, A→C, B→D, C→D) are handled correctly — D is loaded once and shared.
+**Safety:** Circular imports (direct and indirect) are detected at compile time. Diamond imports (A→B, A→C, B→D, C→D) are handled correctly — D is loaded once and shared. Alias collisions (two imports producing the same namespaced name) are compile errors.
 
 ---
 
@@ -263,14 +268,21 @@ Run independent branches concurrently:
 
 After execution, `results.users` and `results.orders` contain each branch's return value.
 
-**Error modes:**
+**Join modes** (`"join"`):
+| Mode | Behavior |
+|------|----------|
+| `all` (default) | Wait for all branches |
+| `any` | First successful branch wins, cancel remaining |
+| `settled` | Wait for all regardless of errors; errors collected as `{"error": true, "message": "..."}` |
+
+**Error modes** (`"on_error"`, applies when join is `all`):
 | Mode | Behavior |
 |------|----------|
 | `cancel_all` (default) | First error cancels all branches |
 | `continue` | Other branches continue; failed branch = `nil` |
 | `collect` | Other branches continue; failed branch = error object |
 
-**Scope isolation:** Each branch gets a read-only copy of parent scope. Writing to parent variables from a parallel branch is a **compile error**.
+**Scope isolation:** Each branch gets a read-only copy of parent scope. Writing to parent variables from a parallel branch is a **compile error**. Step limits are shared across all branches via atomic counter.
 
 ---
 
