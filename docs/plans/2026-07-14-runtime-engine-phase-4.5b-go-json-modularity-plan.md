@@ -375,12 +375,12 @@ Task 22-23 (nullable) ───────────────────�
 **Effort:** Small
 **Depends on:** Phase 4.5a stdlib registry
 
-**Functions (5):** `has(map, key)`, `get(map, dotPath)`, `merge(a, b)`, `pick(map, keys)`, `omit(map, keys)`
+**Functions (5):** `has(map, key)`, `getIn(obj, dotPath [, separator])`, `merge(a, b)`, `pick(map, keys)`, `omit(map, keys)`
 
-**Note:** `keys`, `values`, `toPairs`, `fromPairs` already in expr-lang.
+**Note:** `keys`, `values`, `toPairs`, `fromPairs` already in expr-lang. `get` renamed to `getIn` to avoid collision with expr-lang built-in.
 
 **Edge cases:**
-- `get(map, "a.b.c")` — dot path traversal, nil intermediate → return nil
+- `getIn(map, "a.b.c")` — dot path traversal, nil intermediate → return nil
 - `merge(a, b)` — shallow merge, b overrides a
 - `pick(map, [])` → empty map
 - `omit(map, [])` → original map

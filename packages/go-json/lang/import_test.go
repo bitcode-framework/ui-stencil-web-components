@@ -355,3 +355,147 @@ func TestParallel_LocalLetThenSet_Allowed(t *testing.T) {
 		t.Errorf("expected 20, got %v", result.Value)
 	}
 }
+
+func TestImport_IndirectCircularDetection(t *testing.T) {
+	dir := t.TempDir()
+
+	writeTestFile(t, dir, "a.json", `{
+		"import": {"b": "./b.json"},
+		"steps": []
+	}`)
+	writeTestFile(t, dir, "b.json", `{
+		"import": {"c": "./c.json"},
+		"steps": []
+	}`)
+	writeTestFile(t, dir, "c.json", `{
+		"import": {"a": "./a.json"},
+		"steps": []
+	}`)
+
+	program, err := ParseFile(filepath.Join(dir, "a.json"))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	resolver := NewImportResolver()
+	err = resolver.ResolveImports(program, dir, []string{filepath.Join(dir, "a.json")})
+	if err == nil {
+		t.Fatal("expected circular import error for A→B→C→A")
+	}
+	if !strings.Contains(err.Error(), "circular") {
+		t.Errorf("expected 'circular' error, got: %v", err)
+	}
+}
+
+func TestImport_AliasCollision_Error(t *testing.T) {
+	dir := t.TempDir()
+
+	writeTestFile(t, dir, "types_a.json", `{
+		"structs": {
+			"Item": {
+				"fields": {"name": "string"}
+			}
+		},
+		"functions": {
+			"helper": {
+				"steps": [{"return": 1}]
+			}
+		}
+	}`)
+	writeTestFile(t, dir, "types_b.json", `{
+		"structs": {
+			"Item": {
+				"fields": {"value": "int"}
+			}
+		}
+	}`)
+
+	mainPath := writeTestFile(t, dir, "main.json", `{
+		"import": {
+			"m": "./types_a.json",
+			"m2": "./types_b.json"
+		},
+		"steps": []
+	}`)
+
+	program, err := ParseFile(mainPath)
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	resolver := NewImportResolver()
+	err = resolver.ResolveImports(program, dir, []string{mainPath})
+	if err != nil {
+		t.Fatalf("no collision expected for different aliases: %v", err)
+	}
+
+	if _, ok := program.Structs["m.Item"]; !ok {
+		t.Error("expected m.Item")
+	}
+	if _, ok := program.Structs["m2.Item"]; !ok {
+		t.Error("expected m2.Item")
+	}
+	if _, ok := program.Functions["m.helper"]; !ok {
+		t.Error("expected m.helper")
+	}
+}
+
+func TestImport_SameAliasCollision_Error(t *testing.T) {
+	dir := t.TempDir()
+
+	writeTestFile(t, dir, "types.json", `{
+		"structs": {
+			"Item": {
+				"fields": {"name": "string"}
+			}
+		}
+	}`)
+
+	mainPath := writeTestFile(t, dir, "main.json", `{
+		"steps": []
+	}`)
+
+	program, err := ParseFile(mainPath)
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	if program.Structs == nil {
+		program.Structs = make(map[string]*StructDef)
+	}
+	program.Structs["t.Item"] = &StructDef{Name: "Item", Fields: map[string]*FieldDef{"x": {Type: "int"}}}
+
+	resolver := NewImportResolver()
+	program.Imports = []*ImportDef{{Alias: "t", Path: "./types.json", PathType: "relative"}}
+	err = resolver.ResolveImports(program, dir, []string{mainPath})
+	if err == nil {
+		t.Fatal("expected collision error for duplicate t.Item")
+	}
+	if !strings.Contains(err.Error(), "collision") {
+		t.Errorf("expected 'collision' error, got: %v", err)
+	}
+}
+
+func TestImport_FileWithJsonSyntaxError(t *testing.T) {
+	dir := t.TempDir()
+
+	writeTestFile(t, dir, "bad.json", `{invalid json content}`)
+
+	mainPath := writeTestFile(t, dir, "main.json", `{
+		"import": {
+			"b": "./bad.json"
+		},
+		"steps": []
+	}`)
+
+	program, err := ParseFile(mainPath)
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	resolver := NewImportResolver()
+	err = resolver.ResolveImports(program, dir, []string{mainPath})
+	if err == nil {
+		t.Fatal("expected error for JSON syntax error in imported file")
+	}
+}

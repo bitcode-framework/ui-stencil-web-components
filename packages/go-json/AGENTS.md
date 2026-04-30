@@ -51,8 +51,10 @@ packages/go-json/
 - Structs defined in `structs` block with fields, methods, optional `frozen: true`
 - Construction via `{"let": "x", "new": "StructName", "with": {...}}`
 - Nested construction: `"field": {"new": "Other", "with": {...}}`
+- Runtime type-checking on construction: field values validated against declared types (TYPE_MISMATCH error)
 - Methods with implicit `self` binding, callable at expression and step level
 - Frozen structs: compile-time rejection of `set "self.*"` in methods
+- `self` reassignment blocked in all node types (if/for/while/try/switch/parallel)
 - Forward references resolved via two-pass compilation
 - Circular non-nullable struct references detected at compile time
 
@@ -62,6 +64,7 @@ packages/go-json/
 - Path types: relative (`./`), stdlib (`stdlib:`), extension (`ext:`), I/O (`io:`)
 - Imported items namespaced via alias: `alias.StructName`, `alias.functionName`
 - Circular import detection via import stack
+- Import alias collision detection (compile error on duplicate namespaced names)
 - Barrel file re-export via `{"alias": "imported.Type"}` in structs block
 - Diamond imports handled correctly (loaded once, cached)
 - Wired via `Runtime.CompileFile(path)` — import resolution between parse and compile
@@ -71,8 +74,11 @@ packages/go-json/
 - `{"parallel": {"branch1": [...], "branch2": [...]}, "into": "results"}`
 - Each branch gets own VM + scope (read parent, cannot write parent)
 - Compile-time check: `set` targeting parent variable in parallel branch = error
+- Join modes: `all` (default, wait for all), `any` (first success wins), `settled` (wait for all regardless of errors, errors collected as error objects)
 - Error modes: `cancel_all` (default), `continue`, `collect`
 - Goroutine leak prevention: drain channel after cancel
+- Shared step counter across branches via `sync/atomic` — prevents step limit bypass via many parallel branches
+- Struct instances are NOT thread-safe — do not share mutable struct instances across parallel branches
 
 ## Stdlib Layers
 

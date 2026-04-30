@@ -135,6 +135,11 @@ func (e *GoJSONError) WithContext(ctx map[string]any) *GoJSONError {
 	return e
 }
 
+func (e *GoJSONError) AtStep(step int) *GoJSONError {
+	e.Step = step
+	return e
+}
+
 func (e *GoJSONError) InFunction(name string) *GoJSONError {
 	e.Function = name
 	return e

@@ -286,3 +286,134 @@ func TestStruct_WithNullValue(t *testing.T) {
 		t.Errorf("expected nil, got %v", result.Value)
 	}
 }
+
+func TestStruct_NestedConstruction(t *testing.T) {
+	result := compileAndRun(t, `{
+		"structs": {
+			"Address": {
+				"fields": {
+					"city": "string",
+					"zip": "string"
+				}
+			},
+			"Person": {
+				"fields": {
+					"name": "string",
+					"address": "Address"
+				}
+			}
+		},
+		"steps": [
+			{"let": "p", "new": "Person", "with": {
+				"name": "'Alice'",
+				"address": {"new": "Address", "with": {"city": "'Jakarta'", "zip": "'12345'"}}
+			}},
+			{"return": "p.address.city"}
+		]
+	}`, nil)
+
+	if result.Value != "Jakarta" {
+		t.Errorf("expected 'Jakarta', got %v", result.Value)
+	}
+}
+
+func TestStruct_TypeMismatch_Error(t *testing.T) {
+	program, err := Parse([]byte(`{
+		"structs": {
+			"Person": {
+				"fields": {
+					"name": "string",
+					"age": "int"
+				}
+			}
+		},
+		"steps": [
+			{"let": "p", "new": "Person", "with": {"name": "'Alice'", "age": "'not a number'"}}
+		]
+	}`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	engine := NewExprLangEngine()
+	compiled, err := Compile(program, engine, DefaultLimits())
+	if err != nil {
+		t.Fatalf("compile error: %v", err)
+	}
+
+	vm := NewVM(compiled, engine)
+	_, err = vm.Execute(nil)
+	if err == nil {
+		t.Fatal("expected type mismatch error")
+	}
+	if !strings.Contains(err.Error(), "expected int") {
+		t.Errorf("expected 'expected int' error, got: %v", err)
+	}
+}
+
+func TestStruct_TypeMismatch_NilOnNonNullable_Error(t *testing.T) {
+	program, err := Parse([]byte(`{
+		"structs": {
+			"Person": {
+				"fields": {
+					"name": "string"
+				}
+			}
+		},
+		"steps": [
+			{"let": "p", "new": "Person", "with": {"name": "nil"}}
+		]
+	}`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	engine := NewExprLangEngine()
+	compiled, err := Compile(program, engine, DefaultLimits())
+	if err != nil {
+		t.Fatalf("compile error: %v", err)
+	}
+
+	vm := NewVM(compiled, engine)
+	_, err = vm.Execute(nil)
+	if err == nil {
+		t.Fatal("expected type mismatch error for nil on non-nullable")
+	}
+	if !strings.Contains(err.Error(), "cannot be nil") {
+		t.Errorf("expected 'cannot be nil' error, got: %v", err)
+	}
+}
+
+func TestStruct_FloatAcceptsInt(t *testing.T) {
+	result := compileAndRun(t, `{
+		"structs": {
+			"Config": {
+				"fields": {
+					"ratio": "float"
+				}
+			}
+		},
+		"steps": [
+			{"let": "c", "new": "Config", "with": {"ratio": "42"}},
+			{"return": "c.ratio"}
+		]
+	}`, nil)
+
+	if !numEq(result.Value, 42) {
+		t.Errorf("expected 42, got %v", result.Value)
+	}
+}
+
+func TestStruct_MixedDotBracketMutation(t *testing.T) {
+	result := compileAndRun(t, `{
+		"steps": [
+			{"let": "data", "value": {"items": [{"name": "a"}, {"name": "b"}]}},
+			{"set": "data.items[0].name", "value": "updated"},
+			{"return": "data.items[0].name"}
+		]
+	}`, nil)
+
+	if result.Value != "updated" {
+		t.Errorf("expected 'updated', got %v", result.Value)
+	}
+}

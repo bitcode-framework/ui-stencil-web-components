@@ -322,6 +322,18 @@ func validateNoSelfReassign(steps []Node, structName, methodName string) error {
 			if err := validateNoSelfReassign(n.Finally, structName, methodName); err != nil {
 				return err
 			}
+		case *SwitchNode:
+			for _, steps := range n.Cases {
+				if err := validateNoSelfReassign(steps, structName, methodName); err != nil {
+					return err
+				}
+			}
+		case *ParallelNode:
+			for _, steps := range n.Branches {
+				if err := validateNoSelfReassign(steps, structName, methodName); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil

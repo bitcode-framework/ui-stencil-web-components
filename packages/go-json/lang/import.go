@@ -46,7 +46,9 @@ func (ir *ImportResolver) ResolveImports(program *Program, basePath string, impo
 					fmt.Sprintf("error importing '%s' (alias '%s'): %s", imp.Path, imp.Alias, err.Error()), -1)
 			}
 
-			ir.mergeExports(program, imported, imp.Alias)
+			if err := ir.mergeExports(program, imported, imp.Alias); err != nil {
+				return err
+			}
 
 		case "io", "ext":
 			if program.RequestedModules == nil {
@@ -111,13 +113,18 @@ func (ir *ImportResolver) loadFile(path string, importStack []string) (*Program,
 	return program, nil
 }
 
-func (ir *ImportResolver) mergeExports(target, source *Program, alias string) {
+func (ir *ImportResolver) mergeExports(target, source *Program, alias string) error {
 	if source.Structs != nil {
 		if target.Structs == nil {
 			target.Structs = make(map[string]*StructDef)
 		}
 		for name, sd := range source.Structs {
-			target.Structs[alias+"."+name] = sd
+			key := alias + "." + name
+			if _, exists := target.Structs[key]; exists {
+				return CompileError("IMPORT_COLLISION",
+					fmt.Sprintf("import alias collision: '%s' already defined", key), -1)
+			}
+			target.Structs[key] = sd
 		}
 	}
 
@@ -126,7 +133,13 @@ func (ir *ImportResolver) mergeExports(target, source *Program, alias string) {
 			target.Functions = make(map[string]*FuncDef)
 		}
 		for name, fd := range source.Functions {
-			target.Functions[alias+"."+name] = fd
+			key := alias + "." + name
+			if _, exists := target.Functions[key]; exists {
+				return CompileError("IMPORT_COLLISION",
+					fmt.Sprintf("import alias collision: '%s' already defined", key), -1)
+			}
+			target.Functions[key] = fd
 		}
 	}
+	return nil
 }

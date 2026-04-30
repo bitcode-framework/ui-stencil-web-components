@@ -489,7 +489,7 @@ Layer 2 only contains functions not already provided by expr-lang Layer 1. Funct
 | Function | Signature | Description |
 |---|---|---|
 | `has(obj, key)` | `map, string → bool` | Check key exists |
-| `get(obj, path)` | `map, string → any` | Get by dot path: `get(obj, "a.b.c")` |
+| `getIn(obj, path)` | `any, string → any` | Get by dot path: `getIn(obj, "a.b.c")`. Renamed from `get` to avoid collision with expr-lang built-in. Supports optional separator: `getIn(obj, "a->b", "->")` |
 | `merge(a, b)` | `map, map → map` | Shallow merge (b overrides a) |
 | `pick(obj, keys)` | `map, []string → map` | Pick subset of keys |
 | `omit(obj, keys)` | `map, []string → map` | Drop specified keys |

@@ -394,3 +394,103 @@ func findFunc(r *Registry, name string) func(...any) (any, error) {
 	}
 	return nil
 }
+
+func TestDateTime_FormatDate(t *testing.T) {
+	dt := "2024-06-15T10:30:00Z"
+	result, err := toTime(dt)
+	if err != nil {
+		t.Fatalf("toTime error: %v", err)
+	}
+
+	formatted := result.Format(translateUniversalDateFormat("YYYY-MM-DD"))
+	if formatted != "2024-06-15" {
+		t.Errorf("expected '2024-06-15', got '%s'", formatted)
+	}
+
+	formatted = result.Format(translateUniversalDateFormat("DD/MM/YYYY HH:mm"))
+	if formatted != "15/06/2024 10:30" {
+		t.Errorf("expected '15/06/2024 10:30', got '%s'", formatted)
+	}
+}
+
+func TestDateTime_AddDuration(t *testing.T) {
+	dur, err := parseDurationExtended("2h30m")
+	if err != nil {
+		t.Fatalf("parseDuration error: %v", err)
+	}
+	if dur.Hours() != 2.5 {
+		t.Errorf("expected 2.5 hours, got %v", dur.Hours())
+	}
+
+	dur, err = parseDurationExtended("7d")
+	if err != nil {
+		t.Fatalf("parseDuration error: %v", err)
+	}
+	if dur.Hours() != 168 {
+		t.Errorf("expected 168 hours (7 days), got %v", dur.Hours())
+	}
+
+	dur, err = parseDurationExtended("2w")
+	if err != nil {
+		t.Fatalf("parseDuration error: %v", err)
+	}
+	if dur.Hours() != 336 {
+		t.Errorf("expected 336 hours (14 days), got %v", dur.Hours())
+	}
+
+	_, err = parseDurationExtended("invalid")
+	if err == nil {
+		t.Fatal("expected error for invalid duration")
+	}
+}
+
+func TestDateTime_DiffDates(t *testing.T) {
+	a, _ := toTime("2024-06-15T10:00:00Z")
+	b, _ := toTime("2024-06-15T08:00:00Z")
+
+	diff := a.Sub(b).String()
+	if diff != "2h0m0s" {
+		t.Errorf("expected '2h0m0s', got '%s'", diff)
+	}
+
+	diff = b.Sub(a).String()
+	if diff != "-2h0m0s" {
+		t.Errorf("expected '-2h0m0s' for negative diff, got '%s'", diff)
+	}
+}
+
+func TestDateTime_ToTime_Formats(t *testing.T) {
+	tests := []struct {
+		input string
+		valid bool
+	}{
+		{"2024-06-15T10:30:00Z", true},
+		{"2024-06-15T10:30:00", true},
+		{"2024-06-15", true},
+		{"not-a-date", false},
+	}
+
+	for _, tc := range tests {
+		_, err := toTime(tc.input)
+		if tc.valid && err != nil {
+			t.Errorf("expected '%s' to be valid, got error: %v", tc.input, err)
+		}
+		if !tc.valid && err == nil {
+			t.Errorf("expected '%s' to be invalid, got no error", tc.input)
+		}
+	}
+}
+
+func TestCrypto_HMAC_SHA512(t *testing.T) {
+	ns := CryptoNamespace()
+	hmacFn := ns["hmac"].(func(...any) (any, error))
+
+	result, err := hmacFn("data", "secret", "sha512")
+	if err != nil {
+		t.Fatalf("crypto.hmac sha512 error: %v", err)
+	}
+	hash := result.(string)
+	if len(hash) != 128 {
+		t.Errorf("expected 128-char HMAC-SHA512, got %d chars", len(hash))
+	}
+}

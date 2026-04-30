@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -48,21 +49,22 @@ func WithExecutionID(id string) VMOption {
 }
 
 type VM struct {
-	program     *CompiledProgram
-	engine      ExprEngine
-	scope       *Scope
-	ctx         context.Context
-	cancel      context.CancelFunc
-	debugger    Debugger
-	logger      Logger
-	trace       *ExecutionTrace
-	stepCount   int
-	depth       int
-	callStack   []StackFrame
-	limits      ResolvedLimits
-	session     map[string]any
-	executionID string
-	startTime   time.Time
+	program         *CompiledProgram
+	engine          ExprEngine
+	scope           *Scope
+	ctx             context.Context
+	cancel          context.CancelFunc
+	debugger        Debugger
+	logger          Logger
+	trace           *ExecutionTrace
+	stepCount       int
+	depth           int
+	callStack       []StackFrame
+	limits          ResolvedLimits
+	session         map[string]any
+	executionID     string
+	startTime       time.Time
+	sharedStepCount *int64 // shared across parallel branches for global step limit
 }
 
 type ExecutionResult struct {
@@ -224,9 +226,14 @@ func (vm *VM) executeSteps(steps []Node) (any, error) {
 		default:
 		}
 
-		// Step limit check.
 		vm.stepCount++
-		if vm.stepCount > vm.limits.MaxSteps {
+		if vm.sharedStepCount != nil {
+			if int(atomic.AddInt64(vm.sharedStepCount, 1)) > vm.limits.MaxSteps {
+				return nil, LimitError("STEP_LIMIT",
+					fmt.Sprintf("step limit (%d) exceeded", vm.limits.MaxSteps),
+					step.Meta().StepIndex)
+			}
+		} else if vm.stepCount > vm.limits.MaxSteps {
 			return nil, LimitError("STEP_LIMIT",
 				fmt.Sprintf("step limit (%d) exceeded", vm.limits.MaxSteps),
 				step.Meta().StepIndex)
@@ -1293,6 +1300,14 @@ func (vm *VM) executeParallel(n *ParallelNode) (any, error) {
 
 	parentEnv := vm.scope.ToMap()
 
+	var sharedSteps int64
+	if vm.sharedStepCount != nil {
+		sharedSteps = atomic.LoadInt64(vm.sharedStepCount)
+	} else {
+		sharedSteps = int64(vm.stepCount)
+	}
+	parentShared := &sharedSteps
+
 	for branchName, steps := range n.Branches {
 		bName := branchName
 		bSteps := steps
@@ -1304,12 +1319,13 @@ func (vm *VM) executeParallel(n *ParallelNode) (any, error) {
 			}()
 
 			branchVM := &VM{
-				program:  vm.program,
-				engine:   vm.engine,
-				ctx:      ctx,
-				debugger: vm.debugger,
-				logger:   vm.logger,
-				limits:   vm.limits,
+				program:         vm.program,
+				engine:          vm.engine,
+				ctx:             ctx,
+				debugger:        vm.debugger,
+				logger:          vm.logger,
+				limits:          vm.limits,
+				sharedStepCount: parentShared,
 			}
 
 			branchScope := NewScope("parallel:" + bName)
@@ -1341,31 +1357,38 @@ func (vm *VM) executeParallel(n *ParallelNode) (any, error) {
 		br := <-resultCh
 		collected++
 		if br.err != nil {
-			switch onError {
-			case "cancel_all":
-				cancel()
-				for collected < branchCount {
-					extra := <-resultCh
-					collected++
-					if extra.err == nil {
-						results[extra.name] = extra.value
-					}
-				}
-				if n.Into != "" {
-					results[br.name] = nil
-					if vm.scope.Has(n.Into) {
-						vm.scope.Set(n.Into, results, "map")
-					} else {
-						vm.scope.Declare(n.Into, results, "map")
-					}
-				}
-				return nil, br.err
-			case "continue":
-				results[br.name] = nil
-			case "collect":
+			if join == "settled" {
 				results[br.name] = map[string]any{
 					"error":   true,
 					"message": br.err.Error(),
+				}
+			} else {
+				switch onError {
+				case "cancel_all":
+					cancel()
+					for collected < branchCount {
+						extra := <-resultCh
+						collected++
+						if extra.err == nil {
+							results[extra.name] = extra.value
+						}
+					}
+					if n.Into != "" {
+						results[br.name] = nil
+						if vm.scope.Has(n.Into) {
+							vm.scope.Set(n.Into, results, "map")
+						} else {
+							vm.scope.Declare(n.Into, results, "map")
+						}
+					}
+					return nil, br.err
+				case "continue":
+					results[br.name] = nil
+				case "collect":
+					results[br.name] = map[string]any{
+						"error":   true,
+						"message": br.err.Error(),
+					}
 				}
 			}
 			if firstErr == nil {
@@ -1374,7 +1397,6 @@ func (vm *VM) executeParallel(n *ParallelNode) (any, error) {
 		} else {
 			results[br.name] = br.value
 
-			// join:"any" — first successful result wins, cancel remaining.
 			if join == "any" {
 				cancel()
 				for collected < branchCount {
@@ -1425,6 +1447,9 @@ func (vm *VM) executeNew(structName string, withArgs map[string]any, stepIndex i
 				if err != nil {
 					return nil, err
 				}
+				if err := validateFieldType(structName, fieldName, fd, val); err != nil {
+					return nil, err.(*GoJSONError).AtStep(stepIndex)
+				}
 				instance[fieldName] = val
 				continue
 			}
@@ -1452,6 +1477,67 @@ func (vm *VM) executeNew(structName string, withArgs map[string]any, stepIndex i
 	}
 
 	return instance, nil
+}
+
+func validateFieldType(structName, fieldName string, fd *FieldDef, val any) error {
+	if val == nil {
+		if IsNullable(fd.Type) {
+			return nil
+		}
+		return RuntimeError("TYPE_MISMATCH",
+			fmt.Sprintf("struct '%s' field '%s' (type %s) cannot be nil", structName, fieldName, fd.Type), -1)
+	}
+
+	actualType := InferType(val)
+	baseType := BaseType(fd.Type)
+
+	if strings.HasPrefix(baseType, "[]") {
+		if actualType != "[]any" {
+			return RuntimeError("TYPE_MISMATCH",
+				fmt.Sprintf("struct '%s' field '%s' expected %s, got %s", structName, fieldName, fd.Type, actualType), -1)
+		}
+		return nil
+	}
+
+	switch baseType {
+	case "any", "":
+		return nil
+	case "string":
+		if actualType != "string" {
+			return RuntimeError("TYPE_MISMATCH",
+				fmt.Sprintf("struct '%s' field '%s' expected string, got %s", structName, fieldName, actualType), -1)
+		}
+	case "int":
+		if actualType != "int" {
+			return RuntimeError("TYPE_MISMATCH",
+				fmt.Sprintf("struct '%s' field '%s' expected int, got %s", structName, fieldName, actualType), -1)
+		}
+	case "float":
+		if actualType != "float" && actualType != "int" {
+			return RuntimeError("TYPE_MISMATCH",
+				fmt.Sprintf("struct '%s' field '%s' expected float, got %s", structName, fieldName, actualType), -1)
+		}
+	case "bool":
+		if actualType != "bool" {
+			return RuntimeError("TYPE_MISMATCH",
+				fmt.Sprintf("struct '%s' field '%s' expected bool, got %s", structName, fieldName, actualType), -1)
+		}
+	case "map":
+		if actualType != "map" {
+			return RuntimeError("TYPE_MISMATCH",
+				fmt.Sprintf("struct '%s' field '%s' expected map, got %s", structName, fieldName, actualType), -1)
+		}
+	default:
+		if actualType == "map" {
+			if m, ok := val.(map[string]any); ok {
+				if typeName, ok := m["_type"].(string); ok && typeName != baseType {
+					return RuntimeError("TYPE_MISMATCH",
+						fmt.Sprintf("struct '%s' field '%s' expected %s, got %s", structName, fieldName, baseType, typeName), -1)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // evalNewArg evaluates a single with-arg value based on its parsed type:

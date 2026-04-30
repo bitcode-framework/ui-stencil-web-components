@@ -249,3 +249,114 @@ func TestMethod_UndefinedMethod_Error(t *testing.T) {
 		t.Fatal("expected error for undefined method")
 	}
 }
+
+func TestMethod_ReturnNewInstance(t *testing.T) {
+	result := compileAndRun(t, `{
+		"structs": {
+			"Point": {
+				"frozen": true,
+				"fields": {
+					"x": "int",
+					"y": "int"
+				},
+				"methods": {
+					"withX": {
+						"params": {"newX": "int"},
+						"returns": "Point",
+						"steps": [
+							{"return": {"new": "Point", "with": {"x": "newX", "y": "self.y"}}}
+						]
+					}
+				}
+			}
+		},
+		"steps": [
+			{"let": "p", "new": "Point", "with": {"x": "1", "y": "2"}},
+			{"let": "p2", "call": "p.withX", "with": {"newX": "10"}},
+			{"return": {"with": {"old_x": "p.x", "new_x": "p2.x", "y": "p2.y"}}}
+		]
+	}`, nil)
+
+	m, ok := result.Value.(map[string]any)
+	if !ok {
+		t.Fatalf("expected map, got %T", result.Value)
+	}
+	if !numEq(m["old_x"], 1) {
+		t.Errorf("expected old_x=1, got %v", m["old_x"])
+	}
+	if !numEq(m["new_x"], 10) {
+		t.Errorf("expected new_x=10, got %v", m["new_x"])
+	}
+	if !numEq(m["y"], 2) {
+		t.Errorf("expected y=2, got %v", m["y"])
+	}
+}
+
+func TestMethod_Chaining_MultipleCalls(t *testing.T) {
+	result := compileAndRun(t, `{
+		"structs": {
+			"Counter": {
+				"fields": {
+					"value": "int"
+				},
+				"methods": {
+					"add": {
+						"params": {"n": "int"},
+						"steps": [
+							{"set": "self.value", "expr": "self.value + n"}
+						]
+					},
+					"getResult": {
+						"returns": "int",
+						"steps": [
+							{"return": "self.value"}
+						]
+					}
+				}
+			}
+		},
+		"steps": [
+			{"let": "c", "new": "Counter", "with": {"value": "0"}},
+			{"call": "c.add", "with": {"n": "10"}},
+			{"call": "c.add", "with": {"n": "20"}},
+			{"call": "c.add", "with": {"n": "30"}},
+			{"return": "c.getResult()"}
+		]
+	}`, nil)
+
+	if !numEq(result.Value, 60) {
+		t.Errorf("expected 60, got %v", result.Value)
+	}
+}
+
+func TestMethod_SelfReassign_InSwitch_CompileError(t *testing.T) {
+	program, err := Parse([]byte(`{
+		"structs": {
+			"Obj": {
+				"fields": {"x": "int"},
+				"methods": {
+					"bad": {
+						"steps": [
+							{"switch": "self.x", "cases": {
+								"1": [{"set": "self", "value": "replaced"}]
+							}}
+						]
+					}
+				}
+			}
+		},
+		"steps": []
+	}`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+
+	engine := NewExprLangEngine()
+	_, err = Compile(program, engine, DefaultLimits())
+	if err == nil {
+		t.Fatal("expected compile error for self reassign in switch")
+	}
+	if !strings.Contains(err.Error(), "reassign self") {
+		t.Errorf("expected 'reassign self' error, got: %v", err)
+	}
+}
