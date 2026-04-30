@@ -47,6 +47,8 @@ import (
 	syncPkg "github.com/bitcode-framework/bitcode/internal/runtime/sync"
 	wfEngine "github.com/bitcode-framework/bitcode/internal/runtime/workflow"
 	"github.com/bitcode-framework/bitcode/pkg/security"
+	goJsonRuntime "github.com/bitcode-framework/go-json/runtime"
+	"github.com/expr-lang/expr/ast"
 	"gorm.io/gorm"
 )
 
@@ -214,6 +216,9 @@ func NewApp(cfg AppConfig) (*App, error) {
 		}
 		if err := persistence.AutoMigrateAuditLog(db); err != nil {
 			log.Printf("[WARN] failed to migrate audit_logs: %v", err)
+		}
+		if err := persistence.MigrateRecordRuleExpr(db); err != nil {
+			log.Printf("[WARN] failed to migrate record_rule domain_filter_expr: %v", err)
 		}
 		if err := module.MigrateMigrationTable(db); err != nil {
 			log.Printf("[WARN] failed to migrate ir_migration: %v", err)
@@ -392,6 +397,15 @@ func NewApp(cfg AppConfig) (*App, error) {
 		return nil, nil
 	})
 	app.HookDispatcher = hook.NewModelHookDispatcher(hookDispatcher)
+
+	persistence.SetRuntimeEvalExprBool(goJsonRuntime.EvalExprBool)
+	persistence.SetParseExprForRule(func(expr string) (ast.Node, error) {
+		tree, err := goJsonRuntime.ParseExpr(expr)
+		if err != nil {
+			return nil, err
+		}
+		return tree.Root, nil
+	})
 
 	if db != nil {
 		gormStore := persistence.NewGormMigrationStore(db)
@@ -1520,6 +1534,8 @@ func (a *App) LoadModules() error {
 		a.initSyncInfrastructure()
 	}
 
+	a.ModelRegistry.MarkStartupComplete()
+
 	return nil
 }
 
@@ -1570,6 +1586,17 @@ func (a *App) wireMultiProtocol() {
 	permSvc.SetTableNameResolver(func(name string) string { return a.ModelRegistry.TableName(name) })
 	rrSvc := persistence.NewRecordRuleService(a.DB)
 	rrSvc.SetTableNameResolver(func(name string) string { return a.ModelRegistry.TableName(name) })
+	rrSvc.SetModelFieldsResolver(func(modelName string) []string {
+		modelDef, err := a.ModelRegistry.Get(modelName)
+		if err != nil || modelDef == nil {
+			return nil
+		}
+		fields := make([]string, 0, len(modelDef.Fields))
+		for name := range modelDef.Fields {
+			fields = append(fields, name)
+		}
+		return fields
+	})
 
 	swaggerGen := api.NewSwaggerGenerator()
 	gqlBuilder := gqlPkg.NewSchemaBuilder(gqlPkg.NewResolver(a.DB, a.ModelRegistry, permSvc, rrSvc))
@@ -1716,6 +1743,17 @@ func (a *App) installModule(modPath string) error {
 		routerPermSvc.SetTableNameResolver(func(name string) string { return a.ModelRegistry.TableName(name) })
 		routerRRSvc := persistence.NewRecordRuleService(a.DB)
 		routerRRSvc.SetTableNameResolver(func(name string) string { return a.ModelRegistry.TableName(name) })
+		routerRRSvc.SetModelFieldsResolver(func(modelName string) []string {
+			modelDef, err := a.ModelRegistry.Get(modelName)
+			if err != nil || modelDef == nil {
+				return nil
+			}
+			fields := make([]string, 0, len(modelDef.Fields))
+			for name := range modelDef.Fields {
+				fields = append(fields, name)
+			}
+			return fields
+		})
 		router.SetPermissionService(routerPermSvc)
 		router.SetRecordRuleService(routerRRSvc)
 	}

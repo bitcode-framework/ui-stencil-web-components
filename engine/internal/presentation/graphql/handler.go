@@ -46,6 +46,15 @@ func (h *Handler) handleQuery(c *fiber.Ctx) error {
 	if userID, ok := c.Locals("user_id").(string); ok {
 		goCtx = context.WithValue(goCtx, contextKeyUserID, userID)
 	}
+	if tenantID, ok := c.Locals("tenant_id").(string); ok {
+		goCtx = context.WithValue(goCtx, contextKeyTenantID, tenantID)
+	}
+	if groups, ok := c.Locals("groups").([]string); ok {
+		goCtx = context.WithValue(goCtx, contextKeyGroups, groups)
+	}
+	if roles, ok := c.Locals("roles").([]string); ok {
+		goCtx = context.WithValue(goCtx, contextKeyRoles, roles)
+	}
 	_ = ctx
 
 	result := gql.Do(gql.Params{

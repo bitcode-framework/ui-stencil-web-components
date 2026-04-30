@@ -72,6 +72,13 @@ func (h *CRUDHandler) List(c *fiber.Ctx) error {
 		query = persistence.QueryFromDomain(filters)
 	}
 
+	if exprFilters, ok := c.Locals("rls_expr_filters").([]persistence.WhereClause); ok && len(exprFilters) > 0 {
+		if query == nil {
+			query = persistence.NewQuery()
+		}
+		query.WhereClauses = append(query.WhereClauses, exprFilters...)
+	}
+
 	results, total, err := h.repo.FindAll(c.Context(), query, page, pageSize)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})

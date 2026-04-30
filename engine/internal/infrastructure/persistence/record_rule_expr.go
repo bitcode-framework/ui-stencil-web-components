@@ -39,6 +39,35 @@ func (c *RecordRuleContext) ToMap() map[string]any {
 	}
 }
 
+const maxRecordRuleNodes = 200
+
+// countNodes walks the AST and counts total nodes.
+func countNodes(node ast.Node) int {
+	count := 1
+	switch n := node.(type) {
+	case *ast.BinaryNode:
+		count += countNodes(n.Left) + countNodes(n.Right)
+	case *ast.UnaryNode:
+		count += countNodes(n.Node)
+	case *ast.ConditionalNode:
+		count += countNodes(n.Cond) + countNodes(n.Exp1) + countNodes(n.Exp2)
+	case *ast.BuiltinNode:
+		for _, arg := range n.Arguments {
+			count += countNodes(arg)
+		}
+	case *ast.CallNode:
+		count += countNodes(n.Callee)
+		for _, arg := range n.Arguments {
+			count += countNodes(arg)
+		}
+	case *ast.ArrayNode:
+		for _, elem := range n.Nodes {
+			count += countNodes(elem)
+		}
+	}
+	return count
+}
+
 type ExprToFilters struct {
 	ctxData     map[string]any
 	modelFields map[string]bool
@@ -58,6 +87,9 @@ func NewExprToFilters(ctx *RecordRuleContext, modelFields []string) *ExprToFilte
 }
 
 func (w *ExprToFilters) Convert(node ast.Node) ([]WhereClause, error) {
+	if nodeCount := countNodes(node); nodeCount > maxRecordRuleNodes {
+		return nil, fmt.Errorf("record rule expression too complex: %d nodes (max %d)", nodeCount, maxRecordRuleNodes)
+	}
 	result := w.walkNode(node)
 	if len(w.errors) > 0 {
 		return nil, fmt.Errorf("record rule expression errors: %s", strings.Join(w.errors, "; "))

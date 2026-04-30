@@ -452,6 +452,8 @@ Step 4: Apply via Query.Where() → parameterized SQL
 
 ### 6.5 AST Walker: `ExprToFilters`
 
+> **Implementation note:** The actual implementation reuses the existing `WhereClause` and `ConditionGroup` types from the query builder (`persistence/query.go`) rather than introducing new `FilterNode`/`FilterGroup` types. This avoids type conversion and allows direct integration with the repository layer. The walker output maps directly to the query builder's existing structure.
+
 The walker produces a **recursive filter tree**, not a flat list. This correctly handles nested boolean logic like `(a == 1 || b == 2) && c == 3`.
 
 ```go
@@ -477,6 +479,7 @@ type ExprToFilters struct {
 
 // Convert is the entry point — takes a parsed AST root and returns a filter tree.
 func (w *ExprToFilters) Convert(node ast.Node) (*FilterNode, error) {
+// Implementation returns ([]WhereClause, error) — using existing query builder types
     result := w.walkNode(node)
     if len(w.errors) > 0 {
         return nil, fmt.Errorf("record rule errors: %v", w.errors)
@@ -551,7 +554,7 @@ The `FilterNode` tree maps directly to the existing `Query` builder's `WhereClau
 |-------|------|------|
 | **Field name validation** | AST walk | Left side of comparison must be a known model field via `IsSafeFieldName()` |
 | **Context access whitelist** | AST walk | Only `ctx.*` members allowed; no `sql.*`, `http.*`, `exec.*` |
-| **No function calls** | AST walk | Reject `CallNode` (except whitelisted: `len`). Note: `contains`/`startsWith`/`endsWith` are BinaryNode operators, not CallNode — they are handled in the operator switch. |
+| **No function calls** | AST walk | Reject `CallNode`. Note: `contains`/`startsWith`/`endsWith` are BinaryNode operators, not CallNode — they are handled in the operator switch. `len()` support deferred to future iteration. |
 | **No tautology** | AST walk | Reject expressions with no field reference (e.g., `1 == 1`) |
 | **Empty array check** | Value resolution | `ctx.department_ids == []` → deny all (fail-closed) |
 | **Nil context check** | Value resolution | `ctx.user_id == nil` → deny all (fail-closed) |

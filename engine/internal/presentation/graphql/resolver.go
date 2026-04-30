@@ -3,6 +3,7 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"time"
 
 	gql "github.com/graphql-go/graphql"
 	"github.com/google/uuid"
@@ -80,6 +81,33 @@ func (r *Resolver) getRecordRuleFilters(ctx context.Context, modelName, operatio
 	return filters
 }
 
+func (r *Resolver) getExprRecordRuleFilters(ctx context.Context, modelName, operation string) []persistence.WhereClause {
+	if r.recordRuleService == nil {
+		return nil
+	}
+	userID, ok := ctx.Value(contextKeyUserID).(string)
+	if !ok || userID == "" {
+		return nil
+	}
+	ruleCtx := &persistence.RecordRuleContext{
+		UserID: userID,
+		Now:    time.Now(),
+		Today:  time.Now().Format("2006-01-02"),
+	}
+	if tenantID, ok := ctx.Value(contextKeyTenantID).(string); ok {
+		ruleCtx.TenantID = tenantID
+	}
+	if groups, ok := ctx.Value(contextKeyGroups).([]string); ok {
+		ruleCtx.Groups = groups
+		ruleCtx.GroupIDs = groups
+	}
+	if roles, ok := ctx.Value(contextKeyRoles).([]string); ok && len(roles) > 0 {
+		ruleCtx.Role = roles[0]
+	}
+	filters, _ := r.recordRuleService.GetExprFilters(userID, modelName, operation, ruleCtx)
+	return filters
+}
+
 func (r *Resolver) List(modelName string) gql.FieldResolveFn {
 	return func(p gql.ResolveParams) (any, error) {
 		if err := r.checkPermission(p.Context, modelName, "read"); err != nil {
@@ -111,6 +139,13 @@ func (r *Resolver) List(modelName string) gql.FieldResolveFn {
 		var query *persistence.Query
 		if len(filters) > 0 {
 			query = persistence.QueryFromDomain(filters)
+		}
+
+		if exprFilters := r.getExprRecordRuleFilters(p.Context, modelName, "read"); len(exprFilters) > 0 {
+			if query == nil {
+				query = persistence.NewQuery()
+			}
+			query.WhereClauses = append(query.WhereClauses, exprFilters...)
 		}
 
 		repo := r.getRepo(modelName)
@@ -236,4 +271,9 @@ func (r *Resolver) Delete(modelName string) gql.FieldResolveFn {
 
 type contextKey string
 
-const contextKeyUserID contextKey = "user_id"
+const (
+	contextKeyUserID   contextKey = "user_id"
+	contextKeyTenantID contextKey = "tenant_id"
+	contextKeyGroups   contextKey = "groups"
+	contextKeyRoles    contextKey = "roles"
+)

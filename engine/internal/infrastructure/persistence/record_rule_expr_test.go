@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -329,6 +331,21 @@ func TestPreprocessRuleExpr(t *testing.T) {
 				t.Errorf("PreprocessRuleExpr(%q) = %q, want %q", tt.input, result, tt.expected)
 			}
 		})
+	}
+}
+
+func TestExprToFilters_MaxNodesExceeded(t *testing.T) {
+	parts := make([]string, 0, 100)
+	for i := 0; i < 100; i++ {
+		parts = append(parts, fmt.Sprintf("status == '%d'", i))
+	}
+	expr := strings.Join(parts, " || ")
+	_, err := convertExpr(t, expr, testCtx(), testFields())
+	if err == nil {
+		t.Fatal("expected error for expression exceeding max nodes")
+	}
+	if !strings.Contains(err.Error(), "too complex") {
+		t.Errorf("expected 'too complex' error, got: %v", err)
 	}
 }
 

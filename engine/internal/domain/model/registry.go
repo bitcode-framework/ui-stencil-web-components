@@ -10,12 +10,13 @@ import (
 )
 
 type Registry struct {
-	models         map[string]*parser.ModelDefinition
-	tableNames     map[string]string
-	moduleNames    map[string][]string
-	mu             sync.RWMutex
-	TableNaming    string
-	ProjectAppMode string // "online" (default) | "offline" — set from bitcode.toml [app] mode
+	models          map[string]*parser.ModelDefinition
+	tableNames      map[string]string
+	moduleNames     map[string][]string
+	mu              sync.RWMutex
+	TableNaming     string
+	ProjectAppMode  string // "online" (default) | "offline" — set from bitcode.toml [app] mode
+	startupComplete bool
 }
 
 func NewRegistry() *Registry {
@@ -39,6 +40,9 @@ func (r *Registry) Register(model *parser.ModelDefinition) error {
 	for fieldName := range model.Fields {
 		for _, reserved := range ReservedNamespaces {
 			if fieldName == reserved {
+				if r.startupComplete {
+					return fmt.Errorf("model %q: field name %q is a reserved expression namespace (ctx, input, old, session, self)", model.Name, fieldName)
+				}
 				log.Printf("[MODEL] WARNING: model %q has field %q which is a reserved expression namespace — domain_filter_expr will not work for this model", model.Name, fieldName)
 			}
 		}
@@ -191,6 +195,12 @@ func validateOfflinePK(model *parser.ModelDefinition) error {
 			"Use pk:\"uuid\" or pk:\"natural_key\" instead", model.Name)
 	}
 	return nil
+}
+
+func (r *Registry) MarkStartupComplete() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.startupComplete = true
 }
 
 func appendUnique(slice []string, val string) []string {

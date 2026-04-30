@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/bitcode-framework/bitcode/internal/compiler/parser"
@@ -147,6 +148,25 @@ func (h *CRUDHandler) handleList(client *Client, req CRUDRequest) CRUDResponse {
 	var query *persistence.Query
 	if len(filters) > 0 {
 		query = persistence.QueryFromDomain(filters)
+	}
+
+	if h.recordRuleService != nil && client.UserID != "" {
+		ruleCtx := &persistence.RecordRuleContext{
+			UserID:   client.UserID,
+			TenantID: client.TenantID,
+			Now:      time.Now(),
+			Today:    time.Now().Format("2006-01-02"),
+		}
+		exprFilters, err := h.recordRuleService.GetExprFilters(client.UserID, req.Model, "read", ruleCtx)
+		if err != nil {
+			return CRUDResponse{ID: req.ID, Type: "crud_response", Model: req.Model, Action: "list", Success: false, Error: "record rule expression evaluation failed"}
+		}
+		if len(exprFilters) > 0 {
+			if query == nil {
+				query = persistence.NewQuery()
+			}
+			query.WhereClauses = append(query.WhereClauses, exprFilters...)
+		}
 	}
 
 	repo := h.getRepo(req.Model)
