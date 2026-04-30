@@ -99,7 +99,7 @@ packages/go-json/
 
 ```bash
 cd packages/go-json
-go test ./... -v          # All tests (221)
+go test ./... -v          # All tests (579)
 go test ./lang/ -v        # Language engine tests
 go test ./lang/ -run TestStruct -v       # Struct tests
 go test ./lang/ -run TestMethod -v       # Method tests
@@ -150,7 +150,7 @@ go test ./server/ -v                     # Server config, routing, handler tests
 - MongoDB driver interface: `MongoDriver` interface + `InMemoryMongoDriver` (functional without external deps, production drivers injectable via `WithMongoDriver()`)
 - Redis driver interface: `RedisDriver` interface + `InMemoryRedisDriver` (functional without external deps, production drivers injectable via `WithRedisDriver()`)
 - CLI: `go-json ast --format` flag (forward-compatible, json only for now)
-- 578 tests total across 9 packages (io: 131, lang: 176, codegen: 18, cmd: 46, runtime: 30+, stdlib: 50+, server: 37)
+- 579 tests total across 9 packages (lang: 177, io: 132, stdlib: 103, runtime: 79, cmd: 45, server: 25, codegen: 18)
 
 ## What's Done (Phase 4.5d)
 
@@ -181,7 +181,7 @@ go test ./server/ -v                     # Server config, routing, handler tests
 - **Server mode detection**: `IsServerProgram()` checks for routes key
 - **Health endpoint**: built-in `/health` with status, name, uptime (bypasses middleware)
 - **Graceful shutdown**: SIGINT/SIGTERM handling with configurable timeout
-- 578 tests total (see Phase 4.5c count — Phase 4.5d adds server tests on top)
+- 579 tests total across 9 packages (includes Phase 4.5a–d cumulative)
 
 ## What's NOT Done
 

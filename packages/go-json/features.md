@@ -469,7 +469,7 @@ go-json test tests/
 |--------|-------|
 | Total Go source files | ~95 |
 | Total lines of code | ~14,500 |
-| Test count | 221 |
+| Test count | 579 |
 | Stdlib functions (Layer 2) | 42+ |
 | expr-lang built-ins (Layer 1) | ~68 |
 | I/O modules | 6 |
