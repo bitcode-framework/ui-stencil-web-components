@@ -103,6 +103,17 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 	v.SetDefault("storage.thumbnail.height", 300)
 	v.SetDefault("storage.thumbnail.quality", 85)
 
+	v.SetDefault("database.table_naming", "singular")
+	v.SetDefault("locale.currency", "USD")
+	v.SetDefault("locale.timezone", "UTC")
+	v.SetDefault("locale.number_format", "en-US")
+	v.SetDefault("locale.thousand_separator", "")
+	v.SetDefault("locale.decimal_separator", "")
+	v.SetDefault("meta_api.enabled", true)
+	v.SetDefault("meta_api.auth", true)
+	v.SetDefault("meta_api.admin_only", true)
+	v.SetDefault("eager_loading.max_depth", 3)
+
 	v.SetEnvPrefix("")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
@@ -169,6 +180,17 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 	v.BindEnv("storage.thumbnail.width", "STORAGE_THUMBNAIL_WIDTH")
 	v.BindEnv("storage.thumbnail.height", "STORAGE_THUMBNAIL_HEIGHT")
 	v.BindEnv("storage.thumbnail.quality", "STORAGE_THUMBNAIL_QUALITY")
+
+	v.BindEnv("database.table_naming", "DB_TABLE_NAMING")
+	v.BindEnv("locale.currency", "DEFAULT_CURRENCY")
+	v.BindEnv("locale.timezone", "DEFAULT_TIMEZONE")
+	v.BindEnv("locale.number_format", "NUMBER_FORMAT")
+	v.BindEnv("locale.thousand_separator", "THOUSAND_SEPARATOR")
+	v.BindEnv("locale.decimal_separator", "DECIMAL_SEPARATOR")
+	v.BindEnv("meta_api.enabled", "META_API_ENABLED")
+	v.BindEnv("meta_api.auth", "META_API_AUTH")
+	v.BindEnv("meta_api.admin_only", "META_API_ADMIN_ONLY")
+	v.BindEnv("eager_loading.max_depth", "EAGER_LOADING_MAX_DEPTH")
 
 	if explicitPath != "" {
 		v.SetConfigFile(explicitPath)

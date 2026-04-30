@@ -1661,15 +1661,62 @@ func (r *GenericRepository) FindAllOnlyTrashed(ctx context.Context, query *Query
 	return r.FindAll(ctx, query, page, pageSize)
 }
 
+func (r *GenericRepository) applyWithClauseToQuery(q *gorm.DB, w WithClause) *gorm.DB {
+	for _, cond := range w.Conditions {
+		op := cond.Operator
+		if op == "" {
+			op = "="
+		}
+		switch strings.ToLower(op) {
+		case "=", "!=", "<>", ">", ">=", "<", "<=":
+			q = q.Where(fmt.Sprintf("%s %s ?", cond.Field, op), cond.Value)
+		case "like", "ilike":
+			q = q.Where(fmt.Sprintf("%s %s ?", cond.Field, strings.ToUpper(op)), cond.Value)
+		case "in":
+			q = q.Where(fmt.Sprintf("%s IN ?", cond.Field), cond.Value)
+		case "not in":
+			q = q.Where(fmt.Sprintf("%s NOT IN ?", cond.Field), cond.Value)
+		case "is null":
+			q = q.Where(fmt.Sprintf("%s IS NULL", cond.Field))
+		case "is not null":
+			q = q.Where(fmt.Sprintf("%s IS NOT NULL", cond.Field))
+		}
+	}
+	if len(w.Select) > 0 {
+		q = q.Select(w.Select)
+	}
+	if len(w.OrderBy) > 0 {
+		for _, o := range w.OrderBy {
+			dir := "ASC"
+			if strings.ToLower(o.Direction) == "desc" {
+				dir = "DESC"
+			}
+			q = q.Order(fmt.Sprintf("%s %s", o.Field, dir))
+		}
+	}
+	if w.Limit > 0 {
+		q = q.Limit(w.Limit)
+	}
+	return q
+}
+
 func (r *GenericRepository) loadWithRelations(ctx context.Context, query *Query, results []map[string]any) {
-	if query == nil || len(query.With) == 0 || len(results) == 0 {
+	r.loadWithRelationsDepth(ctx, query.With, results, 0)
+}
+
+func (r *GenericRepository) LoadRelations(ctx context.Context, query *Query, results []map[string]any) {
+	r.loadWithRelations(ctx, query, results)
+}
+
+func (r *GenericRepository) loadWithRelationsDepth(ctx context.Context, withs []WithClause, results []map[string]any, depth int) {
+	if len(withs) == 0 || len(results) == 0 || depth > 3 {
 		return
 	}
 	if r.modelDef == nil {
 		return
 	}
 
-	for _, w := range query.With {
+	for _, w := range withs {
 		fieldDef, ok := r.modelDef.Fields[w.Relation]
 		if !ok {
 			continue
@@ -1693,7 +1740,55 @@ func (r *GenericRepository) loadWithRelations(ctx context.Context, query *Query,
 		case parser.FieldMorphByMany:
 			r.loadMorphByManyRelation(ctx, w, fieldDef, results)
 		}
+
+		if len(w.Nested) > 0 && fieldDef.Model != "" {
+			relatedModelDef, _ := r.getRelatedModelDef(fieldDef.Model)
+			if relatedModelDef != nil {
+				for _, rec := range results {
+					relKey := "_" + w.Relation
+					switch related := rec[relKey].(type) {
+					case []map[string]any:
+						if len(related) > 0 {
+							nestedRepo := &GenericRepository{
+								db:                r.db,
+								tableName:         r.resolveTableName(fieldDef.Model),
+								modelDef:          relatedModelDef,
+								pkCol:             "id",
+								tableNameResolver: r.tableNameResolver,
+								morphTypeResolver: r.morphTypeResolver,
+							}
+							nestedRepo.loadWithRelationsDepth(ctx, w.Nested, related, depth+1)
+						}
+					case map[string]any:
+						singleSlice := []map[string]any{related}
+						nestedRepo := &GenericRepository{
+							db:                r.db,
+							tableName:         r.resolveTableName(fieldDef.Model),
+							modelDef:          relatedModelDef,
+							pkCol:             "id",
+							tableNameResolver: r.tableNameResolver,
+							morphTypeResolver: r.morphTypeResolver,
+						}
+						nestedRepo.loadWithRelationsDepth(ctx, w.Nested, singleSlice, depth+1)
+						rec[relKey] = singleSlice[0]
+					}
+				}
+			}
+		}
 	}
+}
+
+func (r *GenericRepository) getRelatedModelDef(modelName string) (*parser.ModelDefinition, error) {
+	if r.tableNameResolver == nil {
+		return nil, fmt.Errorf("no table name resolver")
+	}
+	type modelGetter interface {
+		Get(string) (*parser.ModelDefinition, error)
+	}
+	if getter, ok := r.tableNameResolver.(modelGetter); ok {
+		return getter.Get(modelName)
+	}
+	return nil, fmt.Errorf("table name resolver does not support Get")
 }
 
 func (r *GenericRepository) loadMany2OneRelation(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
@@ -1718,9 +1813,7 @@ func (r *GenericRepository) loadMany2OneRelation(ctx context.Context, w WithClau
 
 	relatedTable := r.resolveTableName(fieldDef.Model)
 	relQ := r.db.WithContext(ctx).Table(relatedTable).Where("id IN ?", ids)
-	if len(w.Select) > 0 {
-		relQ = relQ.Select(w.Select)
-	}
+	relQ = r.applyWithClauseToQuery(relQ, w)
 
 	var related []map[string]any
 	if err := relQ.Find(&related).Error; err != nil {
@@ -1765,21 +1858,7 @@ func (r *GenericRepository) loadOne2ManyRelation(ctx context.Context, w WithClau
 
 	relatedTable := r.resolveTableName(fieldDef.Model)
 	relQ := r.db.WithContext(ctx).Table(relatedTable).Where(fmt.Sprintf("%s IN ?", inverseField), parentIDs)
-	if len(w.Select) > 0 {
-		relQ = relQ.Select(w.Select)
-	}
-	if len(w.OrderBy) > 0 {
-		for _, o := range w.OrderBy {
-			dir := "ASC"
-			if strings.ToLower(o.Direction) == "desc" {
-				dir = "DESC"
-			}
-			relQ = relQ.Order(fmt.Sprintf("%s %s", o.Field, dir))
-		}
-	}
-	if w.Limit > 0 {
-		relQ = relQ.Limit(w.Limit)
-	}
+	relQ = r.applyWithClauseToQuery(relQ, w)
 
 	var related []map[string]any
 	if err := relQ.Find(&related).Error; err != nil {
@@ -1860,10 +1939,11 @@ func (r *GenericRepository) loadMany2ManyRelation(ctx context.Context, w WithCla
 		ids = append(ids, id)
 	}
 
+	relQ := r.db.WithContext(ctx).Table(relatedTable).Where("id IN ?", ids)
+	relQ = r.applyWithClauseToQuery(relQ, w)
+
 	var relatedRecords []map[string]any
-	if err := r.db.WithContext(ctx).Table(relatedTable).
-		Where("id IN ?", ids).
-		Find(&relatedRecords).Error; err != nil {
+	if err := relQ.Find(&relatedRecords).Error; err != nil {
 		for _, rec := range results {
 			rec["_"+w.Relation] = []map[string]any{}
 		}
@@ -1956,10 +2036,11 @@ func (r *GenericRepository) loadMorphOneRelation(ctx context.Context, w WithClau
 	parentType := r.morphType()
 
 	relatedTable := r.resolveTableName(fieldDef.Model)
+	relQ := r.db.WithContext(ctx).Table(relatedTable).
+		Where(morphName+"_type = ? AND "+morphName+"_id IN ?", parentType, parentIDs)
+	relQ = r.applyWithClauseToQuery(relQ, w)
 	var related []map[string]any
-	if err := r.db.WithContext(ctx).Table(relatedTable).
-		Where(morphName+"_type = ? AND "+morphName+"_id IN ?", parentType, parentIDs).
-		Find(&related).Error; err != nil {
+	if err := relQ.Find(&related).Error; err != nil {
 		return
 	}
 
@@ -2000,22 +2081,7 @@ func (r *GenericRepository) loadMorphManyRelation(ctx context.Context, w WithCla
 	relatedTable := r.resolveTableName(fieldDef.Model)
 	relQ := r.db.WithContext(ctx).Table(relatedTable).
 		Where(morphName+"_type = ? AND "+morphName+"_id IN ?", parentType, parentIDs)
-
-	if len(w.Select) > 0 {
-		relQ = relQ.Select(w.Select)
-	}
-	if len(w.OrderBy) > 0 {
-		for _, o := range w.OrderBy {
-			dir := "ASC"
-			if strings.ToLower(o.Direction) == "desc" {
-				dir = "DESC"
-			}
-			relQ = relQ.Order(fmt.Sprintf("%s %s", o.Field, dir))
-		}
-	}
-	if w.Limit > 0 {
-		relQ = relQ.Limit(w.Limit)
-	}
+	relQ = r.applyWithClauseToQuery(relQ, w)
 
 	var related []map[string]any
 	if err := relQ.Find(&related).Error; err != nil {

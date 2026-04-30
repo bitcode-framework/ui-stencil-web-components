@@ -108,6 +108,45 @@ Key files:
 
 Morph Map: `Registry.SetMorphMap(map)`, `Registry.MorphType(modelName)`, `Registry.MorphModel(morphType)`. Default: model name used as-is.
 
+## Engine Enhancements (Phase 6C)
+
+### Array-Backed Models
+3 source types: `db` (default), `array`, `process`. Array models load data from inline `rows` or `rows_file` (JSON/CSV/XLSX/XML) into the main DB on startup. Process models execute a named process/script to get rows.
+
+| Mode | `writable` | API | Sync on restart |
+|------|:----------:|-----|-----------------|
+| Read-only | `false` | GET only, 405 on writes | DELETE all + re-INSERT |
+| Writable | `true` | Full CRUD | Seed only if empty |
+
+`sync_source: true` writes DB changes back to the source file. `refresh` config enables interval-based re-sync.
+
+Key files:
+- `internal/compiler/parser/model.go` — Source, Writable, DataRows, RowsFile, SyncSource, Refresh, Process, Script fields
+- `internal/infrastructure/persistence/array_sync.go` — SyncArrayModel (read-only vs writable sync)
+- `internal/infrastructure/persistence/array_parser.go` — LoadRowsFromFile (JSON/CSV/XLSX/XML)
+- `internal/infrastructure/persistence/array_writer.go` — WriteBackToFile (sync_source write-back)
+- `internal/runtime/refresh/scheduler.go` — Interval-based refresh scheduler
+
+### View Modifiers
+`visible_if`, `disabled_if`, `readonly_if`, `css_class`, `help_text` on LayoutRow and ChildTableColumn. Rendered as `data-visible-if`/`data-disabled-if` attributes for client-side evaluation.
+
+### Metadata API
+10 endpoints under `/api/v1/_meta/`: models, models/:name, models/:name/fields, views, views/:name, modules, modules/:name, processes, processes/:name, field-types. Plus `POST /api/v1/_meta/models/:name/refresh` for manual refresh.
+
+Key file: `internal/presentation/api/meta_handler.go`
+
+### Embedded View filter_by
+TabDefinition supports `filter_by` (string or map) to scope embedded views by parent record.
+
+### Process Data Source
+DataSourceDefinition supports `process` field (mutually exclusive with `model`) to execute a process for view data.
+
+### Eager Loading Fixes
+- `WithClause.Conditions` applied to ALL relation types (many2one, one2many, many2many, all 5 morph types)
+- `WithClause.Select`, `OrderBy`, `Limit` applied consistently via `applyWithClauseToQuery` helper
+- `WithClause.Nested` triggers recursive loading (max depth 3, configurable)
+- `?with=` query param on Read endpoint (`GET /:id`) — comma-separated or JSON array
+
 ## Primary Keys
 
 6 strategies: `uuid` (v4/v7), `auto_increment`, `composite`, `natural_key`, `naming_series`, `manual`.

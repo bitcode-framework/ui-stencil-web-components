@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,6 +24,7 @@ type CRUDHandler struct {
 	pkGenerator       *pkgen.Generator
 	hookDispatcher    persistence.HookDispatcher
 	permissionService *persistence.PermissionService
+	syncSourceFn      func()
 }
 
 func NewCRUDHandler(repo *persistence.GenericRepository, apiDef *parser.APIDefinition, wfEngine *workflow.Engine) *CRUDHandler {
@@ -123,8 +125,37 @@ func (h *CRUDHandler) Read(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "record not found"})
 	}
+
+	if withParam := c.Query("with"); withParam != "" {
+		withClauses := h.parseWithParam(withParam)
+		if len(withClauses) > 0 {
+			q := &persistence.Query{With: withClauses}
+			results := []map[string]any{result}
+			h.repo.LoadRelations(c.Context(), q, results)
+			result = results[0]
+		}
+	}
+
 	filteredResult := h.applyFieldFilter(c, result)
 	return c.JSON(fiber.Map{"data": filteredResult})
+}
+
+func (h *CRUDHandler) parseWithParam(param string) []persistence.WithClause {
+	var clauses []persistence.WithClause
+
+	var parsed []persistence.WithClause
+	if err := json.Unmarshal([]byte(param), &parsed); err == nil {
+		return parsed
+	}
+
+	parts := strings.Split(param, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			clauses = append(clauses, persistence.WithClause{Relation: part})
+		}
+	}
+	return clauses
 }
 
 func (h *CRUDHandler) Create(c *fiber.Ctx) error {
@@ -188,6 +219,7 @@ func (h *CRUDHandler) Create(c *fiber.Ctx) error {
 		return handleError(c, err, 500)
 	}
 
+	h.triggerSyncSource()
 	return c.Status(201).JSON(fiber.Map{"data": result})
 }
 
@@ -248,6 +280,7 @@ func (h *CRUDHandler) Update(c *fiber.Ctx) error {
 		if err := h.repo.UpdateByCompositePK(c.Context(), keys, body); err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 		}
+		h.triggerSyncSource()
 		return c.JSON(fiber.Map{"message": "updated"})
 	}
 
@@ -258,6 +291,7 @@ func (h *CRUDHandler) Update(c *fiber.Ctx) error {
 			}
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 		}
+		h.triggerSyncSource()
 		return c.JSON(fiber.Map{"message": "updated"})
 	}
 
@@ -265,6 +299,7 @@ func (h *CRUDHandler) Update(c *fiber.Ctx) error {
 		return handleError(c, err, 500)
 	}
 
+	h.triggerSyncSource()
 	return c.JSON(fiber.Map{"message": "updated"})
 }
 
@@ -295,6 +330,7 @@ func (h *CRUDHandler) Delete(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	h.triggerSyncSource()
 	return c.JSON(fiber.Map{"message": "deleted"})
 }
 
@@ -599,4 +635,10 @@ func (h *CRUDHandler) MorphSync(c *fiber.Ctx) error {
 		}
 	}
 	return c.JSON(fiber.Map{"status": "ok"})
+}
+
+func (h *CRUDHandler) triggerSyncSource() {
+	if h.syncSourceFn != nil {
+		go h.syncSourceFn()
+	}
 }

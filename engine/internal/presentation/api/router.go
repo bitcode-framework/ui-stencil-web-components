@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/bitcode-framework/bitcode/internal/compiler/parser"
 	"github.com/bitcode-framework/bitcode/internal/infrastructure/persistence"
@@ -27,6 +29,11 @@ type Router struct {
 	eventBus          persistence.EventPublisher
 	permissionService *persistence.PermissionService
 	recordRuleService *persistence.RecordRuleService
+	syncSourceFn      func(modelName string)
+}
+
+func (r *Router) SetSyncSourceFn(fn func(modelName string)) {
+	r.syncSourceFn = fn
 }
 
 func NewRouter(app *fiber.App, db *gorm.DB, wfEngine *workflow.Engine) *Router {
@@ -138,6 +145,11 @@ func (r *Router) RegisterAPI(apiDef *parser.APIDefinition) {
 		if r.permissionService != nil {
 			crud.permissionService = r.permissionService
 		}
+		if modelDef != nil && modelDef.SyncSource && modelDef.IsWritable() && r.syncSourceFn != nil {
+			crud.syncSourceFn = func() {
+				r.syncSourceFn(apiDef.Model)
+			}
+		}
 
 		if apiDef.Model != "" && crud.modelDef != nil && crud.modelDef.Events != nil && len(crud.modelDef.Events.OnChange) > 0 {
 			group.Post("/onchange", crud.OnChange)
@@ -149,9 +161,15 @@ func (r *Router) RegisterAPI(apiDef *parser.APIDefinition) {
 			group.Post("/:id/:relation/sync", crud.MorphSync)
 		}
 
+		isReadOnly := modelDef != nil && modelDef.IsReadOnlySource()
+
 		for _, ep := range endpoints {
 			handler := r.resolveHandler(crud, ep)
 			var handlers []fiber.Handler
+
+			if isReadOnly && isWriteAction(ep.Action) {
+				handlers = append(handlers, readOnlySourceGuard(apiDef.Model, modelDef.GetEffectiveSource()))
+			}
 
 			if r.permissionService != nil && len(ep.Permissions) > 0 {
 				handlers = append(handlers, middleware.PermissionMiddleware(r.permissionService, ep.Permissions))
@@ -233,3 +251,20 @@ func (r *Router) resolveHandler(crud *CRUDHandler, ep parser.EndpointDefinition)
 		}
 	}
 }
+
+func isWriteAction(action string) bool {
+	switch action {
+	case "create", "update", "delete":
+		return true
+	}
+	return false
+}
+
+func readOnlySourceGuard(modelName string, source string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		return c.Status(405).JSON(fiber.Map{
+			"error": fmt.Sprintf("model %q is read-only (source: %s)", modelName, source),
+		})
+	}
+}
+

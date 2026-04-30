@@ -37,18 +37,26 @@ type SortDefinition struct {
 }
 
 type LayoutRow struct {
-	Field    string `json:"field,omitempty"`
-	Width    int    `json:"width,omitempty"`
-	Readonly bool   `json:"readonly,omitempty"`
-	Widget   string `json:"widget,omitempty"`
-	Formula  string `json:"formula,omitempty"`
+	Field      string `json:"field,omitempty"`
+	Width      int    `json:"width,omitempty"`
+	Readonly   bool   `json:"readonly,omitempty"`
+	Widget     string `json:"widget,omitempty"`
+	Formula    string `json:"formula,omitempty"`
+	VisibleIf  string `json:"visible_if,omitempty"`
+	DisabledIf string `json:"disabled_if,omitempty"`
+	ReadonlyIf string `json:"readonly_if,omitempty"`
+	CSSClass   string `json:"css_class,omitempty"`
+	HelpText   string `json:"help_text,omitempty"`
 }
 
 type TabDefinition struct {
-	Label   string   `json:"label"`
-	View    string   `json:"view,omitempty"`
-	Fields  []string `json:"fields,omitempty"`
-	Visible string   `json:"visible,omitempty"`
+	Label       string          `json:"label"`
+	View        string          `json:"view,omitempty"`
+	Fields      []string        `json:"fields,omitempty"`
+	Visible     string          `json:"visible,omitempty"`
+	FilterByRaw json.RawMessage `json:"filter_by,omitempty"`
+	FilterBy    string          `json:"-"`
+	FilterByMap map[string]any  `json:"-"`
 }
 
 type HeaderDefinition struct {
@@ -77,11 +85,14 @@ type SeparatorDefinition struct {
 }
 
 type ChildTableColumn struct {
-	Field    string `json:"field"`
-	Width    int    `json:"width,omitempty"`
-	Readonly bool   `json:"readonly,omitempty"`
-	Widget   string `json:"widget,omitempty"`
-	Formula  string `json:"formula,omitempty"`
+	Field      string `json:"field"`
+	Width      int    `json:"width,omitempty"`
+	Readonly   bool   `json:"readonly,omitempty"`
+	Widget     string `json:"widget,omitempty"`
+	Formula    string `json:"formula,omitempty"`
+	VisibleIf  string `json:"visible_if,omitempty"`
+	DisabledIf string `json:"disabled_if,omitempty"`
+	ReadonlyIf string `json:"readonly_if,omitempty"`
 }
 
 type ChildTableDefinition struct {
@@ -143,7 +154,36 @@ func ParseView(data []byte) (*ViewDefinition, error) {
 	if view.Type == ViewCustom && view.Template == "" {
 		return nil, fmt.Errorf("custom view requires a template")
 	}
+
+	resolveTabFilterBy(&view)
 	return &view, nil
+}
+
+func resolveTabFilterBy(view *ViewDefinition) {
+	for i := range view.Layout {
+		resolveLayoutItemTabs(&view.Layout[i])
+	}
+}
+
+func resolveLayoutItemTabs(item *LayoutItem) {
+	for i := range item.Tabs {
+		tab := &item.Tabs[i]
+		if len(tab.FilterByRaw) == 0 {
+			continue
+		}
+		var str string
+		if err := json.Unmarshal(tab.FilterByRaw, &str); err == nil {
+			tab.FilterBy = str
+		} else {
+			var m map[string]any
+			if err := json.Unmarshal(tab.FilterByRaw, &m); err == nil {
+				tab.FilterByMap = m
+			}
+		}
+	}
+	for i := range item.Rows {
+		resolveLayoutItemTabs(&item.Rows[i])
+	}
 }
 
 func ParseViewFile(path string) (*ViewDefinition, error) {

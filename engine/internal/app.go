@@ -44,6 +44,7 @@ import (
 	"github.com/bitcode-framework/bitcode/internal/runtime/pkgen"
 	"github.com/bitcode-framework/bitcode/internal/runtime/plugin"
 	"github.com/bitcode-framework/bitcode/internal/runtime/validation"
+	"github.com/bitcode-framework/bitcode/internal/runtime/refresh"
 	syncPkg "github.com/bitcode-framework/bitcode/internal/runtime/sync"
 	wfEngine "github.com/bitcode-framework/bitcode/internal/runtime/workflow"
 	"github.com/bitcode-framework/bitcode/pkg/security"
@@ -123,6 +124,7 @@ type App struct {
 	Sanitizer       *validation.Sanitizer
 	MigrationEngine *module.MigrationEngine
 	EmbeddedRegistry *jsrt.EngineRegistry
+	RefreshScheduler *refresh.Scheduler
 	viewDefs        map[string]*viewEntry
 	moduleMenus     map[string][]parser.MenuItemDefinition
 	moduleOrder     []string
@@ -241,31 +243,32 @@ func NewApp(cfg AppConfig) (*App, error) {
 	pkGen := pkgen.NewGenerator(fmtEngine, nil)
 
 	app := &App{
-		Config:          cfg,
-		DB:              db,
-		Fiber:           fiberApp,
-		ModelRegistry:   modelReg,
-		ModuleRegistry:  module.NewRegistry(),
-		ProcessRegistry: processReg,
-		EventBus:        event.NewBus(),
-		TemplateEngine:  templateEngine,
-		ViewRenderer:    view.NewRenderer(db, templateEngine),
-		WorkflowEngine:  wfEngine.NewEngine(),
-		Executor:        executor.NewExecutor(),
-		PluginManager:   pluginMgr,
-		Cache:           appCache,
-		JWTConfig:       jwtCfg,
-		WSHub:           wsHub,
-		Translator:      translator,
-		SettingStore:    settingStore,
-		SequenceEngine:  seqEngine,
-		FormatEngine:    fmtEngine,
-		PKGenerator:     pkGen,
-		Hydrator:        hydrator,
-		AuditLogRepo:    auditLogRepo,
-		MongoConn:       mongoConn,
+		Config:           cfg,
+		DB:               db,
+		Fiber:            fiberApp,
+		ModelRegistry:    modelReg,
+		ModuleRegistry:   module.NewRegistry(),
+		ProcessRegistry:  processReg,
+		EventBus:         event.NewBus(),
+		TemplateEngine:   templateEngine,
+		ViewRenderer:     view.NewRenderer(db, templateEngine),
+		WorkflowEngine:   wfEngine.NewEngine(),
+		Executor:         executor.NewExecutor(),
+		PluginManager:    pluginMgr,
+		Cache:            appCache,
+		JWTConfig:        jwtCfg,
+		WSHub:            wsHub,
+		Translator:       translator,
+		SettingStore:     settingStore,
+		SequenceEngine:   seqEngine,
+		FormatEngine:     fmtEngine,
+		PKGenerator:      pkGen,
+		Hydrator:         hydrator,
+		AuditLogRepo:     auditLogRepo,
+		MongoConn:        mongoConn,
 		DBDriver:         driver,
 		EmbeddedRegistry: embeddedReg,
+		RefreshScheduler: refresh.NewScheduler(),
 		viewDefs:         make(map[string]*viewEntry),
 		moduleMenus:      make(map[string][]parser.MenuItemDefinition),
 	}
@@ -285,6 +288,10 @@ func NewApp(cfg AppConfig) (*App, error) {
 	app.ViewRenderer.SetModelRegistry(app.ModelRegistry)
 	app.ViewRenderer.SetHydrator(app.Hydrator)
 	app.ViewRenderer.SetTableNameResolver(app.ModelRegistry)
+	app.ViewRenderer.SetProcessExecutor(&appProcessRunner{
+		executor: app.Executor,
+		registry: app.ProcessRegistry,
+	})
 	app.Hydrator.SetTableNameResolver(app.ModelRegistry)
 
 	v := validation.NewValidator()
@@ -581,6 +588,37 @@ func (a *App) setupRoutes() {
 		Processes:   a.ProcessRegistry.List(),
 	}, a.Config.ModuleDir, a.JWTConfig)
 	adminPanel.RegisterRoutes(a.Fiber)
+
+	metaHandler := api.NewMetaHandler(api.MetaHandlerConfig{
+		ModelRegistry:   a.ModelRegistry,
+		ModuleRegistry:  a.ModuleRegistry,
+		ProcessRegistry: a.ProcessRegistry,
+		ViewResolver: func(name string) *parser.ViewDefinition {
+			for _, entry := range a.viewDefs {
+				if entry.Def.Name == name {
+					return entry.Def
+				}
+			}
+			return nil
+		},
+		ViewLister: func() map[string]*parser.ViewDefinition {
+			result := make(map[string]*parser.ViewDefinition, len(a.viewDefs))
+			for key, entry := range a.viewDefs {
+				result[key] = entry.Def
+			}
+			return result
+		},
+		RefreshSched: a.RefreshScheduler,
+		SyncFn: func(modelName string) error {
+			m, err := a.ModelRegistry.Get(modelName)
+			if err != nil {
+				return err
+			}
+			tableName := a.ModelRegistry.TableName(modelName)
+			return a.syncArrayModelData(m, tableName)
+		},
+	})
+	metaHandler.RegisterRoutes(a.Fiber)
 
 	a.setupComponentAssets()
 
@@ -1693,6 +1731,13 @@ func (a *App) installModule(modPath string) error {
 				return fmt.Errorf("failed to migrate model %s: %w", m.Name, err)
 			}
 		}
+
+		if a.DB != nil && (m.IsArraySource() || m.IsProcessSource()) {
+			tableName := a.ModelRegistry.TableName(m.Name)
+			if err := a.syncArrayModelData(m, tableName); err != nil {
+				log.Printf("[WARN] failed to sync array model %s: %v", m.Name, err)
+			}
+		}
 	}
 
 	if a.DB != nil {
@@ -1748,6 +1793,16 @@ func (a *App) installModule(modPath string) error {
 		router.SetSanitizer(a.Sanitizer)
 	}
 	router.SetEventBus(a.EventBus)
+	router.SetSyncSourceFn(func(modelName string) {
+		modelDef, err := a.ModelRegistry.Get(modelName)
+		if err != nil || modelDef == nil {
+			return
+		}
+		tableName := a.ModelRegistry.TableName(modelName)
+		if writeErr := persistence.WriteBackToFile(a.DB, modelDef, tableName, modelDef.ModulePath); writeErr != nil {
+			log.Printf("[SYNC_SOURCE] %s: write-back failed: %v", modelName, writeErr)
+		}
+	})
 	if a.DB != nil {
 		routerPermSvc := persistence.NewPermissionService(a.DB)
 		routerPermSvc.SetTableNameResolver(func(name string) string { return a.ModelRegistry.TableName(name) })
@@ -1940,6 +1995,85 @@ func (a *App) ModuleOrder() []string {
 	return a.moduleOrder
 }
 
+func (a *App) syncArrayModelData(m *parser.ModelDefinition, tableName string) error {
+	if m.IsArraySource() {
+		var rows []map[string]any
+		if len(m.DataRows) > 0 {
+			rows = m.DataRows
+		} else if m.RowsFile != "" {
+			var err error
+			rows, err = persistence.LoadRowsFromFile(m.RowsFile, m.ModulePath)
+			if err != nil {
+				return err
+			}
+		}
+		if err := persistence.SyncArrayModel(a.DB, m, tableName, rows); err != nil {
+			return err
+		}
+	} else if m.IsProcessSource() {
+		if err := a.syncProcessModelData(m, tableName); err != nil {
+			return err
+		}
+	}
+
+	if interval, ok := refresh.ParseRefreshInterval(m.Refresh); ok {
+		modelCopy := m
+		tbl := tableName
+		a.RefreshScheduler.Register(m.Name, interval, func() error {
+			return a.syncArrayModelData(modelCopy, tbl)
+		})
+	}
+
+	return nil
+}
+
+func (a *App) syncProcessModelData(m *parser.ModelDefinition, tableName string) error {
+	var result any
+	var err error
+
+	if m.Process != "" {
+		proc, loadErr := a.ProcessRegistry.LoadProcess(m.Process)
+		if loadErr != nil {
+			return fmt.Errorf("process source model %q: process %q not found: %w", m.Name, m.Process, loadErr)
+		}
+		execCtx, execErr := a.Executor.Execute(context.Background(), proc, nil, "")
+		if execErr != nil {
+			return fmt.Errorf("process source model %q: execution failed: %w", m.Name, execErr)
+		}
+		if execCtx != nil {
+			result = execCtx.Result
+		}
+	} else if m.Script != nil {
+		scriptPath := m.Script.File
+		if !filepath.IsAbs(scriptPath) && m.ModulePath != "" {
+			scriptPath = filepath.Join(m.ModulePath, scriptPath)
+		}
+		result, err = a.PluginManager.Run(context.Background(), scriptPath, nil)
+		if err != nil {
+			return fmt.Errorf("process source model %q: script execution failed: %w", m.Name, err)
+		}
+	}
+
+	rows, ok := result.([]map[string]any)
+	if !ok {
+		if arrAny, ok2 := result.([]any); ok2 {
+			rows = make([]map[string]any, 0, len(arrAny))
+			for _, item := range arrAny {
+				if row, ok3 := item.(map[string]any); ok3 {
+					rows = append(rows, row)
+				}
+			}
+		}
+	}
+
+	if len(rows) == 0 {
+		log.Printf("[PROCESS] %s: process returned no rows", m.Name)
+		return nil
+	}
+
+	return persistence.SyncArrayModel(a.DB, m, tableName, rows)
+}
+
 func (a *App) Start() error {
 	port := a.Config.Port
 	if port == "" {
@@ -1951,6 +2085,9 @@ func (a *App) Start() error {
 
 func (a *App) Shutdown() error {
 	a.PluginManager.StopAll()
+	if a.RefreshScheduler != nil {
+		a.RefreshScheduler.StopAll()
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	return a.Fiber.ShutdownWithContext(ctx)
@@ -2034,6 +2171,10 @@ type appProcessRunner struct {
 }
 
 func (r *appProcessRunner) RunProcess(ctx context.Context, processName string, input map[string]any) (any, error) {
+	return r.ExecuteByName(ctx, processName, input)
+}
+
+func (r *appProcessRunner) ExecuteByName(ctx context.Context, processName string, input map[string]any) (any, error) {
 	proc, err := r.registry.LoadProcess(processName)
 	if err != nil {
 		return nil, fmt.Errorf("process %q not found: %w", processName, err)

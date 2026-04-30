@@ -9,7 +9,7 @@ import (
 	"github.com/bitcode-framework/bitcode/internal/compiler/parser"
 )
 
-type EmbeddedViewRenderer func(viewName string) string
+type EmbeddedViewRenderer func(viewName string, parentRecord map[string]any, filterBy string, filterByMap map[string]any) string
 
 type ComponentCompiler struct {
 	modelLookup          ModelLookup
@@ -365,7 +365,21 @@ func (c *ComponentCompiler) compileFormRow(fields []parser.LayoutRow, record map
 		if width == 0 {
 			width = 6
 		}
-		b.WriteString(fmt.Sprintf(`<div class="bc-col-%d">`, width))
+
+		colAttrs := fmt.Sprintf(`class="bc-col-%d"`, width)
+		if f.CSSClass != "" {
+			colAttrs = fmt.Sprintf(`class="bc-col-%d %s"`, width, esc(f.CSSClass))
+		}
+		if f.VisibleIf != "" {
+			colAttrs += fmt.Sprintf(` data-visible-if="%s"`, esc(f.VisibleIf))
+		}
+		if f.DisabledIf != "" {
+			colAttrs += fmt.Sprintf(` data-disabled-if="%s"`, esc(f.DisabledIf))
+		}
+		if f.ReadonlyIf != "" {
+			colAttrs += fmt.Sprintf(` data-readonly-if="%s"`, esc(f.ReadonlyIf))
+		}
+		b.WriteString(fmt.Sprintf(`<div %s>`, colAttrs))
 		b.WriteString(`<div class="bc-form-group">`)
 
 		val := ""
@@ -382,8 +396,14 @@ func (c *ComponentCompiler) compileFormRow(fields []parser.LayoutRow, record map
 		}
 
 		b.WriteString(fmt.Sprintf(`<label class="bc-label">%s</label>`, esc(label)))
+		if f.HelpText != "" {
+			b.WriteString(fmt.Sprintf(`<small class="bc-help-text" style="display:block;font-size:0.75rem;color:var(--text-muted,#999);margin-bottom:0.25rem;">%s</small>`, esc(f.HelpText)))
+		}
 
 		readonly := f.Readonly
+		if f.ReadonlyIf != "" && f.ReadonlyIf != "false" {
+			readonly = true
+		}
 		if fieldDef != nil && fieldDef.Computed != "" {
 			readonly = true
 		}
@@ -522,7 +542,7 @@ func (c *ComponentCompiler) compileFormTabs(tabs []parser.TabDefinition, record 
 		b.WriteString(fmt.Sprintf(`<div class="bc-tab-content" id="bc-tab-%d" %s>`, i, display))
 		if tab.View != "" {
 			if c.embeddedViewRenderer != nil {
-				b.WriteString(c.embeddedViewRenderer(tab.View))
+				b.WriteString(c.embeddedViewRenderer(tab.View, record, tab.FilterBy, tab.FilterByMap))
 			} else {
 				b.WriteString(fmt.Sprintf(`<p style="color:var(--text-muted);font-size:0.85rem;padding:0.75rem 0;">View: %s (loading...)</p>`, esc(tab.View)))
 			}
@@ -767,7 +787,23 @@ func (c *ComponentCompiler) compileRow(fields []parser.LayoutRow, record map[str
 		if width == 0 {
 			width = 12
 		}
-		b.WriteString(fmt.Sprintf(`<bc-column width="%d">`, width))
+		colAttrs := fmt.Sprintf(`width="%d"`, width)
+		if f.VisibleIf != "" {
+			colAttrs += fmt.Sprintf(` visible-if="%s"`, esc(f.VisibleIf))
+		}
+		if f.DisabledIf != "" {
+			colAttrs += fmt.Sprintf(` disabled-if="%s"`, esc(f.DisabledIf))
+		}
+		if f.ReadonlyIf != "" {
+			colAttrs += fmt.Sprintf(` readonly-if="%s"`, esc(f.ReadonlyIf))
+		}
+		if f.CSSClass != "" {
+			colAttrs += fmt.Sprintf(` css-class="%s"`, esc(f.CSSClass))
+		}
+		if f.HelpText != "" {
+			colAttrs += fmt.Sprintf(` help-text="%s"`, esc(f.HelpText))
+		}
+		b.WriteString(fmt.Sprintf(`<bc-column %s>`, colAttrs))
 
 		val := ""
 		if record != nil {
@@ -845,9 +881,17 @@ func (c *ComponentCompiler) compileTabs(tabs []parser.TabDefinition) string {
 	var b strings.Builder
 	b.WriteString(`<bc-tabs>`)
 	for _, tab := range tabs {
-		b.WriteString(fmt.Sprintf(`<bc-tab label="%s">`, esc(tab.Label)))
+		tabAttrs := fmt.Sprintf(`label="%s"`, esc(tab.Label))
+		if tab.Visible != "" {
+			tabAttrs += fmt.Sprintf(` visible="%s"`, esc(tab.Visible))
+		}
+		b.WriteString(fmt.Sprintf(`<bc-tab %s>`, tabAttrs))
 		if tab.View != "" {
-			b.WriteString(fmt.Sprintf(`<bc-datatable model="%s"></bc-datatable>`, esc(tab.View)))
+			dtAttrs := fmt.Sprintf(`model="%s"`, esc(tab.View))
+			if tab.FilterBy != "" {
+				dtAttrs += fmt.Sprintf(` filter-by="%s"`, esc(tab.FilterBy))
+			}
+			b.WriteString(fmt.Sprintf(`<bc-datatable %s></bc-datatable>`, dtAttrs))
 		}
 		for _, field := range tab.Fields {
 			b.WriteString(fmt.Sprintf(`<bc-field-text name="%s" label="%s"></bc-field-text>`, esc(field), esc(field)))

@@ -1,7 +1,7 @@
 # Phase 6C: Engine Enhancements — Array-Backed Models, View Modifiers, Metadata API, Eager Loading
 
 **Date**: 14 July 2026
-**Status**: Draft
+**Status**: Done
 **Depends on**: Phase 6A (field modifiers, display_field), Phase 1 (bridge API for process data_source)
 **Unlocks**: Phase 7 (module setting)
 **Master doc**: `2026-07-14-runtime-engine-redesign-master.md`

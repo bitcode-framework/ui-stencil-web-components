@@ -39,6 +39,10 @@ type RenderOptions struct {
 	Page         int
 }
 
+type ProcessExecutor interface {
+	ExecuteByName(ctx context.Context, processName string, input map[string]any) (any, error)
+}
+
 type Renderer struct {
 	db                *gorm.DB
 	template          *tmplEngine.Engine
@@ -46,6 +50,11 @@ type Renderer struct {
 	modelRegistry     ModelLookup
 	hydrator          *expression.Hydrator
 	tableNameResolver interface{ TableName(string) string }
+	processExecutor   ProcessExecutor
+}
+
+func (r *Renderer) SetProcessExecutor(exec ProcessExecutor) {
+	r.processExecutor = exec
 }
 
 func (r *Renderer) SetTableNameResolver(resolver interface{ TableName(string) string }) {
@@ -77,14 +86,15 @@ func (r *Renderer) SetHydrator(h *expression.Hydrator) {
 }
 
 func (r *Renderer) SetViewResolver(resolver func(name string) *parser.ViewDefinition) {
-	r.componentCompiler.embeddedViewRenderer = func(viewName string) string {
+	r.componentCompiler.embeddedViewRenderer = func(viewName string, parentRecord map[string]any, filterBy string, filterByMap map[string]any) string {
 		viewDef := resolver(viewName)
 		if viewDef == nil {
 			return fmt.Sprintf(`<p style="color:var(--text-muted);font-size:0.85rem;">View "%s" not found</p>`, viewName)
 		}
 		if viewDef.Type == parser.ViewList && viewDef.Model != "" {
 			repo := persistence.NewGenericRepository(r.db, r.resolveTable(viewDef.Model))
-			records, total, err := repo.FindAll(context.Background(), nil, 1, 10)
+			query := r.buildEmbeddedViewQuery(parentRecord, filterBy, filterByMap)
+			records, total, err := repo.FindAll(context.Background(), query, 1, 10)
 			if err != nil {
 				return fmt.Sprintf(`<p style="color:var(--danger);">Error loading %s: %s</p>`, viewName, err.Error())
 			}
@@ -92,6 +102,40 @@ func (r *Renderer) SetViewResolver(resolver func(name string) *parser.ViewDefini
 		}
 		return fmt.Sprintf(`<p style="color:var(--text-muted);font-size:0.85rem;">Embedded %s view: %s</p>`, viewDef.Type, viewName)
 	}
+}
+
+func (r *Renderer) buildEmbeddedViewQuery(parentRecord map[string]any, filterBy string, filterByMap map[string]any) *persistence.Query {
+	if filterBy == "" && len(filterByMap) == 0 {
+		return nil
+	}
+
+	var filters [][]any
+
+	if filterBy != "" && parentRecord != nil {
+		parentID := parentRecord["id"]
+		if parentID != nil {
+			filters = append(filters, []any{filterBy, "=", parentID})
+		}
+	}
+
+	for field, val := range filterByMap {
+		strVal := fmt.Sprintf("%v", val)
+		if strings.HasPrefix(strVal, "{record.") && strings.HasSuffix(strVal, "}") {
+			refField := strVal[8 : len(strVal)-1]
+			if parentRecord != nil {
+				if refVal, ok := parentRecord[refField]; ok {
+					filters = append(filters, []any{field, "=", refVal})
+				}
+			}
+		} else {
+			filters = append(filters, []any{field, "=", val})
+		}
+	}
+
+	if len(filters) == 0 {
+		return nil
+	}
+	return persistence.QueryFromDomain(filters)
 }
 
 func (r *Renderer) renderEmbeddedList(viewDef *parser.ViewDefinition, records []map[string]any, total int64) string {
@@ -291,6 +335,13 @@ func (r *Renderer) renderChart(ctx context.Context, viewDef *parser.ViewDefiniti
 				continue
 			}
 			data[name] = records
+		} else if ds.Process != "" && r.processExecutor != nil {
+			result, err := r.processExecutor.ExecuteByName(ctx, ds.Process, nil)
+			if err != nil {
+				data[name] = []map[string]any{}
+				continue
+			}
+			data[name] = result
 		}
 	}
 
@@ -320,6 +371,13 @@ func (r *Renderer) renderCustom(ctx context.Context, viewDef *parser.ViewDefinit
 				records = []map[string]any{}
 			}
 			data[name] = records
+		} else if ds.Process != "" && r.processExecutor != nil {
+			result, err := r.processExecutor.ExecuteByName(ctx, ds.Process, nil)
+			if err != nil {
+				data[name] = []map[string]any{}
+				continue
+			}
+			data[name] = result
 		}
 	}
 

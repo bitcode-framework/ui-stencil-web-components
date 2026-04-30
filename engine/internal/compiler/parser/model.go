@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -512,8 +513,50 @@ type ModelDefinition struct {
 
 	App *ModelAppConfig `json:"app,omitempty"`
 
+	// Phase 6C: Array-backed models (Sushi-style)
+	Source     string           `json:"source,omitempty"`      // "db" (default) | "array" | "process"
+	Writable   *bool            `json:"writable,omitempty"`    // array/process source: allow CRUD? default false
+	DataRows   []map[string]any `json:"rows,omitempty"`        // inline array data
+	RowsFile   string           `json:"rows_file,omitempty"`   // external file path (relative to module)
+	SyncSource bool             `json:"sync_source,omitempty"` // write-back to file on DB change
+	Refresh    string           `json:"refresh,omitempty"`     // "startup" | "never" | duration ("5m", "1h")
+	Process    string           `json:"process,omitempty"`     // for source: "process" — named process
+	Script     *ScriptRef       `json:"script,omitempty"`      // for source: "process" — inline script
+
 	ModulePath    string `json:"-"`
 	OfflineModule bool   `json:"-"`
+}
+
+// IsWritable returns whether the model allows write operations.
+// Only meaningful for array/process source models.
+func (m *ModelDefinition) IsWritable() bool {
+	if m.Writable == nil {
+		return false
+	}
+	return *m.Writable
+}
+
+// IsArraySource returns true if the model's data comes from inline rows or a file.
+func (m *ModelDefinition) IsArraySource() bool {
+	return m.Source == "array"
+}
+
+// IsProcessSource returns true if the model's data comes from process execution.
+func (m *ModelDefinition) IsProcessSource() bool {
+	return m.Source == "process"
+}
+
+// IsReadOnlySource returns true if the model is a non-writable array or process source.
+func (m *ModelDefinition) IsReadOnlySource() bool {
+	return (m.IsArraySource() || m.IsProcessSource()) && !m.IsWritable()
+}
+
+// GetEffectiveSource returns the effective source, defaulting to "db".
+func (m *ModelDefinition) GetEffectiveSource() string {
+	if m.Source == "" {
+		return "db"
+	}
+	return m.Source
 }
 
 type ModelAppConfig struct {
@@ -709,7 +752,55 @@ func ParseModel(data []byte) (*ModelDefinition, error) {
 		}
 	}
 
+	if err := validateArraySource(&model); err != nil {
+		return nil, err
+	}
+
 	return &model, nil
+}
+
+func validateArraySource(model *ModelDefinition) error {
+	switch model.Source {
+	case "", "db":
+		if model.Writable != nil {
+			log.Printf("WARN: writable is only meaningful for array/process source models (model %q)", model.Name)
+		}
+		return nil
+	case "array":
+		if len(model.DataRows) == 0 && model.RowsFile == "" {
+			return fmt.Errorf("array model %q must have rows or rows_file", model.Name)
+		}
+		if len(model.DataRows) > 0 && model.RowsFile != "" {
+			return fmt.Errorf("model %q cannot have both rows and rows_file", model.Name)
+		}
+		if model.RowsFile != "" {
+			ext := strings.ToLower(filepath.Ext(model.RowsFile))
+			switch ext {
+			case ".json", ".csv", ".xlsx", ".xml":
+			default:
+				return fmt.Errorf("unsupported file format %q for rows_file in model %q", ext, model.Name)
+			}
+		}
+		if model.SyncSource {
+			if model.Writable == nil || !*model.Writable {
+				return fmt.Errorf("sync_source requires writable: true (model %q)", model.Name)
+			}
+			if model.RowsFile == "" {
+				return fmt.Errorf("sync_source requires rows_file (cannot write back to inline rows) in model %q", model.Name)
+			}
+		}
+		return nil
+	case "process":
+		if model.Process == "" && model.Script == nil {
+			return fmt.Errorf("process source model %q must specify process or script", model.Name)
+		}
+		if model.SyncSource {
+			return fmt.Errorf("sync_source only works with array source (model %q)", model.Name)
+		}
+		return nil
+	default:
+		return fmt.Errorf("model %q: unsupported source %q (valid: db, array, process)", model.Name, model.Source)
+	}
 }
 
 func resolveFieldValidation(model *ModelDefinition) {
