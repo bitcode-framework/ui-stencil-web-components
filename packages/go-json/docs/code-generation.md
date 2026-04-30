@@ -19,7 +19,7 @@ go-json codegen program.json --target python --output program.py
 | `let` | `:=` | `const` / `let` | `=` |
 | `set` | `=` | `=` | `=` |
 | `if`/`elif`/`else` | `if`/`else if`/`else` | `if`/`else if`/`else` | `if`/`elif`/`else` |
-| `switch` | `switch` | `switch` | `match` (3.10+) |
+| `switch` | `switch` | `switch` | `if`/`elif`/`else` chain |
 | `for`/`in` | `for _, v := range` | `for...of` | `for v in` |
 | `for`/`range` | `for i := start; i < end; i++` | `for (let i = start; i < end; i++)` | `for i in range(start, end)` |
 | `while` | `for condition` | `while (condition)` | `while condition:` |

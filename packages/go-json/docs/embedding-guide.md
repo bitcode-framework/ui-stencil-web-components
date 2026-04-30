@@ -377,6 +377,21 @@ defer rt.Close()
 
 > **Important:** Always call `rt.Close()` when you're done with a runtime that has I/O enabled, to release underlying resources.
 
+### Custom MongoDB/Redis Drivers
+
+By default, MongoDB and Redis modules use in-memory drivers (suitable for testing and development). For production, inject real drivers:
+
+```go
+rt := gojson.NewRuntime(
+	gojson.WithIO(
+		goio.Mongo(sec, goio.WithMongoDriver(myMongoDriver)),
+		goio.Redis(sec, goio.WithRedisDriver(myRedisDriver)),
+	),
+)
+```
+
+Implement the `MongoDriver` or `RedisDriver` interface to wrap your preferred client library.
+
 ---
 
 ## Expression Evaluation

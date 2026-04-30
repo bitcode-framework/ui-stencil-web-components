@@ -250,6 +250,7 @@ go-json ast <program.json> [options]
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--output <path>` | stdout | Write AST to file |
+| `--format <fmt>` | `json` | Output format (currently only `json` supported) |
 
 ### Examples
 

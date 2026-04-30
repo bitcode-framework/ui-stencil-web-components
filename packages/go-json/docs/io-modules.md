@@ -523,7 +523,7 @@ Returns:
 
 ## MongoDB Module (`io:mongo`)
 
-> **Status: Stubbed** — Interface defined, requires external driver dependency (not yet in `go.mod`).
+> **Status: Functional** — Uses `MongoDriver` interface with built-in `InMemoryMongoDriver` for development/testing. For production, inject a real driver via `WithMongoDriver(driver)` (e.g., wrapping `go.mongodb.org/mongo-driver/v2`).
 
 **Import:** `"mongo": "io:mongo"`
 **Enable:** `goio.Mongo()`
@@ -606,7 +606,7 @@ Returns:
 
 ## Redis Module (`io:redis`)
 
-> **Status: Stubbed** — Interface defined, requires external driver dependency (not yet in `go.mod`).
+> **Status: Functional** — Uses `RedisDriver` interface with built-in `InMemoryRedisDriver` for development/testing. For production, inject a real driver via `WithRedisDriver(driver)` (e.g., wrapping `github.com/redis/go-redis/v9`).
 
 **Import:** `"redis": "io:redis"`
 **Enable:** `goio.Redis()`
@@ -723,10 +723,12 @@ runtime. Hardcoded deny lists are **always enforced** and cannot be overridden.
 type SecurityConfig struct {
     EnabledModules  []string
 
-    HTTP  HTTPSecurityConfig
-    FS    FSSecurityConfig
-    SQL   SQLSecurityConfig
-    Exec  ExecSecurityConfig
+    HTTP   HTTPSecurityConfig
+    FS     FSSecurityConfig
+    SQL    SQLSecurityConfig
+    Exec   ExecSecurityConfig
+    Mongo  MongoSecurityConfig
+    Redis  RedisSecurityConfig
 }
 ```
 
@@ -736,8 +738,8 @@ type SecurityConfig struct {
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `AllowedHosts` | `[]string` | Whitelist of allowed hostnames. Empty = all allowed. |
-| `BlockedHosts` | `[]string` | Blacklist (takes precedence over allowed). |
+| `AllowedHosts` | `[]string` | Whitelist of allowed hostnames. Empty = all non-blocked allowed. Explicitly allowed hosts override BlockedHosts. |
+| `BlockedHosts` | `[]string` | Blacklist (skipped for explicitly allowed hosts). |
 | `MaxResponseSize` | `int64` | Max response body size in bytes. Default: 10 MB. |
 | `Timeout` | `time.Duration` | Request timeout. |
 
