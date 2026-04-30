@@ -247,9 +247,21 @@ Plus bridge: `bitcode.meta.models()`, `bitcode.meta.model("name")`, etc.
 
 **File**: `internal/infrastructure/persistence/repository.go`
 
-- Apply `WithClause.Conditions` in ALL relation loaders
-- Apply `WithClause.Select`, `OrderBy`, `Limit` consistently
+- Apply `WithClause.Conditions` in ALL relation loaders (many2one, one2many, many2many, 5 morph types)
+- Apply `WithClause.Select`, `OrderBy`, `Limit` consistently across all relation types
 - Implement `WithClause.Nested` — recursive loading (max depth from config)
+
+**File**: `internal/infrastructure/persistence/mongo_repository.go`
+
+- Implement `MongoRepository.loadWithRelations()` — full eager loading for MongoDB
+  - `many2one`: batch-load by FK IDs from related collection
+  - `one2many`: query child collection by inverse field
+  - `many2many`: load from embedded `{field}_ids` array, batch-load related docs
+  - `morph_to`: group by `_type`, batch-load per type from different collections
+  - `morph_one` / `morph_many`: query child collection filtered by morph type + parent IDs
+  - `morph_to_many` / `morph_by_many`: query junction collection, then batch-load related docs
+- Call `r.loadWithRelations(ctx, query, results)` after cursor loop in `FindAll`/`FindAllActive`
+- Support `WithClause.Conditions`, `Select`, `OrderBy`, `Limit` for MongoDB queries
 
 ---
 
@@ -275,6 +287,7 @@ Add all new config keys with Viper bindings:
 - [ ] Metadata API: all 10 endpoints work
 - [ ] Embedded view filter_by works
 - [ ] Process data source works in views
-- [ ] Eager loading: conditions, nested loading work
+- [ ] Eager loading: conditions, nested loading work (SQL)
+- [ ] Eager loading: MongoDB `loadWithRelations` works for all relation types
 - [ ] All config keys with Viper bindings
 - [ ] All tests pass

@@ -1023,9 +1023,12 @@ v.BindEnv("eager_loading.max_depth", "EAGER_LOADING_MAX_DEPTH")
 - [ ] Apply `WithClause.Limit` consistently across all relation types
 - [ ] Implement `WithClause.Nested` — recursive relation loading (max depth configurable)
 - [ ] Add `eager_loading.max_depth` config
+- [ ] Implement `MongoRepository.loadWithRelations` — eager loading for MongoDB (many2one, one2many, many2many, all 5 morph types)
+- [ ] Call `loadWithRelations` after `FindAll`/`FindAllActive` in MongoRepository when `query.With` is set
 - [ ] Write tests for conditional eager loading
 - [ ] Write tests for nested eager loading (1, 2, 3 levels)
 - [ ] Write tests for depth limit enforcement
+- [ ] Write tests for MongoDB eager loading
 
 ### 9.7 Project Config
 
