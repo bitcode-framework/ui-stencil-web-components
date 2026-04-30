@@ -197,6 +197,10 @@ func fieldTypeToGraphQL(ft parser.FieldType) graphql.Output {
 		return graphql.String
 	case parser.FieldOne2Many, parser.FieldMany2Many:
 		return nil
+	case parser.FieldMorphTo:
+		return graphql.String
+	case parser.FieldMorphOne, parser.FieldMorphMany, parser.FieldMorphToMany, parser.FieldMorphByMany:
+		return nil
 	default:
 		return graphql.String
 	}

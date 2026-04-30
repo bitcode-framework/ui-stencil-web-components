@@ -13,9 +13,10 @@ type Registry struct {
 	models          map[string]*parser.ModelDefinition
 	tableNames      map[string]string
 	moduleNames     map[string][]string
+	morphMap        map[string]string
 	mu              sync.RWMutex
 	TableNaming     string
-	ProjectAppMode  string // "online" (default) | "offline" — set from bitcode.toml [app] mode
+	ProjectAppMode  string
 	startupComplete bool
 }
 
@@ -24,6 +25,7 @@ func NewRegistry() *Registry {
 		models:      make(map[string]*parser.ModelDefinition),
 		tableNames:  make(map[string]string),
 		moduleNames: make(map[string][]string),
+		morphMap:    make(map[string]string),
 	}
 }
 
@@ -210,4 +212,32 @@ func appendUnique(slice []string, val string) []string {
 		}
 	}
 	return append(slice, val)
+}
+
+func (r *Registry) SetMorphMap(m map[string]string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for k, v := range m {
+		r.morphMap[k] = v
+	}
+}
+
+func (r *Registry) MorphType(modelName string) string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if alias, ok := r.morphMap[modelName]; ok {
+		return alias
+	}
+	return modelName
+}
+
+func (r *Registry) MorphModel(morphType string) string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for model, alias := range r.morphMap {
+		if alias == morphType {
+			return model
+		}
+	}
+	return morphType
 }

@@ -85,6 +85,29 @@ Both produce parameterized SQL. New format supports nested AND/OR, `contains`/`s
 
 Security: `matches` operator rejected (ReDoS risk), tautology detection, field validation, ctx-only access whitelist, MaxNodes=200 limit, empty array/nil → deny-all.
 
+## Polymorphic Relations (Phase 6B)
+
+5 morph types: `morph_to`, `morph_one`, `morph_many`, `morph_to_many`, `morph_by_many`.
+
+| Type | Creates Columns | Description |
+|------|----------------|-------------|
+| `morph_to` | `{name}_type` + `{name}_id` | Child belongs to any parent type |
+| `morph_one` | None (virtual) | Parent has one polymorphic child |
+| `morph_many` | None (virtual) | Parent has many polymorphic children |
+| `morph_to_many` | Junction table `{morph}s` | Many-to-many polymorphic (parent side) |
+| `morph_by_many` | None (uses existing junction) | Many-to-many polymorphic (inverse side) |
+
+Key files:
+- `internal/compiler/parser/model.go` — FieldType constants + validation
+- `internal/infrastructure/persistence/dynamic_model.go` — Column/index/junction table generation
+- `internal/infrastructure/persistence/repository.go` — 5 morph loaders + MorphAttach/Detach/Sync
+- `internal/infrastructure/persistence/mongo_migration.go` — MongoDB indexes + junction collections
+- `internal/infrastructure/persistence/mongo_repository.go` — MongoDB morph operations
+- `internal/runtime/bridge/model.go` — Bridge API (morphAttach/morphDetach/morphSync)
+- `internal/domain/model/registry.go` — MorphMap (type aliasing)
+
+Morph Map: `Registry.SetMorphMap(map)`, `Registry.MorphType(modelName)`, `Registry.MorphModel(morphType)`. Default: model name used as-is.
+
 ## Primary Keys
 
 6 strategies: `uuid` (v4/v7), `auto_increment`, `composite`, `natural_key`, `naming_series`, `manual`.

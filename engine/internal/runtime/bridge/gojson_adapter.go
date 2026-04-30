@@ -399,6 +399,9 @@ func buildModelProxy(bc *Context, name string, sudo bool) map[string]any {
 		"removeRelation": func(params ...any) (any, error) { if len(params) < 3 { return nil, fmt.Errorf("model.removeRelation: id, field, ids required") }; return nil, handle.RemoveRelation(fmt.Sprintf("%v", params[0]), fmt.Sprintf("%v", params[1]), toStringSlice(params[2])) },
 		"setRelation":    func(params ...any) (any, error) { if len(params) < 3 { return nil, fmt.Errorf("model.setRelation: id, field, ids required") }; return nil, handle.SetRelation(fmt.Sprintf("%v", params[0]), fmt.Sprintf("%v", params[1]), toStringSlice(params[2])) },
 		"loadRelation":   func(params ...any) (any, error) { if len(params) < 2 { return nil, fmt.Errorf("model.loadRelation: id and field required") }; r, e := handle.LoadRelation(fmt.Sprintf("%v", params[0]), fmt.Sprintf("%v", params[1])); return convertToAny(r), e },
+		"morphAttach":    func(params ...any) (any, error) { if len(params) < 3 { return nil, fmt.Errorf("model.morphAttach: id, relation, ids required") }; return nil, handle.MorphAttach(fmt.Sprintf("%v", params[0]), fmt.Sprintf("%v", params[1]), toStringSlice(params[2])) },
+		"morphDetach":    func(params ...any) (any, error) { if len(params) < 3 { return nil, fmt.Errorf("model.morphDetach: id, relation, ids required") }; return nil, handle.MorphDetach(fmt.Sprintf("%v", params[0]), fmt.Sprintf("%v", params[1]), toStringSlice(params[2])) },
+		"morphSync":      func(params ...any) (any, error) { if len(params) < 3 { return nil, fmt.Errorf("model.morphSync: id, relation, ids required") }; return nil, handle.MorphSync(fmt.Sprintf("%v", params[0]), fmt.Sprintf("%v", params[1]), toStringSlice(params[2])) },
 		"sudo":           func() any { return buildModelProxy(bc, name, true) },
 	}
 }

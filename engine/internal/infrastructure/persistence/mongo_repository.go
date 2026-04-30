@@ -783,6 +783,122 @@ func (r *MongoRepository) LoadMany2Many(ctx context.Context, id string, field st
 	return results, nil
 }
 
+func (r *MongoRepository) MorphAttach(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
+	collName := morphName + "s"
+	coll := r.conn.Collection(collName)
+	parentType := r.modelName
+	relatedCol := relatedModel + "_id"
+
+	for _, relID := range relatedIDs {
+		filter := bson.M{
+			morphName + "_type": parentType,
+			morphName + "_id":   parentID,
+			relatedCol:          relID,
+		}
+		count, _ := coll.CountDocuments(ctx, filter)
+		if count == 0 {
+			doc := bson.M{
+				relatedCol:          relID,
+				morphName + "_id":   parentID,
+				morphName + "_type": parentType,
+			}
+			coll.InsertOne(ctx, doc)
+		}
+	}
+	return nil
+}
+
+func (r *MongoRepository) MorphDetach(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
+	collName := morphName + "s"
+	coll := r.conn.Collection(collName)
+	parentType := r.modelName
+	relatedCol := relatedModel + "_id"
+
+	for _, relID := range relatedIDs {
+		filter := bson.M{
+			morphName + "_type": parentType,
+			morphName + "_id":   parentID,
+			relatedCol:          relID,
+		}
+		coll.DeleteOne(ctx, filter)
+	}
+	return nil
+}
+
+func (r *MongoRepository) MorphSync(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
+	collName := morphName + "s"
+	coll := r.conn.Collection(collName)
+	parentType := r.modelName
+	relatedCol := relatedModel + "_id"
+
+	coll.DeleteMany(ctx, bson.M{
+		morphName + "_type": parentType,
+		morphName + "_id":   parentID,
+	})
+
+	for _, relID := range relatedIDs {
+		doc := bson.M{
+			relatedCol:          relID,
+			morphName + "_id":   parentID,
+			morphName + "_type": parentType,
+		}
+		coll.InsertOne(ctx, doc)
+	}
+	return nil
+}
+
+func (r *MongoRepository) LoadMorphToMany(ctx context.Context, id string, morphName string, relatedModel string) ([]map[string]any, error) {
+	collName := morphName + "s"
+	coll := r.conn.Collection(collName)
+	parentType := r.modelName
+	relatedCol := relatedModel + "_id"
+
+	filter := bson.M{
+		morphName + "_type": parentType,
+		morphName + "_id":   id,
+	}
+	cursor, err := coll.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var relatedIDs []any
+	for cursor.Next(ctx) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			continue
+		}
+		if rid, ok := doc[relatedCol]; ok {
+			relatedIDs = append(relatedIDs, rid)
+		}
+	}
+
+	if len(relatedIDs) == 0 {
+		return []map[string]any{}, nil
+	}
+
+	relatedColl := r.conn.Collection(relatedModel)
+	relCursor, err := relatedColl.Find(ctx, bson.M{"_id": bson.M{"$in": relatedIDs}})
+	if err != nil {
+		return nil, err
+	}
+	defer relCursor.Close(ctx)
+
+	var results []map[string]any
+	for relCursor.Next(ctx) {
+		var d bson.M
+		if err := relCursor.Decode(&d); err != nil {
+			continue
+		}
+		results = append(results, mongoDocToMap(d))
+	}
+	if results == nil {
+		results = []map[string]any{}
+	}
+	return results, nil
+}
+
 func (r *MongoRepository) Avg(ctx context.Context, field string, query *Query) (float64, error) {
 	return r.mongoAggregateSingle(ctx, "$avg", field, query, r.buildNotDeletedFilter())
 }

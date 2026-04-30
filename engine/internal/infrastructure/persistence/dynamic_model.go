@@ -98,6 +98,16 @@ func MigrateModel(db *gorm.DB, model *parser.ModelDefinition, resolver TableName
 				return err
 			}
 		}
+		if field.Type == parser.FieldMorphTo {
+			idxName := fmt.Sprintf("idx_%s_%s_morph", tableName, fieldName)
+			idxSQL := fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s (%s_type, %s_id)", idxName, tableName, fieldName, fieldName)
+			db.Exec(idxSQL)
+		}
+		if field.Type == parser.FieldMorphToMany {
+			if err := createMorphJunctionTable(db, field.Morph, field.Model, dialect, resolver); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
@@ -219,6 +229,10 @@ func buildColumns(model *parser.ModelDefinition, dialect DBDialect, tenantEnable
 	}
 
 	for name, field := range model.Fields {
+		if field.Type == parser.FieldMorphTo {
+			cols += buildMorphToColumns(name, dialect)
+			continue
+		}
 		sqlType := fieldTypeToSQL(field, dialect)
 		if sqlType == "" {
 			continue
@@ -463,6 +477,12 @@ func fieldTypeToSQL(field parser.FieldDefinition, dialect DBDialect) string {
 	case parser.FieldOne2Many, parser.FieldMany2Many, parser.FieldComputed:
 		return ""
 
+	case parser.FieldMorphTo:
+		return ""
+
+	case parser.FieldMorphOne, parser.FieldMorphMany, parser.FieldMorphToMany, parser.FieldMorphByMany:
+		return ""
+
 	// --- JSON types ---
 
 	case parser.FieldJSON, parser.FieldJSONObject, parser.FieldJSONArray:
@@ -596,6 +616,66 @@ func createJunctionTable(db *gorm.DB, model1 string, fieldName string, model2 st
 	idx2 := fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_%s_id ON %s (%s_id)", tableName, model2, tableName, model2)
 	db.Exec(idx1)
 	db.Exec(idx2)
+
+	return nil
+}
+
+func buildMorphToColumns(fieldName string, dialect DBDialect) string {
+	var typeCol, idCol string
+	switch dialect {
+	case DialectPostgres:
+		typeCol = "VARCHAR(255)"
+		idCol = "VARCHAR(36)"
+	case DialectMySQL:
+		typeCol = "VARCHAR(255)"
+		idCol = "VARCHAR(36)"
+	default:
+		typeCol = "TEXT"
+		idCol = "TEXT"
+	}
+	return fmt.Sprintf(",\n  %s_type %s,\n  %s_id %s", fieldName, typeCol, fieldName, idCol)
+}
+
+func createMorphJunctionTable(db *gorm.DB, morphName string, relatedModel string, dialect DBDialect, resolver TableNameResolver) error {
+	tableName := morphName + "s"
+	if db.Migrator().HasTable(tableName) {
+		return nil
+	}
+
+	relatedCol := relatedModel + "_id"
+
+	var idType, fkType, morphIDType, morphTypeCol string
+	switch dialect {
+	case DialectPostgres:
+		idType = "UUID PRIMARY KEY DEFAULT gen_random_uuid()"
+		fkType = "UUID NOT NULL"
+		morphIDType = "VARCHAR(36) NOT NULL"
+		morphTypeCol = "VARCHAR(255) NOT NULL"
+	case DialectMySQL:
+		idType = "CHAR(36) PRIMARY KEY"
+		fkType = "CHAR(36) NOT NULL"
+		morphIDType = "VARCHAR(36) NOT NULL"
+		morphTypeCol = "VARCHAR(255) NOT NULL"
+	default:
+		idType = "TEXT PRIMARY KEY"
+		fkType = "TEXT NOT NULL"
+		morphIDType = "TEXT NOT NULL"
+		morphTypeCol = "TEXT NOT NULL"
+	}
+
+	sql := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+  id %s,
+  %s %s,
+  %s_id %s,
+  %s_type %s
+)`, tableName, idType, relatedCol, fkType, morphName, morphIDType, morphName, morphTypeCol)
+
+	if err := db.Exec(sql).Error; err != nil {
+		return fmt.Errorf("failed to create morph junction table %s: %w", tableName, err)
+	}
+
+	db.Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_%s ON %s (%s)", tableName, relatedCol, tableName, relatedCol))
+	db.Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_morph ON %s (%s_type, %s_id)", tableName, tableName, morphName, morphName))
 
 	return nil
 }

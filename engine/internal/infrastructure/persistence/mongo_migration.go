@@ -45,6 +45,20 @@ func (e *MongoMigrationEngine) MigrateModel(model *parser.ModelDefinition, resol
 			}
 			coll.Indexes().CreateOne(ctx, indexModel)
 		}
+
+		if field.Type == parser.FieldMorphTo {
+			indexModel := mongo.IndexModel{
+				Keys: bson.D{
+					{Key: fieldName + "_type", Value: 1},
+					{Key: fieldName + "_id", Value: 1},
+				},
+			}
+			coll.Indexes().CreateOne(ctx, indexModel)
+		}
+
+		if field.Type == parser.FieldMorphToMany {
+			e.createMorphJunctionCollection(ctx, field.Morph, field.Model)
+		}
 	}
 
 	for _, indexFields := range model.Indexes {
@@ -69,6 +83,24 @@ func (e *MongoMigrationEngine) MigrateModel(model *parser.ModelDefinition, resol
 	}
 
 	return nil
+}
+
+func (e *MongoMigrationEngine) createMorphJunctionCollection(ctx context.Context, morphName string, relatedModel string) {
+	collName := morphName + "s"
+	_ = e.conn.Database.CreateCollection(ctx, collName)
+
+	coll := e.conn.Collection(collName)
+	relatedCol := relatedModel + "_id"
+
+	coll.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{Key: relatedCol, Value: 1}},
+	})
+	coll.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: morphName + "_type", Value: 1},
+			{Key: morphName + "_id", Value: 1},
+		},
+	})
 }
 
 func (e *MongoMigrationEngine) MigrateSystemCollection(name string, columns []SystemColumn) error {

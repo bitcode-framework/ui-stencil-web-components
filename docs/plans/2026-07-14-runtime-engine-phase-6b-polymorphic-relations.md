@@ -1,7 +1,7 @@
 # Phase 6B: Polymorphic Relations (Morphs)
 
 **Date**: 14 July 2026
-**Status**: Draft
+**Status**: ✅ Done
 **Depends on**: Phase 6A (new field types, storage hints)
 **Unlocks**: Phase 6C (engine enhancements), Phase 7 (module setting)
 **Master doc**: `2026-07-14-runtime-engine-redesign-master.md`

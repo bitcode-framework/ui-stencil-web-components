@@ -97,6 +97,16 @@ func fieldTypeToTag(fieldType parser.FieldType, widget string) string {
 		return "bc-field-number"
 	case parser.FieldVector, parser.FieldBinary:
 		return ""
+	case parser.FieldMorphTo:
+		return "bc-field-morph"
+	case parser.FieldMorphOne:
+		return "bc-field-link"
+	case parser.FieldMorphMany:
+		return ""
+	case parser.FieldMorphToMany:
+		return "bc-field-tags"
+	case parser.FieldMorphByMany:
+		return ""
 	default:
 		return "bc-field-string"
 	}

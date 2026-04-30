@@ -1361,6 +1361,61 @@ func (r *GenericRepository) RemoveMany2Many(ctx context.Context, id string, fiel
 	return nil
 }
 
+func (r *GenericRepository) MorphAttach(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
+	junctionTable := morphName + "s"
+	parentType := r.modelName
+	relatedCol := relatedModel + "_id"
+
+	for _, relID := range relatedIDs {
+		var count int64
+		r.db.WithContext(ctx).Table(junctionTable).
+			Where(morphName+"_type = ? AND "+morphName+"_id = ? AND "+relatedCol+" = ?", parentType, parentID, relID).
+			Count(&count)
+		if count == 0 {
+			record := map[string]any{
+				relatedCol:            relID,
+				morphName + "_id":     parentID,
+				morphName + "_type":   parentType,
+			}
+			r.db.WithContext(ctx).Table(junctionTable).Create(&record)
+		}
+	}
+	return nil
+}
+
+func (r *GenericRepository) MorphDetach(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
+	junctionTable := morphName + "s"
+	parentType := r.modelName
+	relatedCol := relatedModel + "_id"
+
+	for _, relID := range relatedIDs {
+		r.db.WithContext(ctx).Table(junctionTable).
+			Where(morphName+"_type = ? AND "+morphName+"_id = ? AND "+relatedCol+" = ?", parentType, parentID, relID).
+			Delete(nil)
+	}
+	return nil
+}
+
+func (r *GenericRepository) MorphSync(ctx context.Context, morphName string, relatedModel string, parentID string, relatedIDs []string) error {
+	junctionTable := morphName + "s"
+	parentType := r.modelName
+	relatedCol := relatedModel + "_id"
+
+	r.db.WithContext(ctx).Table(junctionTable).
+		Where(morphName+"_type = ? AND "+morphName+"_id = ?", parentType, parentID).
+		Delete(nil)
+
+	for _, relID := range relatedIDs {
+		record := map[string]any{
+			relatedCol:            relID,
+			morphName + "_id":     parentID,
+			morphName + "_type":   parentType,
+		}
+		r.db.WithContext(ctx).Table(junctionTable).Create(&record)
+	}
+	return nil
+}
+
 func (r *GenericRepository) LoadMany2Many(ctx context.Context, id string, field string) ([]map[string]any, error) {
 	junctionTable := r.tableName + "_" + field
 	var junctionRecords []map[string]any
@@ -1622,6 +1677,16 @@ func (r *GenericRepository) loadWithRelations(ctx context.Context, query *Query,
 			r.loadOne2ManyRelation(ctx, w, fieldDef, results)
 		case parser.FieldMany2Many:
 			r.loadMany2ManyRelation(ctx, w, results)
+		case parser.FieldMorphTo:
+			r.loadMorphToRelation(ctx, w, results)
+		case parser.FieldMorphOne:
+			r.loadMorphOneRelation(ctx, w, fieldDef, results)
+		case parser.FieldMorphMany:
+			r.loadMorphManyRelation(ctx, w, fieldDef, results)
+		case parser.FieldMorphToMany:
+			r.loadMorphToManyRelation(ctx, w, fieldDef, results)
+		case parser.FieldMorphByMany:
+			r.loadMorphByManyRelation(ctx, w, fieldDef, results)
 		}
 	}
 }
@@ -1818,6 +1883,329 @@ func (r *GenericRepository) loadMany2ManyRelation(ctx context.Context, w WithCla
 		}
 		rec["_"+w.Relation] = children
 	}
+}
+
+func (r *GenericRepository) loadMorphToRelation(ctx context.Context, w WithClause, results []map[string]any) {
+	typeCol := w.Relation + "_type"
+	idCol := w.Relation + "_id"
+
+	typeGroups := make(map[string][]string)
+	for _, rec := range results {
+		morphType, _ := rec[typeCol].(string)
+		morphID := fmt.Sprintf("%v", rec[idCol])
+		if morphType != "" && morphID != "" && morphID != "<nil>" {
+			typeGroups[morphType] = append(typeGroups[morphType], morphID)
+		}
+	}
+
+	if len(typeGroups) == 0 {
+		return
+	}
+
+	relatedByType := make(map[string]map[string]map[string]any)
+	for modelName, ids := range typeGroups {
+		table := r.resolveTableName(modelName)
+		uniqueIDs := uniqueStrings(ids)
+		var related []map[string]any
+		if err := r.db.WithContext(ctx).Table(table).Where("id IN ?", uniqueIDs).Find(&related).Error; err != nil {
+			continue
+		}
+		relatedMap := make(map[string]map[string]any)
+		for _, rel := range related {
+			if id, ok := rel["id"]; ok {
+				relatedMap[fmt.Sprintf("%v", id)] = rel
+			}
+		}
+		relatedByType[modelName] = relatedMap
+	}
+
+	for _, rec := range results {
+		morphType, _ := rec[typeCol].(string)
+		morphID := fmt.Sprintf("%v", rec[idCol])
+		if relMap, ok := relatedByType[morphType]; ok {
+			if rel, ok := relMap[morphID]; ok {
+				rec["_"+w.Relation] = rel
+				rec["_"+w.Relation+"_type"] = morphType
+			}
+		}
+	}
+}
+
+func (r *GenericRepository) loadMorphOneRelation(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	if fieldDef.Model == "" || fieldDef.Morph == "" {
+		return
+	}
+
+	parentIDs := make([]string, 0, len(results))
+	for _, rec := range results {
+		if id, ok := rec[r.pkCol]; ok {
+			parentIDs = append(parentIDs, fmt.Sprintf("%v", id))
+		}
+	}
+	if len(parentIDs) == 0 {
+		return
+	}
+
+	morphName := fieldDef.Morph
+	parentType := r.modelName
+
+	relatedTable := r.resolveTableName(fieldDef.Model)
+	var related []map[string]any
+	if err := r.db.WithContext(ctx).Table(relatedTable).
+		Where(morphName+"_type = ? AND "+morphName+"_id IN ?", parentType, parentIDs).
+		Find(&related).Error; err != nil {
+		return
+	}
+
+	childMap := make(map[string]map[string]any)
+	for _, rel := range related {
+		pid := fmt.Sprintf("%v", rel[morphName+"_id"])
+		if _, exists := childMap[pid]; !exists {
+			childMap[pid] = rel
+		}
+	}
+
+	for _, rec := range results {
+		pid := fmt.Sprintf("%v", rec[r.pkCol])
+		if child, ok := childMap[pid]; ok {
+			rec["_"+w.Relation] = child
+		}
+	}
+}
+
+func (r *GenericRepository) loadMorphManyRelation(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	if fieldDef.Model == "" || fieldDef.Morph == "" {
+		return
+	}
+
+	parentIDs := make([]string, 0, len(results))
+	for _, rec := range results {
+		if id, ok := rec[r.pkCol]; ok {
+			parentIDs = append(parentIDs, fmt.Sprintf("%v", id))
+		}
+	}
+	if len(parentIDs) == 0 {
+		return
+	}
+
+	morphName := fieldDef.Morph
+	parentType := r.modelName
+
+	relatedTable := r.resolveTableName(fieldDef.Model)
+	relQ := r.db.WithContext(ctx).Table(relatedTable).
+		Where(morphName+"_type = ? AND "+morphName+"_id IN ?", parentType, parentIDs)
+
+	if len(w.Select) > 0 {
+		relQ = relQ.Select(w.Select)
+	}
+	if len(w.OrderBy) > 0 {
+		for _, o := range w.OrderBy {
+			dir := "ASC"
+			if strings.ToLower(o.Direction) == "desc" {
+				dir = "DESC"
+			}
+			relQ = relQ.Order(fmt.Sprintf("%s %s", o.Field, dir))
+		}
+	}
+	if w.Limit > 0 {
+		relQ = relQ.Limit(w.Limit)
+	}
+
+	var related []map[string]any
+	if err := relQ.Find(&related).Error; err != nil {
+		return
+	}
+
+	childMap := make(map[string][]map[string]any)
+	for _, rel := range related {
+		pid := fmt.Sprintf("%v", rel[morphName+"_id"])
+		childMap[pid] = append(childMap[pid], rel)
+	}
+
+	for _, rec := range results {
+		pid := fmt.Sprintf("%v", rec[r.pkCol])
+		if children, ok := childMap[pid]; ok {
+			rec["_"+w.Relation] = children
+		} else {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+	}
+}
+
+func (r *GenericRepository) loadMorphToManyRelation(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	if fieldDef.Model == "" || fieldDef.Morph == "" {
+		return
+	}
+
+	parentIDs := make([]string, 0, len(results))
+	for _, rec := range results {
+		if id, ok := rec[r.pkCol]; ok {
+			parentIDs = append(parentIDs, fmt.Sprintf("%v", id))
+		}
+	}
+	if len(parentIDs) == 0 {
+		return
+	}
+
+	morphName := fieldDef.Morph
+	junctionTable := morphName + "s"
+	parentType := r.modelName
+	relatedCol := fieldDef.Model + "_id"
+
+	var junctionRecords []map[string]any
+	if err := r.db.WithContext(ctx).Table(junctionTable).
+		Where(morphName+"_type = ? AND "+morphName+"_id IN ?", parentType, parentIDs).
+		Find(&junctionRecords).Error; err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	parentToRelatedIDs := make(map[string][]string)
+	allRelatedIDs := make(map[string]bool)
+	for _, jr := range junctionRecords {
+		pid := fmt.Sprintf("%v", jr[morphName+"_id"])
+		rid := fmt.Sprintf("%v", jr[relatedCol])
+		parentToRelatedIDs[pid] = append(parentToRelatedIDs[pid], rid)
+		allRelatedIDs[rid] = true
+	}
+
+	if len(allRelatedIDs) == 0 {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	ids := make([]string, 0, len(allRelatedIDs))
+	for id := range allRelatedIDs {
+		ids = append(ids, id)
+	}
+
+	relatedTable := r.resolveTableName(fieldDef.Model)
+	var relatedRecords []map[string]any
+	if err := r.db.WithContext(ctx).Table(relatedTable).
+		Where("id IN ?", ids).
+		Find(&relatedRecords).Error; err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	relatedMap := make(map[string]map[string]any)
+	for _, rel := range relatedRecords {
+		if id, ok := rel["id"]; ok {
+			relatedMap[fmt.Sprintf("%v", id)] = rel
+		}
+	}
+
+	for _, rec := range results {
+		pid := fmt.Sprintf("%v", rec[r.pkCol])
+		relIDs := parentToRelatedIDs[pid]
+		children := make([]map[string]any, 0, len(relIDs))
+		for _, rid := range relIDs {
+			if rel, ok := relatedMap[rid]; ok {
+				children = append(children, rel)
+			}
+		}
+		rec["_"+w.Relation] = children
+	}
+}
+
+func (r *GenericRepository) loadMorphByManyRelation(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	if fieldDef.Model == "" || fieldDef.Morph == "" {
+		return
+	}
+
+	parentIDs := make([]string, 0, len(results))
+	for _, rec := range results {
+		if id, ok := rec[r.pkCol]; ok {
+			parentIDs = append(parentIDs, fmt.Sprintf("%v", id))
+		}
+	}
+	if len(parentIDs) == 0 {
+		return
+	}
+
+	morphName := fieldDef.Morph
+	junctionTable := morphName + "s"
+	targetType := fieldDef.Model
+	selfCol := r.modelName + "_id"
+
+	var junctionRecords []map[string]any
+	if err := r.db.WithContext(ctx).Table(junctionTable).
+		Where(selfCol+" IN ? AND "+morphName+"_type = ?", parentIDs, targetType).
+		Find(&junctionRecords).Error; err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	parentToRelatedIDs := make(map[string][]string)
+	allRelatedIDs := make(map[string]bool)
+	for _, jr := range junctionRecords {
+		pid := fmt.Sprintf("%v", jr[selfCol])
+		rid := fmt.Sprintf("%v", jr[morphName+"_id"])
+		parentToRelatedIDs[pid] = append(parentToRelatedIDs[pid], rid)
+		allRelatedIDs[rid] = true
+	}
+
+	if len(allRelatedIDs) == 0 {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	ids := make([]string, 0, len(allRelatedIDs))
+	for id := range allRelatedIDs {
+		ids = append(ids, id)
+	}
+
+	relatedTable := r.resolveTableName(fieldDef.Model)
+	var relatedRecords []map[string]any
+	if err := r.db.WithContext(ctx).Table(relatedTable).
+		Where("id IN ?", ids).
+		Find(&relatedRecords).Error; err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	relatedMap := make(map[string]map[string]any)
+	for _, rel := range relatedRecords {
+		if id, ok := rel["id"]; ok {
+			relatedMap[fmt.Sprintf("%v", id)] = rel
+		}
+	}
+
+	for _, rec := range results {
+		pid := fmt.Sprintf("%v", rec[r.pkCol])
+		relIDs := parentToRelatedIDs[pid]
+		children := make([]map[string]any, 0, len(relIDs))
+		for _, rid := range relIDs {
+			if rel, ok := relatedMap[rid]; ok {
+				children = append(children, rel)
+			}
+		}
+		rec["_"+w.Relation] = children
+	}
+}
+
+func uniqueStrings(input []string) []string {
+	seen := make(map[string]bool, len(input))
+	result := make([]string, 0, len(input))
+	for _, s := range input {
+		if !seen[s] {
+			seen[s] = true
+			result = append(result, s)
+		}
+	}
+	return result
 }
 
 func (r *GenericRepository) saveRevision(action string, recordID string, before, after map[string]any) {

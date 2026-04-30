@@ -376,6 +376,51 @@ func (m *modelBridge) LoadRelation(id string, field string) ([]map[string]any, e
 	return results, nil
 }
 
+func (m *modelBridge) MorphAttach(id string, relation string, relatedIDs []string) error {
+	if err := m.checkPermission("write"); err != nil {
+		return err
+	}
+	repo, modelDef, err := m.getRepo()
+	if err != nil {
+		return err
+	}
+	fieldDef, ok := modelDef.Fields[relation]
+	if !ok {
+		return NewError(ErrNotFound, "field "+relation+" not found")
+	}
+	return repo.MorphAttach(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
+}
+
+func (m *modelBridge) MorphDetach(id string, relation string, relatedIDs []string) error {
+	if err := m.checkPermission("write"); err != nil {
+		return err
+	}
+	repo, modelDef, err := m.getRepo()
+	if err != nil {
+		return err
+	}
+	fieldDef, ok := modelDef.Fields[relation]
+	if !ok {
+		return NewError(ErrNotFound, "field "+relation+" not found")
+	}
+	return repo.MorphDetach(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
+}
+
+func (m *modelBridge) MorphSync(id string, relation string, relatedIDs []string) error {
+	if err := m.checkPermission("write"); err != nil {
+		return err
+	}
+	repo, modelDef, err := m.getRepo()
+	if err != nil {
+		return err
+	}
+	fieldDef, ok := modelDef.Fields[relation]
+	if !ok {
+		return NewError(ErrNotFound, "field "+relation+" not found")
+	}
+	return repo.MorphSync(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
+}
+
 func (m *modelBridge) Sudo() SudoModelHandle {
 	return &sudoModelBridge{inner: m}
 }
@@ -577,6 +622,42 @@ func (s *sudoModelBridge) LoadRelation(id string, field string) ([]map[string]an
 		return nil, err
 	}
 	return repo.LoadMany2Many(context.Background(), id, field)
+}
+
+func (s *sudoModelBridge) MorphAttach(id string, relation string, relatedIDs []string) error {
+	repo, modelDef, err := s.getRepo()
+	if err != nil {
+		return err
+	}
+	fieldDef, ok := modelDef.Fields[relation]
+	if !ok {
+		return NewError(ErrNotFound, "field "+relation+" not found")
+	}
+	return repo.MorphAttach(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
+}
+
+func (s *sudoModelBridge) MorphDetach(id string, relation string, relatedIDs []string) error {
+	repo, modelDef, err := s.getRepo()
+	if err != nil {
+		return err
+	}
+	fieldDef, ok := modelDef.Fields[relation]
+	if !ok {
+		return NewError(ErrNotFound, "field "+relation+" not found")
+	}
+	return repo.MorphDetach(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
+}
+
+func (s *sudoModelBridge) MorphSync(id string, relation string, relatedIDs []string) error {
+	repo, modelDef, err := s.getRepo()
+	if err != nil {
+		return err
+	}
+	fieldDef, ok := modelDef.Fields[relation]
+	if !ok {
+		return NewError(ErrNotFound, "field "+relation+" not found")
+	}
+	return repo.MorphSync(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
 }
 
 func (s *sudoModelBridge) Sudo() SudoModelHandle {

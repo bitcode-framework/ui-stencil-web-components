@@ -60,6 +60,13 @@ const (
 	// Phase 6A: JSON variants
 	FieldJSONObject FieldType = "json:object"
 	FieldJSONArray  FieldType = "json:array"
+
+	// Phase 6B: Polymorphic relations (morphs)
+	FieldMorphTo     FieldType = "morph_to"
+	FieldMorphOne    FieldType = "morph_one"
+	FieldMorphMany   FieldType = "morph_many"
+	FieldMorphToMany FieldType = "morph_to_many"
+	FieldMorphByMany FieldType = "morph_by_many"
 )
 
 type PKStrategy string
@@ -615,6 +622,30 @@ func ParseModel(data []byte) (*ModelDefinition, error) {
 		}
 		if field.Type == FieldDynamicLink && field.Model == "" {
 			return nil, fmt.Errorf("dynamic_link field %q must specify model", name)
+		}
+		if field.Type == FieldMorphOne || field.Type == FieldMorphMany {
+			if field.Model == "" {
+				return nil, fmt.Errorf("%s field %q must specify model", field.Type, name)
+			}
+			if field.Morph == "" {
+				return nil, fmt.Errorf("%s field %q must specify morph", field.Type, name)
+			}
+		}
+		if field.Type == FieldMorphToMany {
+			if field.Model == "" {
+				return nil, fmt.Errorf("morph_to_many field %q must specify model", name)
+			}
+			if field.Morph == "" {
+				return nil, fmt.Errorf("morph_to_many field %q must specify morph", name)
+			}
+		}
+		if field.Type == FieldMorphByMany {
+			if field.Model == "" {
+				return nil, fmt.Errorf("morph_by_many field %q must specify model", name)
+			}
+			if field.Morph == "" {
+				return nil, fmt.Errorf("morph_by_many field %q must specify morph", name)
+			}
 		}
 		if field.Type == FieldVector && field.Dimensions == 0 {
 			return nil, fmt.Errorf("vector field %q must specify dimensions", name)

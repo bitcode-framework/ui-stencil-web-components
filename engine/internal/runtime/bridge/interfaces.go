@@ -21,6 +21,10 @@ type ModelHandle interface {
 	SetRelation(id string, field string, relatedIDs []string) error
 	LoadRelation(id string, field string) ([]map[string]any, error)
 
+	MorphAttach(id string, relation string, relatedIDs []string) error
+	MorphDetach(id string, relation string, relatedIDs []string) error
+	MorphSync(id string, relation string, relatedIDs []string) error
+
 	Sudo() SudoModelHandle
 }
 

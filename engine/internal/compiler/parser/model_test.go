@@ -868,3 +868,203 @@ func TestParseModel_HiddenField(t *testing.T) {
 		t.Error("expected name to not be hidden")
 	}
 }
+
+func TestParseModel_MorphTo(t *testing.T) {
+	data := []byte(`{
+		"name": "comment",
+		"fields": {
+			"body": { "type": "text" },
+			"commentable": { "type": "morph_to", "models": ["post", "video"] }
+		}
+	}`)
+
+	model, err := ParseModel(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if model.Fields["commentable"].Type != FieldMorphTo {
+		t.Errorf("expected morph_to, got %s", model.Fields["commentable"].Type)
+	}
+	if len(model.Fields["commentable"].Models) != 2 {
+		t.Errorf("expected 2 models, got %d", len(model.Fields["commentable"].Models))
+	}
+}
+
+func TestParseModel_MorphToWithoutModels(t *testing.T) {
+	data := []byte(`{
+		"name": "activity_log",
+		"fields": {
+			"action": { "type": "string" },
+			"subject": { "type": "morph_to" }
+		}
+	}`)
+
+	model, err := ParseModel(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if model.Fields["subject"].Type != FieldMorphTo {
+		t.Errorf("expected morph_to, got %s", model.Fields["subject"].Type)
+	}
+	if len(model.Fields["subject"].Models) != 0 {
+		t.Errorf("expected 0 models (unbounded), got %d", len(model.Fields["subject"].Models))
+	}
+}
+
+func TestParseModel_MorphOne(t *testing.T) {
+	data := []byte(`{
+		"name": "user",
+		"fields": {
+			"name": { "type": "string" },
+			"avatar": { "type": "morph_one", "model": "image", "morph": "imageable" }
+		}
+	}`)
+
+	model, err := ParseModel(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if model.Fields["avatar"].Type != FieldMorphOne {
+		t.Errorf("expected morph_one, got %s", model.Fields["avatar"].Type)
+	}
+	if model.Fields["avatar"].Model != "image" {
+		t.Errorf("expected model image, got %s", model.Fields["avatar"].Model)
+	}
+	if model.Fields["avatar"].Morph != "imageable" {
+		t.Errorf("expected morph imageable, got %s", model.Fields["avatar"].Morph)
+	}
+}
+
+func TestParseModel_MorphMany(t *testing.T) {
+	data := []byte(`{
+		"name": "post",
+		"fields": {
+			"title": { "type": "string" },
+			"comments": { "type": "morph_many", "model": "comment", "morph": "commentable" }
+		}
+	}`)
+
+	model, err := ParseModel(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if model.Fields["comments"].Type != FieldMorphMany {
+		t.Errorf("expected morph_many, got %s", model.Fields["comments"].Type)
+	}
+	if model.Fields["comments"].Model != "comment" {
+		t.Errorf("expected model comment, got %s", model.Fields["comments"].Model)
+	}
+	if model.Fields["comments"].Morph != "commentable" {
+		t.Errorf("expected morph commentable, got %s", model.Fields["comments"].Morph)
+	}
+}
+
+func TestParseModel_MorphToMany(t *testing.T) {
+	data := []byte(`{
+		"name": "post",
+		"fields": {
+			"title": { "type": "string" },
+			"tags": { "type": "morph_to_many", "model": "tag", "morph": "taggable" }
+		}
+	}`)
+
+	model, err := ParseModel(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if model.Fields["tags"].Type != FieldMorphToMany {
+		t.Errorf("expected morph_to_many, got %s", model.Fields["tags"].Type)
+	}
+	if model.Fields["tags"].Model != "tag" {
+		t.Errorf("expected model tag, got %s", model.Fields["tags"].Model)
+	}
+	if model.Fields["tags"].Morph != "taggable" {
+		t.Errorf("expected morph taggable, got %s", model.Fields["tags"].Morph)
+	}
+}
+
+func TestParseModel_MorphByMany(t *testing.T) {
+	data := []byte(`{
+		"name": "tag",
+		"fields": {
+			"name": { "type": "string" },
+			"posts": { "type": "morph_by_many", "model": "post", "morph": "taggable" },
+			"videos": { "type": "morph_by_many", "model": "video", "morph": "taggable" }
+		}
+	}`)
+
+	model, err := ParseModel(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if model.Fields["posts"].Type != FieldMorphByMany {
+		t.Errorf("expected morph_by_many, got %s", model.Fields["posts"].Type)
+	}
+	if model.Fields["posts"].Model != "post" {
+		t.Errorf("expected model post, got %s", model.Fields["posts"].Model)
+	}
+	if model.Fields["videos"].Model != "video" {
+		t.Errorf("expected model video, got %s", model.Fields["videos"].Model)
+	}
+}
+
+func TestParseModel_MorphValidationErrors(t *testing.T) {
+	tests := []struct {
+		name    string
+		json    string
+		wantErr string
+	}{
+		{
+			name:    "morph_one without model",
+			json:    `{"name": "bad", "fields": {"avatar": {"type": "morph_one", "morph": "imageable"}}}`,
+			wantErr: "must specify model",
+		},
+		{
+			name:    "morph_one without morph",
+			json:    `{"name": "bad", "fields": {"avatar": {"type": "morph_one", "model": "image"}}}`,
+			wantErr: "must specify morph",
+		},
+		{
+			name:    "morph_many without model",
+			json:    `{"name": "bad", "fields": {"comments": {"type": "morph_many", "morph": "commentable"}}}`,
+			wantErr: "must specify model",
+		},
+		{
+			name:    "morph_many without morph",
+			json:    `{"name": "bad", "fields": {"comments": {"type": "morph_many", "model": "comment"}}}`,
+			wantErr: "must specify morph",
+		},
+		{
+			name:    "morph_to_many without model",
+			json:    `{"name": "bad", "fields": {"tags": {"type": "morph_to_many", "morph": "taggable"}}}`,
+			wantErr: "must specify model",
+		},
+		{
+			name:    "morph_to_many without morph",
+			json:    `{"name": "bad", "fields": {"tags": {"type": "morph_to_many", "model": "tag"}}}`,
+			wantErr: "must specify morph",
+		},
+		{
+			name:    "morph_by_many without model",
+			json:    `{"name": "bad", "fields": {"posts": {"type": "morph_by_many", "morph": "taggable"}}}`,
+			wantErr: "must specify model",
+		},
+		{
+			name:    "morph_by_many without morph",
+			json:    `{"name": "bad", "fields": {"posts": {"type": "morph_by_many", "model": "post"}}}`,
+			wantErr: "must specify morph",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ParseModel([]byte(tt.json))
+			if err == nil {
+				t.Fatal("expected error")
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("expected error containing %q, got %q", tt.wantErr, err.Error())
+			}
+		})
+	}
+}
