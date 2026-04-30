@@ -30,7 +30,7 @@ func SyncArrayModel(db *gorm.DB, model *parser.ModelDefinition, tableName string
 	}
 
 	log.Printf("[ARRAY] %s: syncing %d rows (read-only mode)", model.Name, len(rows))
-	if err := db.Exec("DELETE FROM " + tableName).Error; err != nil {
+	if err := db.Table(tableName).Where("1=1").Delete(nil).Error; err != nil {
 		return fmt.Errorf("array sync: failed to clear table %s: %w", tableName, err)
 	}
 	return bulkInsertRows(db, tableName, model, rows)

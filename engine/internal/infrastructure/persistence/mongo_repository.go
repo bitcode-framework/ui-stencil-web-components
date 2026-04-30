@@ -169,6 +169,8 @@ func (r *MongoRepository) FindAll(ctx context.Context, query *Query, page, pageS
 		results = []map[string]any{}
 	}
 
+	r.loadWithRelations(ctx, query, results)
+
 	return results, total, nil
 }
 
@@ -243,6 +245,8 @@ func (r *MongoRepository) FindAllActive(ctx context.Context, query *Query, page,
 	if results == nil {
 		results = []map[string]any{}
 	}
+
+	r.loadWithRelations(ctx, query, results)
 
 	return results, total, nil
 }
@@ -1519,4 +1523,600 @@ func (r *MongoRepository) mongoMerge(old map[string]any, incoming map[string]any
 		merged[k] = v
 	}
 	return merged
+}
+
+func (r *MongoRepository) loadWithRelations(ctx context.Context, query *Query, results []map[string]any) {
+	if query == nil || len(query.With) == 0 || len(results) == 0 || r.modelDef == nil {
+		return
+	}
+
+	for _, w := range query.With {
+		fieldDef, ok := r.modelDef.Fields[w.Relation]
+		if !ok {
+			continue
+		}
+
+		switch fieldDef.Type {
+		case parser.FieldMany2One:
+			r.loadMongoMany2One(ctx, w, fieldDef, results)
+		case parser.FieldOne2Many:
+			r.loadMongoOne2Many(ctx, w, fieldDef, results)
+		case parser.FieldMany2Many:
+			r.loadMongoMany2Many(ctx, w, fieldDef, results)
+		case parser.FieldMorphTo:
+			r.loadMongoMorphTo(ctx, w, results)
+		case parser.FieldMorphOne:
+			r.loadMongoMorphOneMany(ctx, w, fieldDef, results, false)
+		case parser.FieldMorphMany:
+			r.loadMongoMorphOneMany(ctx, w, fieldDef, results, true)
+		case parser.FieldMorphToMany:
+			r.loadMongoMorphToMany(ctx, w, fieldDef, results)
+		case parser.FieldMorphByMany:
+			r.loadMongoMorphByMany(ctx, w, fieldDef, results)
+		}
+	}
+}
+
+func (r *MongoRepository) resolveCollection(modelName string) string {
+	if r.morphTypeResolver != nil {
+		if resolver, ok := r.morphTypeResolver.(TableNameResolver); ok {
+			return resolver.TableName(modelName)
+		}
+	}
+	return modelName
+}
+
+func (r *MongoRepository) loadMongoMany2One(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	if fieldDef.Model == "" {
+		return
+	}
+
+	fkIDs := make(map[string]bool)
+	for _, rec := range results {
+		if fk, ok := rec[w.Relation]; ok && fk != nil {
+			fkIDs[fmt.Sprintf("%v", fk)] = true
+		}
+	}
+	if len(fkIDs) == 0 {
+		return
+	}
+
+	ids := make([]string, 0, len(fkIDs))
+	for id := range fkIDs {
+		ids = append(ids, id)
+	}
+
+	collName := r.resolveCollection(fieldDef.Model)
+	filter := bson.M{"_id": bson.M{"$in": ids}}
+	r.applyMongoWithConditions(filter, w)
+
+	cursor, err := r.conn.Database.Collection(collName).Find(ctx, filter)
+	if err != nil {
+		return
+	}
+	defer cursor.Close(ctx)
+
+	relatedMap := make(map[string]map[string]any)
+	for cursor.Next(ctx) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			continue
+		}
+		m := mongoDocToMap(doc)
+		if id, ok := m["id"]; ok {
+			relatedMap[fmt.Sprintf("%v", id)] = m
+		}
+	}
+
+	for _, rec := range results {
+		if fk, ok := rec[w.Relation]; ok && fk != nil {
+			if rel, ok := relatedMap[fmt.Sprintf("%v", fk)]; ok {
+				rec["_"+w.Relation] = rel
+			}
+		}
+	}
+}
+
+func (r *MongoRepository) loadMongoOne2Many(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	if fieldDef.Model == "" {
+		return
+	}
+
+	parentIDs := make([]string, 0, len(results))
+	for _, rec := range results {
+		if id, ok := rec["id"]; ok {
+			parentIDs = append(parentIDs, fmt.Sprintf("%v", id))
+		}
+	}
+	if len(parentIDs) == 0 {
+		return
+	}
+
+	inverseField := fieldDef.Inverse
+	if inverseField == "" {
+		inverseField = r.modelName + "_id"
+	}
+
+	collName := r.resolveCollection(fieldDef.Model)
+	filter := bson.M{inverseField: bson.M{"$in": parentIDs}}
+	r.applyMongoWithConditions(filter, w)
+
+	opts := options.Find()
+	if len(w.OrderBy) > 0 {
+		sort := bson.D{}
+		for _, o := range w.OrderBy {
+			dir := 1
+			if strings.ToLower(o.Direction) == "desc" {
+				dir = -1
+			}
+			sort = append(sort, bson.E{Key: o.Field, Value: dir})
+		}
+		opts.SetSort(sort)
+	}
+	if w.Limit > 0 {
+		opts.SetLimit(int64(w.Limit))
+	}
+
+	cursor, err := r.conn.Database.Collection(collName).Find(ctx, filter, opts)
+	if err != nil {
+		return
+	}
+	defer cursor.Close(ctx)
+
+	childMap := make(map[string][]map[string]any)
+	for cursor.Next(ctx) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			continue
+		}
+		m := mongoDocToMap(doc)
+		if fk, ok := m[inverseField]; ok {
+			key := fmt.Sprintf("%v", fk)
+			childMap[key] = append(childMap[key], m)
+		}
+	}
+
+	for _, rec := range results {
+		if id, ok := rec["id"]; ok {
+			key := fmt.Sprintf("%v", id)
+			if children, ok := childMap[key]; ok {
+				rec["_"+w.Relation] = children
+			} else {
+				rec["_"+w.Relation] = []map[string]any{}
+			}
+		}
+	}
+}
+
+func (r *MongoRepository) loadMongoMany2Many(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	idsField := w.Relation + "_ids"
+	allRelatedIDs := make(map[string]bool)
+	parentToRelatedIDs := make(map[string][]string)
+
+	for _, rec := range results {
+		pid := fmt.Sprintf("%v", rec["id"])
+		if idsRaw, ok := rec[idsField]; ok {
+			if idsArr, ok := idsRaw.([]any); ok {
+				for _, id := range idsArr {
+					rid := fmt.Sprintf("%v", id)
+					parentToRelatedIDs[pid] = append(parentToRelatedIDs[pid], rid)
+					allRelatedIDs[rid] = true
+				}
+			}
+		}
+	}
+
+	if len(allRelatedIDs) == 0 {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	ids := make([]string, 0, len(allRelatedIDs))
+	for id := range allRelatedIDs {
+		ids = append(ids, id)
+	}
+
+	collName := r.resolveCollection(fieldDef.Model)
+	filter := bson.M{"_id": bson.M{"$in": ids}}
+	r.applyMongoWithConditions(filter, w)
+
+	cursor, err := r.conn.Database.Collection(collName).Find(ctx, filter)
+	if err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+	defer cursor.Close(ctx)
+
+	relatedMap := make(map[string]map[string]any)
+	for cursor.Next(ctx) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			continue
+		}
+		m := mongoDocToMap(doc)
+		if id, ok := m["id"]; ok {
+			relatedMap[fmt.Sprintf("%v", id)] = m
+		}
+	}
+
+	for _, rec := range results {
+		pid := fmt.Sprintf("%v", rec["id"])
+		relIDs := parentToRelatedIDs[pid]
+		children := make([]map[string]any, 0, len(relIDs))
+		for _, rid := range relIDs {
+			if rel, ok := relatedMap[rid]; ok {
+				children = append(children, rel)
+			}
+		}
+		rec["_"+w.Relation] = children
+	}
+}
+
+func (r *MongoRepository) loadMongoMorphTo(ctx context.Context, w WithClause, results []map[string]any) {
+	typeCol := w.Relation + "_type"
+	idCol := w.Relation + "_id"
+
+	typeGroups := make(map[string][]string)
+	for _, rec := range results {
+		morphType, _ := rec[typeCol].(string)
+		morphID := fmt.Sprintf("%v", rec[idCol])
+		if morphType != "" && morphID != "" && morphID != "<nil>" {
+			typeGroups[morphType] = append(typeGroups[morphType], morphID)
+		}
+	}
+
+	if len(typeGroups) == 0 {
+		return
+	}
+
+	relatedByType := make(map[string]map[string]map[string]any)
+	for morphType, ids := range typeGroups {
+		modelName := morphType
+		if r.morphTypeResolver != nil {
+			modelName = r.morphTypeResolver.MorphModel(morphType)
+		}
+		collName := r.resolveCollection(modelName)
+		uniqueIDs := uniqueStrings(ids)
+		filter := bson.M{"_id": bson.M{"$in": uniqueIDs}}
+
+		cursor, err := r.conn.Database.Collection(collName).Find(ctx, filter)
+		if err != nil {
+			continue
+		}
+		relatedMap := make(map[string]map[string]any)
+		for cursor.Next(ctx) {
+			var doc bson.M
+			if err := cursor.Decode(&doc); err != nil {
+				continue
+			}
+			m := mongoDocToMap(doc)
+			if id, ok := m["id"]; ok {
+				relatedMap[fmt.Sprintf("%v", id)] = m
+			}
+		}
+		cursor.Close(ctx)
+		relatedByType[morphType] = relatedMap
+	}
+
+	for _, rec := range results {
+		morphType, _ := rec[typeCol].(string)
+		morphID := fmt.Sprintf("%v", rec[idCol])
+		if relMap, ok := relatedByType[morphType]; ok {
+			if rel, ok := relMap[morphID]; ok {
+				rec["_"+w.Relation] = rel
+				rec["_"+w.Relation+"_type"] = morphType
+			}
+		}
+	}
+}
+
+func (r *MongoRepository) loadMongoMorphOneMany(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any, isMany bool) {
+	if fieldDef.Model == "" || fieldDef.Morph == "" {
+		return
+	}
+
+	parentIDs := make([]string, 0, len(results))
+	for _, rec := range results {
+		if id, ok := rec["id"]; ok {
+			parentIDs = append(parentIDs, fmt.Sprintf("%v", id))
+		}
+	}
+	if len(parentIDs) == 0 {
+		return
+	}
+
+	morphName := fieldDef.Morph
+	parentType := r.modelName
+	if r.morphTypeResolver != nil {
+		parentType = r.morphTypeResolver.MorphType(r.modelName)
+	}
+
+	collName := r.resolveCollection(fieldDef.Model)
+	filter := bson.M{
+		morphName + "_type": parentType,
+		morphName + "_id":   bson.M{"$in": parentIDs},
+	}
+	r.applyMongoWithConditions(filter, w)
+
+	cursor, err := r.conn.Database.Collection(collName).Find(ctx, filter)
+	if err != nil {
+		return
+	}
+	defer cursor.Close(ctx)
+
+	if isMany {
+		childMap := make(map[string][]map[string]any)
+		for cursor.Next(ctx) {
+			var doc bson.M
+			if err := cursor.Decode(&doc); err != nil {
+				continue
+			}
+			m := mongoDocToMap(doc)
+			if pid, ok := m[morphName+"_id"]; ok {
+				key := fmt.Sprintf("%v", pid)
+				childMap[key] = append(childMap[key], m)
+			}
+		}
+		for _, rec := range results {
+			pid := fmt.Sprintf("%v", rec["id"])
+			if children, ok := childMap[pid]; ok {
+				rec["_"+w.Relation] = children
+			} else {
+				rec["_"+w.Relation] = []map[string]any{}
+			}
+		}
+	} else {
+		childMap := make(map[string]map[string]any)
+		for cursor.Next(ctx) {
+			var doc bson.M
+			if err := cursor.Decode(&doc); err != nil {
+				continue
+			}
+			m := mongoDocToMap(doc)
+			if pid, ok := m[morphName+"_id"]; ok {
+				key := fmt.Sprintf("%v", pid)
+				childMap[key] = m
+			}
+		}
+		for _, rec := range results {
+			pid := fmt.Sprintf("%v", rec["id"])
+			if child, ok := childMap[pid]; ok {
+				rec["_"+w.Relation] = child
+			}
+		}
+	}
+}
+
+func (r *MongoRepository) loadMongoMorphToMany(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	if fieldDef.Model == "" || fieldDef.Morph == "" {
+		return
+	}
+
+	parentIDs := make([]string, 0, len(results))
+	for _, rec := range results {
+		if id, ok := rec["id"]; ok {
+			parentIDs = append(parentIDs, fmt.Sprintf("%v", id))
+		}
+	}
+	if len(parentIDs) == 0 {
+		return
+	}
+
+	morphName := fieldDef.Morph
+	junctionColl := morphName + "s"
+	parentType := r.modelName
+	if r.morphTypeResolver != nil {
+		parentType = r.morphTypeResolver.MorphType(r.modelName)
+	}
+	relatedCol := fieldDef.Model + "_id"
+
+	jFilter := bson.M{
+		morphName + "_type": parentType,
+		morphName + "_id":   bson.M{"$in": parentIDs},
+	}
+	jCursor, err := r.conn.Database.Collection(junctionColl).Find(ctx, jFilter)
+	if err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+	defer jCursor.Close(ctx)
+
+	parentToRelatedIDs := make(map[string][]string)
+	allRelatedIDs := make(map[string]bool)
+	for jCursor.Next(ctx) {
+		var doc bson.M
+		if err := jCursor.Decode(&doc); err != nil {
+			continue
+		}
+		pid := fmt.Sprintf("%v", doc[morphName+"_id"])
+		rid := fmt.Sprintf("%v", doc[relatedCol])
+		parentToRelatedIDs[pid] = append(parentToRelatedIDs[pid], rid)
+		allRelatedIDs[rid] = true
+	}
+
+	if len(allRelatedIDs) == 0 {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	ids := make([]string, 0, len(allRelatedIDs))
+	for id := range allRelatedIDs {
+		ids = append(ids, id)
+	}
+
+	collName := r.resolveCollection(fieldDef.Model)
+	rFilter := bson.M{"_id": bson.M{"$in": ids}}
+	r.applyMongoWithConditions(rFilter, w)
+
+	rCursor, err := r.conn.Database.Collection(collName).Find(ctx, rFilter)
+	if err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+	defer rCursor.Close(ctx)
+
+	relatedMap := make(map[string]map[string]any)
+	for rCursor.Next(ctx) {
+		var doc bson.M
+		if err := rCursor.Decode(&doc); err != nil {
+			continue
+		}
+		m := mongoDocToMap(doc)
+		if id, ok := m["id"]; ok {
+			relatedMap[fmt.Sprintf("%v", id)] = m
+		}
+	}
+
+	for _, rec := range results {
+		pid := fmt.Sprintf("%v", rec["id"])
+		relIDs := parentToRelatedIDs[pid]
+		children := make([]map[string]any, 0, len(relIDs))
+		for _, rid := range relIDs {
+			if rel, ok := relatedMap[rid]; ok {
+				children = append(children, rel)
+			}
+		}
+		rec["_"+w.Relation] = children
+	}
+}
+
+func (r *MongoRepository) loadMongoMorphByMany(ctx context.Context, w WithClause, fieldDef parser.FieldDefinition, results []map[string]any) {
+	if fieldDef.Model == "" || fieldDef.Morph == "" {
+		return
+	}
+
+	parentIDs := make([]string, 0, len(results))
+	for _, rec := range results {
+		if id, ok := rec["id"]; ok {
+			parentIDs = append(parentIDs, fmt.Sprintf("%v", id))
+		}
+	}
+	if len(parentIDs) == 0 {
+		return
+	}
+
+	morphName := fieldDef.Morph
+	junctionColl := morphName + "s"
+	selfCol := r.modelName + "_id"
+	targetType := fieldDef.Model
+	if r.morphTypeResolver != nil {
+		targetType = r.morphTypeResolver.MorphType(fieldDef.Model)
+	}
+
+	jFilter := bson.M{
+		selfCol:             bson.M{"$in": parentIDs},
+		morphName + "_type": targetType,
+	}
+	jCursor, err := r.conn.Database.Collection(junctionColl).Find(ctx, jFilter)
+	if err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+	defer jCursor.Close(ctx)
+
+	parentToRelatedIDs := make(map[string][]string)
+	allRelatedIDs := make(map[string]bool)
+	for jCursor.Next(ctx) {
+		var doc bson.M
+		if err := jCursor.Decode(&doc); err != nil {
+			continue
+		}
+		pid := fmt.Sprintf("%v", doc[selfCol])
+		rid := fmt.Sprintf("%v", doc[morphName+"_id"])
+		parentToRelatedIDs[pid] = append(parentToRelatedIDs[pid], rid)
+		allRelatedIDs[rid] = true
+	}
+
+	if len(allRelatedIDs) == 0 {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+
+	ids := make([]string, 0, len(allRelatedIDs))
+	for id := range allRelatedIDs {
+		ids = append(ids, id)
+	}
+
+	collName := r.resolveCollection(fieldDef.Model)
+	rFilter := bson.M{"_id": bson.M{"$in": ids}}
+	r.applyMongoWithConditions(rFilter, w)
+
+	rCursor, err := r.conn.Database.Collection(collName).Find(ctx, rFilter)
+	if err != nil {
+		for _, rec := range results {
+			rec["_"+w.Relation] = []map[string]any{}
+		}
+		return
+	}
+	defer rCursor.Close(ctx)
+
+	relatedMap := make(map[string]map[string]any)
+	for rCursor.Next(ctx) {
+		var doc bson.M
+		if err := rCursor.Decode(&doc); err != nil {
+			continue
+		}
+		m := mongoDocToMap(doc)
+		if id, ok := m["id"]; ok {
+			relatedMap[fmt.Sprintf("%v", id)] = m
+		}
+	}
+
+	for _, rec := range results {
+		pid := fmt.Sprintf("%v", rec["id"])
+		relIDs := parentToRelatedIDs[pid]
+		children := make([]map[string]any, 0, len(relIDs))
+		for _, rid := range relIDs {
+			if rel, ok := relatedMap[rid]; ok {
+				children = append(children, rel)
+			}
+		}
+		rec["_"+w.Relation] = children
+	}
+}
+
+func (r *MongoRepository) applyMongoWithConditions(filter bson.M, w WithClause) {
+	for _, cond := range w.Conditions {
+		op := cond.Operator
+		if op == "" {
+			op = "="
+		}
+		switch strings.ToLower(op) {
+		case "=":
+			filter[cond.Field] = cond.Value
+		case "!=", "<>":
+			filter[cond.Field] = bson.M{"$ne": cond.Value}
+		case ">":
+			filter[cond.Field] = bson.M{"$gt": cond.Value}
+		case ">=":
+			filter[cond.Field] = bson.M{"$gte": cond.Value}
+		case "<":
+			filter[cond.Field] = bson.M{"$lt": cond.Value}
+		case "<=":
+			filter[cond.Field] = bson.M{"$lte": cond.Value}
+		case "in":
+			filter[cond.Field] = bson.M{"$in": cond.Value}
+		case "not in":
+			filter[cond.Field] = bson.M{"$nin": cond.Value}
+		case "like":
+			if s, ok := cond.Value.(string); ok {
+				pattern := strings.ReplaceAll(s, "%", ".*")
+				filter[cond.Field] = bson.M{"$regex": pattern, "$options": "i"}
+			}
+		}
+	}
 }

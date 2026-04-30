@@ -2156,10 +2156,11 @@ func (r *GenericRepository) loadMorphToManyRelation(ctx context.Context, w WithC
 	}
 
 	relatedTable := r.resolveTableName(fieldDef.Model)
+	relQ2 := r.db.WithContext(ctx).Table(relatedTable).Where("id IN ?", ids)
+	relQ2 = r.applyWithClauseToQuery(relQ2, w)
+
 	var relatedRecords []map[string]any
-	if err := r.db.WithContext(ctx).Table(relatedTable).
-		Where("id IN ?", ids).
-		Find(&relatedRecords).Error; err != nil {
+	if err := relQ2.Find(&relatedRecords).Error; err != nil {
 		for _, rec := range results {
 			rec["_"+w.Relation] = []map[string]any{}
 		}
@@ -2241,10 +2242,11 @@ func (r *GenericRepository) loadMorphByManyRelation(ctx context.Context, w WithC
 	}
 
 	relatedTable := r.resolveTableName(fieldDef.Model)
+	relQ3 := r.db.WithContext(ctx).Table(relatedTable).Where("id IN ?", ids)
+	relQ3 = r.applyWithClauseToQuery(relQ3, w)
+
 	var relatedRecords []map[string]any
-	if err := r.db.WithContext(ctx).Table(relatedTable).
-		Where("id IN ?", ids).
-		Find(&relatedRecords).Error; err != nil {
+	if err := relQ3.Find(&relatedRecords).Error; err != nil {
 		for _, rec := range results {
 			rec["_"+w.Relation] = []map[string]any{}
 		}

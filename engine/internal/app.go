@@ -618,7 +618,7 @@ func (a *App) setupRoutes() {
 			return a.syncArrayModelData(m, tableName)
 		},
 	})
-	metaHandler.RegisterRoutes(a.Fiber)
+	metaHandler.RegisterRoutes(a.Fiber, middleware.AuthMiddleware(a.JWTConfig))
 
 	a.setupComponentAssets()
 
@@ -1996,6 +1996,24 @@ func (a *App) ModuleOrder() []string {
 }
 
 func (a *App) syncArrayModelData(m *parser.ModelDefinition, tableName string) error {
+	if err := a.doArraySync(m, tableName); err != nil {
+		return err
+	}
+
+	if interval, ok := refresh.ParseRefreshInterval(m.Refresh); ok {
+		if !a.RefreshScheduler.HasJob(m.Name) {
+			modelCopy := m
+			tbl := tableName
+			a.RefreshScheduler.Register(m.Name, interval, func() error {
+				return a.doArraySync(modelCopy, tbl)
+			})
+		}
+	}
+
+	return nil
+}
+
+func (a *App) doArraySync(m *parser.ModelDefinition, tableName string) error {
 	if m.IsArraySource() {
 		var rows []map[string]any
 		if len(m.DataRows) > 0 {
@@ -2007,23 +2025,11 @@ func (a *App) syncArrayModelData(m *parser.ModelDefinition, tableName string) er
 				return err
 			}
 		}
-		if err := persistence.SyncArrayModel(a.DB, m, tableName, rows); err != nil {
-			return err
-		}
-	} else if m.IsProcessSource() {
-		if err := a.syncProcessModelData(m, tableName); err != nil {
-			return err
-		}
+		return persistence.SyncArrayModel(a.DB, m, tableName, rows)
 	}
-
-	if interval, ok := refresh.ParseRefreshInterval(m.Refresh); ok {
-		modelCopy := m
-		tbl := tableName
-		a.RefreshScheduler.Register(m.Name, interval, func() error {
-			return a.syncArrayModelData(modelCopy, tbl)
-		})
+	if m.IsProcessSource() {
+		return a.syncProcessModelData(m, tableName)
 	}
-
 	return nil
 }
 

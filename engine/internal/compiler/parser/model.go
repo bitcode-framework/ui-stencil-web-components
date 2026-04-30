@@ -578,6 +578,9 @@ func (m *ModelDefinition) IsVersion() bool {
 }
 
 func (m *ModelDefinition) IsTimestamps() bool {
+	if m.IsReadOnlySource() {
+		return false
+	}
 	if m.Timestamps == nil {
 		return true
 	}
@@ -592,6 +595,9 @@ func (m *ModelDefinition) IsTimestampsBy() bool {
 }
 
 func (m *ModelDefinition) IsSoftDeletes() bool {
+	if m.IsReadOnlySource() {
+		return false
+	}
 	if m.SoftDeletes == nil {
 		return false
 	}

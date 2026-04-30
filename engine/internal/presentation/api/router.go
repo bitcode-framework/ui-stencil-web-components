@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/bitcode-framework/bitcode/internal/compiler/parser"
@@ -146,8 +147,14 @@ func (r *Router) RegisterAPI(apiDef *parser.APIDefinition) {
 			crud.permissionService = r.permissionService
 		}
 		if modelDef != nil && modelDef.SyncSource && modelDef.IsWritable() && r.syncSourceFn != nil {
+			var syncMu sync.Mutex
+			modelName := apiDef.Model
 			crud.syncSourceFn = func() {
-				r.syncSourceFn(apiDef.Model)
+				go func() {
+					syncMu.Lock()
+					defer syncMu.Unlock()
+					r.syncSourceFn(modelName)
+				}()
 			}
 		}
 

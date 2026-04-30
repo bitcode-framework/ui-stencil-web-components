@@ -156,6 +156,13 @@ func ParseView(data []byte) (*ViewDefinition, error) {
 	}
 
 	resolveTabFilterBy(&view)
+
+	for name, ds := range view.DataSources {
+		if ds.Model != "" && ds.Process != "" {
+			return nil, fmt.Errorf("data source %q cannot have both model and process", name)
+		}
+	}
+
 	return &view, nil
 }
 

@@ -639,6 +639,6 @@ func (h *CRUDHandler) MorphSync(c *fiber.Ctx) error {
 
 func (h *CRUDHandler) triggerSyncSource() {
 	if h.syncSourceFn != nil {
-		go h.syncSourceFn()
+		h.syncSourceFn()
 	}
 }

@@ -41,8 +41,11 @@ func NewMetaHandler(cfg MetaHandlerConfig) *MetaHandler {
 	}
 }
 
-func (h *MetaHandler) RegisterRoutes(app *fiber.App) {
+func (h *MetaHandler) RegisterRoutes(app *fiber.App, authMiddleware ...fiber.Handler) {
 	meta := app.Group("/api/v1/_meta")
+	for _, mw := range authMiddleware {
+		meta.Use(mw)
+	}
 
 	meta.Get("/models", h.ListModels)
 	meta.Get("/models/:name", h.GetModel)
