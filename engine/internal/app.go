@@ -70,6 +70,7 @@ type AppConfig struct {
 	GlobalModuleDir string
 	AppMode         string
 	MorphMap        map[string]string
+	EagerMaxDepth   int
 }
 
 type SecurityConfig struct {
@@ -454,19 +455,49 @@ func (a *App) wireBridgeFactory() {
 	permSvc := persistence.NewPermissionService(a.DB)
 	permSvc.SetTableNameResolver(func(name string) string { return a.ModelRegistry.TableName(name) })
 
-	factory := &bridge.Factory{
-		DB:            a.DB,
-		ModelRegistry: a.ModelRegistry,
-		PermService:   permSvc,
-		Cache:         a.Cache,
-		EventBus:      a.EventBus,
-		EmailSender:   emailSender,
-		WSHub:         a.WSHub,
-		Translator:    a.Translator,
-		AuditRepo:     a.AuditLogRepo,
-		Encryptor:     a.FieldEncryptor,
-		Executor:      a.Executor,
+	metaBridge := bridge.NewMetaBridge(bridge.MetaBridgeConfig{
+		ModelRegistry:   a.ModelRegistry,
+		ModuleRegistry:  a.ModuleRegistry,
 		ProcessRegistry: a.ProcessRegistry,
+		ViewResolver: func(name string) *parser.ViewDefinition {
+			for _, entry := range a.viewDefs {
+				if entry.Def.Name == name {
+					return entry.Def
+				}
+			}
+			return nil
+		},
+		ViewLister: func() []map[string]any {
+			var result []map[string]any
+			for key, entry := range a.viewDefs {
+				result = append(result, map[string]any{
+					"name":  key,
+					"type":  string(entry.Def.Type),
+					"model": entry.Def.Model,
+					"title": entry.Def.Title,
+				})
+			}
+			return result
+		},
+	})
+
+	refresher := &appModelRefresher{app: a}
+
+	factory := &bridge.Factory{
+		DB:              a.DB,
+		ModelRegistry:   a.ModelRegistry,
+		PermService:     permSvc,
+		Cache:           a.Cache,
+		EventBus:        a.EventBus,
+		EmailSender:     emailSender,
+		WSHub:           a.WSHub,
+		Translator:      a.Translator,
+		AuditRepo:       a.AuditLogRepo,
+		Encryptor:       a.FieldEncryptor,
+		Executor:        a.Executor,
+		ProcessRegistry: a.ProcessRegistry,
+		Meta:            metaBridge,
+		Refresher:       refresher,
 	}
 	a.PluginManager.SetBridgeFactory(factory)
 }
@@ -1793,6 +1824,9 @@ func (a *App) installModule(modPath string) error {
 		router.SetSanitizer(a.Sanitizer)
 	}
 	router.SetEventBus(a.EventBus)
+	if a.Config.EagerMaxDepth > 0 {
+		router.SetMaxEagerDepth(a.Config.EagerMaxDepth)
+	}
 	router.SetSyncSourceFn(func(modelName string) {
 		modelDef, err := a.ModelRegistry.Get(modelName)
 		if err != nil || modelDef == nil {
@@ -2193,4 +2227,20 @@ func (r *appProcessRunner) ExecuteByName(ctx context.Context, processName string
 		return execCtx.Result, nil
 	}
 	return nil, nil
+}
+
+type appModelRefresher struct {
+	app *App
+}
+
+func (r *appModelRefresher) Refresh(modelName string) error {
+	m, err := r.app.ModelRegistry.Get(modelName)
+	if err != nil {
+		return fmt.Errorf("model %q not found: %w", modelName, err)
+	}
+	if !m.IsArraySource() && !m.IsProcessSource() {
+		return fmt.Errorf("model %q is not an array/process source", modelName)
+	}
+	tableName := r.app.ModelRegistry.TableName(modelName)
+	return r.app.doArraySync(m, tableName)
 }

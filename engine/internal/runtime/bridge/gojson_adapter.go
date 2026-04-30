@@ -34,6 +34,8 @@ func BuildGoJSONExtension(bc *Context) gojsonrt.Extension {
 			"audit":   map[string]any{"log": func(opts map[string]any) (any, error) { return nil, bc.Audit().Log(mapToAuditOptions(opts)) }},
 			"crypto":  buildCryptoNamespace(bc),
 			"execution": buildExecutionNamespace(bc),
+			"meta":   buildMetaNamespace(bc),
+			"refresh": buildRefreshFunc(bc),
 		},
 	}
 }
@@ -536,4 +538,72 @@ func toMapSlice(records []any) []map[string]any {
 		if m, ok := r.(map[string]any); ok { maps = append(maps, m) }
 	}
 	return maps
+}
+
+func buildMetaNamespace(bc *Context) map[string]any {
+	return map[string]any{
+		"models": func() (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.Models()
+		},
+		"model": func(name string) (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.Model(name)
+		},
+		"fields": func(modelName string) (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.Fields(modelName)
+		},
+		"fieldTypes": func() (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.FieldTypes()
+		},
+		"views": func() (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.Views()
+		},
+		"view": func(name string) (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.View(name)
+		},
+		"modules": func() (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.Modules()
+		},
+		"module": func(name string) (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.Module(name)
+		},
+		"processes": func() (any, error) {
+			if bc.meta == nil {
+				return nil, fmt.Errorf("meta provider not configured")
+			}
+			return bc.meta.Processes()
+		},
+	}
+}
+
+func buildRefreshFunc(bc *Context) func(modelName string) (any, error) {
+	return func(modelName string) (any, error) {
+		if bc.refresher == nil {
+			return nil, fmt.Errorf("model refresher not configured")
+		}
+		return nil, bc.refresher.Refresh(modelName)
+	}
 }

@@ -142,3 +142,19 @@ type ExecutionLog interface {
 type TxManager interface {
 	RunTx(parent *Context, fn func(tx *Context) error) error
 }
+
+type MetaProvider interface {
+	Models() ([]map[string]any, error)
+	Model(name string) (map[string]any, error)
+	Fields(modelName string) (map[string]any, error)
+	FieldTypes() ([]map[string]any, error)
+	Views() ([]map[string]any, error)
+	View(name string) (map[string]any, error)
+	Modules() ([]map[string]any, error)
+	Module(name string) (map[string]any, error)
+	Processes() ([]map[string]any, error)
+}
+
+type ModelRefresher interface {
+	Refresh(modelName string) error
+}

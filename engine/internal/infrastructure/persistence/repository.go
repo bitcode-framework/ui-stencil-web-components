@@ -53,6 +53,18 @@ type GenericRepository struct {
 	sanitizer         FieldSanitizer
 	eventBus          EventPublisher
 	locale            string
+	maxEagerDepth     int
+}
+
+func (r *GenericRepository) SetMaxEagerDepth(depth int) {
+	r.maxEagerDepth = depth
+}
+
+func (r *GenericRepository) getMaxEagerDepth() int {
+	if r.maxEagerDepth > 0 {
+		return r.maxEagerDepth
+	}
+	return 3
 }
 
 func NewGenericRepository(db *gorm.DB, tableName string) *GenericRepository {
@@ -1709,7 +1721,7 @@ func (r *GenericRepository) LoadRelations(ctx context.Context, query *Query, res
 }
 
 func (r *GenericRepository) loadWithRelationsDepth(ctx context.Context, withs []WithClause, results []map[string]any, depth int) {
-	if len(withs) == 0 || len(results) == 0 || depth > 3 {
+	if len(withs) == 0 || len(results) == 0 || depth > r.getMaxEagerDepth() {
 		return
 	}
 	if r.modelDef == nil {

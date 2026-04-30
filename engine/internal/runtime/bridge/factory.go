@@ -31,6 +31,8 @@ type Factory struct {
 	Executor        *executor.Executor
 	ProcessRegistry ProcessRegistry
 	ExecLogConfig   ExecutionLogConfig
+	Meta            MetaProvider
+	Refresher       ModelRefresher
 }
 
 func (f *Factory) NewContext(moduleName string, session Session, rules SecurityRules) *Context {
@@ -56,5 +58,7 @@ func (f *Factory) NewContext(moduleName string, session Session, rules SecurityR
 		audit:     newAuditBridge(f.AuditRepo, session, moduleName),
 		crypto:    newCryptoBridge(f.Encryptor),
 		execution: newExecutionBridge(f.DB, session),
+		meta:      f.Meta,
+		refresher: f.Refresher,
 	}
 }

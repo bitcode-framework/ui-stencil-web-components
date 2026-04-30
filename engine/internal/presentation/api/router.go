@@ -31,10 +31,15 @@ type Router struct {
 	permissionService *persistence.PermissionService
 	recordRuleService *persistence.RecordRuleService
 	syncSourceFn      func(modelName string)
+	maxEagerDepth     int
 }
 
 func (r *Router) SetSyncSourceFn(fn func(modelName string)) {
 	r.syncSourceFn = fn
+}
+
+func (r *Router) SetMaxEagerDepth(depth int) {
+	r.maxEagerDepth = depth
 }
 
 func NewRouter(app *fiber.App, db *gorm.DB, wfEngine *workflow.Engine) *Router {
@@ -139,6 +144,9 @@ func (r *Router) RegisterAPI(apiDef *parser.APIDefinition) {
 		}
 		if r.eventBus != nil {
 			repo.SetEventBus(r.eventBus)
+		}
+		if r.maxEagerDepth > 0 {
+			repo.SetMaxEagerDepth(r.maxEagerDepth)
 		}
 		crud := NewCRUDHandler(repo, apiDef, r.workflowEngine)
 		crud.modelDef = modelDef

@@ -26,6 +26,8 @@ type Context struct {
 	audit     AuditLogger
 	crypto    Crypto
 	execution ExecutionLog
+	meta      MetaProvider
+	refresher ModelRefresher
 }
 
 func (c *Context) Tx(fn func(tx *Context) error) error {
@@ -65,6 +67,8 @@ func (c *Context) Security() SecurityChecker  { return c.security }
 func (c *Context) Audit() AuditLogger         { return c.audit }
 func (c *Context) Crypto() Crypto             { return c.crypto }
 func (c *Context) Execution() ExecutionLog    { return c.execution }
+func (c *Context) Meta() MetaProvider         { return c.meta }
+func (c *Context) Refresher() ModelRefresher  { return c.refresher }
 
 type ContextDeps struct {
 	TxManager TxManager
@@ -88,6 +92,8 @@ type ContextDeps struct {
 	Audit     AuditLogger
 	Crypto    Crypto
 	Execution ExecutionLog
+	Meta      MetaProvider
+	Refresher ModelRefresher
 }
 
 func NewContext(deps ContextDeps) *Context {
@@ -113,6 +119,8 @@ func NewContext(deps ContextDeps) *Context {
 		audit:     deps.Audit,
 		crypto:    deps.Crypto,
 		execution: deps.Execution,
+		meta:      deps.Meta,
+		refresher: deps.Refresher,
 	}
 }
 

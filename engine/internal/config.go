@@ -321,7 +321,8 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 				MaxExecutions: v.GetInt("runtime.background.max_executions"),
 			},
 		},
-		AppMode: v.GetString("app.mode"),
+		AppMode:       v.GetString("app.mode"),
+		EagerMaxDepth: v.GetInt("eager_loading.max_depth"),
 	}
 
 	return cfg, nil
