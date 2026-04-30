@@ -2,5 +2,16 @@
   "name": "service-layer",
   "description": "Service layer pattern — separates routes from business logic functions",
   "language": "go-json",
-  "files": []
+  "files": [
+    {
+      "template": "api.json.tmpl",
+      "output": "api.json",
+      "once": true
+    },
+    {
+      "template": "service.json.tmpl",
+      "output": "services/{{.Model.Name}}.json",
+      "per_model": true
+    }
+  ]
 }

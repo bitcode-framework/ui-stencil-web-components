@@ -1,0 +1,16 @@
+package ports
+
+// {{pascal .Model.Name}}Repository is the port for {{lower .Model.Name}} persistence.
+type {{pascal .Model.Name}}Repository interface {
+	FindAll() ([]{{pascal .Model.Name}}, error)
+	FindByID(id int) (*{{pascal .Model.Name}}, error)
+	Save(entity *{{pascal .Model.Name}}) error
+	Delete(id int) error
+}
+
+// {{pascal .Model.Name}} is the domain model.
+type {{pascal .Model.Name}} struct {
+{{- range .Model.Columns}}
+	{{pascal .Name}} {{.GoJSONType}} `json:"{{.Name}}"`
+{{- end}}
+}

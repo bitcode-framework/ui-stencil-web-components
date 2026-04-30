@@ -405,16 +405,19 @@ Generate a complete API from a database table:
 
 ```bash
 # From database introspection
-go-json generate crud --from-db --dsn "postgres://localhost/mydb" --table users
+go-json generate crud --table users --dsn "postgres://localhost/mydb"
 
 # From manual field definition
-go-json generate crud --fields "name:string,email:string,role:string"
+go-json generate crud --table users --fields "name:string,email:string,role:string"
 
-# With auth scaffold
-go-json generate auth --output ./auth/
+# With auth middleware on write endpoints
+go-json generate crud --table users --fields "name:string,email:string" --auth
+
+# Auth scaffold (register, login, refresh, me, change-password)
+go-json generate auth --output auth.json
 
 # Full project scaffold
-go-json generate project --name my-api --output ./my-api/
+go-json generate project my-api --auth
 ```
 
 See [Code Generation](docs/code-generation.md) for complete documentation.
@@ -479,12 +482,14 @@ go-json test tests/
 
 | Metric | Value |
 |--------|-------|
-| Total Go source files | ~95 |
-| Total lines of code | ~14,500 |
-| Test count | 579 |
+| Total Go source files | ~143 |
+| Total lines of code | ~18,000 |
+| Test count | 723 |
+| Test files | 50 |
 | Stdlib functions (Layer 2) | 42+ |
 | expr-lang built-ins (Layer 1) | ~68 |
 | I/O modules | 6 |
 | Server framework adapters | 5 |
 | Codegen targets | 3 languages × multiple frameworks |
-| Architecture patterns | 4 |
+| Architecture patterns | 4 (with template files) |
+| CLI commands | 9 |

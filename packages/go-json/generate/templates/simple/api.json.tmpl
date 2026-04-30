@@ -1,0 +1,17 @@
+{
+  "name": "{{.ProjectName}}",
+  "go_json": "1",
+  "server": { "port": 3000 },
+  "import": { "db": "io:sql" },
+  "middleware": ["logger", "recover"],
+  "routes": [
+{{- range $i, $m := .Models}}{{if $i}},{{end}}
+    { "method": "GET", "path": "/{{lower $m.Name}}", "handler": "list{{pascal $m.Name}}" },
+    { "method": "POST", "path": "/{{lower $m.Name}}", "handler": "create{{singular (pascal $m.Name)}}" },
+    { "method": "GET", "path": "/{{lower $m.Name}}/:id", "handler": "get{{singular (pascal $m.Name)}}" },
+    { "method": "PUT", "path": "/{{lower $m.Name}}/:id", "handler": "update{{singular (pascal $m.Name)}}" },
+    { "method": "DELETE", "path": "/{{lower $m.Name}}/:id", "handler": "delete{{singular (pascal $m.Name)}}" }
+{{- end}}
+  ],
+  "functions": {}
+}

@@ -1,6 +1,22 @@
 {
   "name": "ddd",
-  "description": "Domain-Driven Design pattern — cmd/ + internal/domain/ + application/ + infrastructure/",
+  "description": "Domain-Driven Design pattern — domain/ + application/ + infrastructure/ (codegen target: Go)",
   "language": "go",
-  "files": []
+  "files": [
+    {
+      "template": "main.go.tmpl",
+      "output": "cmd/server/main.go",
+      "once": true
+    },
+    {
+      "template": "entity.go.tmpl",
+      "output": "internal/domain/{{.Model.Name}}/entity.go",
+      "per_model": true
+    },
+    {
+      "template": "repository.go.tmpl",
+      "output": "internal/domain/{{.Model.Name}}/repository.go",
+      "per_model": true
+    }
+  ]
 }

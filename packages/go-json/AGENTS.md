@@ -109,8 +109,9 @@ go test ./lang/ -run TestIntegration -v  # Integration tests
 go test ./stdlib/ -v                     # Stdlib tests (including regex, path, JSON)
 go test ./io/ -v                         # I/O + SQL param translation tests
 go test ./runtime/ -v                    # Runtime + extension tests
-go test ./codegen/ -v                    # Code generation tests
-go test ./server/ -v                     # Server config, routing, handler tests
+go test ./codegen/ -v                    # Code generation + server codegen tests
+go test ./server/ -v                     # Server config, routing, handler, auth, JWT, middleware, OpenAPI, template, static tests
+go test ./generate/ -v                   # CRUD generator, auth scaffold, project scaffold, introspection, pattern tests
 ```
 
 ## What's Done (Phase 4.5b)
@@ -150,7 +151,7 @@ go test ./server/ -v                     # Server config, routing, handler tests
 - MongoDB module: real driver (`go.mongodb.org/mongo-driver/v2`), lazy connection, full CRUD + aggregation
 - Redis module: real driver (`github.com/redis/go-redis/v9`), lazy connection, 16 commands, auto JSON serialize
 - CLI: `go-json ast --format` flag (forward-compatible, json only for now)
-- 579 tests total across 9 packages (lang: 177, io: 132, stdlib: 103, runtime: 79, cmd: 45, server: 25, codegen: 18)
+- 723 tests total across 10 packages (lang: 177, io: 132, stdlib: 103, server: 108, runtime: 79, generate: 48, cmd: 45, codegen: 36)
 
 ## What's Done (Phase 4.5d)
 
@@ -181,7 +182,8 @@ go test ./server/ -v                     # Server config, routing, handler tests
 - **Server mode detection**: `IsServerProgram()` checks for routes key
 - **Health endpoint**: built-in `/health` with status, name, uptime (bypasses middleware)
 - **Graceful shutdown**: SIGINT/SIGTERM handling with configurable timeout
-- 579 tests total across 9 packages (includes Phase 4.5a–d cumulative)
+- 723 tests total across 9 packages (includes Phase 4.5a–d cumulative)
+- Pattern templates: 4 built-in patterns (simple, service-layer, ddd, hexagonal) with actual template files
 
 ## What's NOT Done
 

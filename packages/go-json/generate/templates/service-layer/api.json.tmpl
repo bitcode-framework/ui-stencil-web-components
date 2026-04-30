@@ -1,0 +1,19 @@
+{
+  "name": "{{.ProjectName}}",
+  "go_json": "1",
+  "server": { "port": 3000 },
+  "import": {
+    "db": "io:sql"{{range .Models}},
+    "{{lower .Name}}": "./services/{{lower .Name}}.json"{{end}}
+  },
+  "middleware": ["logger", "recover", "cors"],
+  "routes": [
+{{- range $i, $m := .Models}}{{if $i}},{{end}}
+    { "method": "GET", "path": "/{{lower $m.Name}}", "handler": "{{lower $m.Name}}.list" },
+    { "method": "POST", "path": "/{{lower $m.Name}}", "handler": "{{lower $m.Name}}.create" },
+    { "method": "GET", "path": "/{{lower $m.Name}}/:id", "handler": "{{lower $m.Name}}.getById" },
+    { "method": "PUT", "path": "/{{lower $m.Name}}/:id", "handler": "{{lower $m.Name}}.update" },
+    { "method": "DELETE", "path": "/{{lower $m.Name}}/:id", "handler": "{{lower $m.Name}}.delete" }
+{{- end}}
+  ]
+}

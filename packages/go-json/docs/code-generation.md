@@ -163,7 +163,7 @@ Generate a complete CRUD API from a database table or manual field definition.
 ### From Database Introspection
 
 ```bash
-go-json generate crud --from-db --dsn "postgres://user:pass@localhost/mydb" --table users
+go-json generate crud --table users --dsn "postgres://user:pass@localhost/mydb"
 ```
 
 Supported databases:
@@ -174,7 +174,7 @@ Supported databases:
 ### From Manual Fields
 
 ```bash
-go-json generate crud --fields "name:string,email:string,age:int,role:string" --auth
+go-json generate crud --table users --fields "name:string,email:string,age:int,role:string" --auth
 ```
 
 ### What Gets Generated
@@ -328,27 +328,40 @@ internal/
 
 ```bash
 # Use built-in pattern
-go-json generate crud --from-db --dsn "..." --table users --pattern service-layer
+go-json generate crud --table users --dsn "..." --pattern service-layer
 
 # Export pattern for customization
 go-json generate --export-pattern ddd --output ./my-templates/ddd/
 
 # Use custom pattern
-go-json generate crud --pattern ./my-templates/ddd/
+go-json generate crud --table users --fields "name:string" --pattern ./my-templates/ddd/
 ```
 
 ### Custom Templates
 
-Pattern templates use Go `text/template` syntax with variables:
+Pattern templates use Go `text/template` syntax with these variables:
 
-| Variable | Description |
-|----------|-------------|
-| `{{.Model}}` | Model/table name |
-| `{{.Fields}}` | Field definitions |
-| `{{.PrimaryKey}}` | Primary key field |
-| `{{.ForeignKeys}}` | Foreign key relationships |
-| `{{.Driver}}` | Database driver |
-| `{{.Framework}}` | Target framework |
-| `{{.HasAuth}}` | Whether auth is enabled |
+| Variable | Scope | Description |
+|----------|-------|-------------|
+| `{{.ProjectName}}` | All | Project name |
+| `{{.Models}}` | `once` files | List of all table models |
+| `{{.Model}}` | `per_model` files | Current table model |
+| `{{.Model.Name}}` | `per_model` files | Table name |
+| `{{.Model.Columns}}` | `per_model` files | Column definitions |
+| `{{.Model.PrimaryKey}}` | `per_model` files | Primary key columns |
+| `{{.Model.ForeignKeys}}` | `per_model` files | Foreign key relationships |
+
+Available template functions: `lower`, `upper`, `title`, `capitalize`, `singular`, `plural`, `snake`, `camel`, `pascal`.
 
 Each pattern has a `template.json` metadata file defining `once` files (generated once per project) and `per_model` files (generated per table/model).
+
+### Built-in Pattern Templates
+
+All 4 patterns include ready-to-use template files:
+
+| Pattern | Template Files | Description |
+|---------|---------------|-------------|
+| `simple` | `api.json.tmpl` | Single go-json file with all routes |
+| `service-layer` | `api.json.tmpl`, `service.json.tmpl` | Routes + per-model service files |
+| `ddd` | `main.go.tmpl`, `entity.go.tmpl`, `repository.go.tmpl` | Go DDD structure |
+| `hexagonal` | `main.go.tmpl`, `port.go.tmpl`, `service.go.tmpl` | Go hexagonal structure |

@@ -2,5 +2,11 @@
   "name": "simple",
   "description": "Simple flat structure — all routes and handlers in a single api.json",
   "language": "go-json",
-  "files": []
+  "files": [
+    {
+      "template": "api.json.tmpl",
+      "output": "api.json",
+      "once": true
+    }
+  ]
 }

@@ -1,0 +1,20 @@
+package main
+
+import (
+	"log"
+	"net/http"
+)
+
+func main() {
+	mux := http.NewServeMux()
+{{range .Models}}
+	// {{pascal .Name}} endpoints
+	mux.HandleFunc("GET /{{lower .Name}}", list{{pascal .Name}})
+	mux.HandleFunc("POST /{{lower .Name}}", create{{pascal .Name}})
+	mux.HandleFunc("GET /{{lower .Name}}/{id}", get{{pascal .Name}})
+	mux.HandleFunc("PUT /{{lower .Name}}/{id}", update{{pascal .Name}})
+	mux.HandleFunc("DELETE /{{lower .Name}}/{id}", delete{{pascal .Name}})
+{{end}}
+	log.Println("Server starting on :3000")
+	log.Fatal(http.ListenAndServe(":3000", mux))
+}

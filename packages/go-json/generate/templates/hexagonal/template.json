@@ -1,6 +1,22 @@
 {
   "name": "hexagonal",
-  "description": "Hexagonal architecture pattern — cmd/ + internal/core/ + adapters/",
+  "description": "Hexagonal architecture pattern — core/ + adapters/ + ports/ (codegen target: Go)",
   "language": "go",
-  "files": []
+  "files": [
+    {
+      "template": "main.go.tmpl",
+      "output": "cmd/server/main.go",
+      "once": true
+    },
+    {
+      "template": "port.go.tmpl",
+      "output": "internal/core/ports/{{.Model.Name}}.go",
+      "per_model": true
+    },
+    {
+      "template": "service.go.tmpl",
+      "output": "internal/core/services/{{.Model.Name}}_service.go",
+      "per_model": true
+    }
+  ]
 }

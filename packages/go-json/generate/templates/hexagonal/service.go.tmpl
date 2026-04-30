@@ -1,0 +1,23 @@
+package services
+
+import "{{.ProjectName}}/internal/core/ports"
+
+// {{pascal .Model.Name}}Service implements business logic for {{lower .Model.Name}}.
+type {{pascal .Model.Name}}Service struct {
+	repo ports.{{pascal .Model.Name}}Repository
+}
+
+// New{{pascal .Model.Name}}Service creates a new service instance.
+func New{{pascal .Model.Name}}Service(repo ports.{{pascal .Model.Name}}Repository) *{{pascal .Model.Name}}Service {
+	return &{{pascal .Model.Name}}Service{repo: repo}
+}
+
+// FindAll returns all {{lower .Model.Name}} entities.
+func (s *{{pascal .Model.Name}}Service) FindAll() ([]ports.{{pascal .Model.Name}}, error) {
+	return s.repo.FindAll()
+}
+
+// FindByID returns a single {{lower .Model.Name}} by ID.
+func (s *{{pascal .Model.Name}}Service) FindByID(id int) (*ports.{{pascal .Model.Name}}, error) {
+	return s.repo.FindByID(id)
+}

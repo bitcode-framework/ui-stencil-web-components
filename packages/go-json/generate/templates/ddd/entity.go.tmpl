@@ -1,0 +1,8 @@
+package {{lower .Model.Name}}
+
+// {{pascal .Model.Name}} is the domain entity.
+type {{pascal .Model.Name}} struct {
+{{- range .Model.Columns}}
+	{{pascal .Name}} {{.GoJSONType}} `json:"{{.Name}}"`
+{{- end}}
+}

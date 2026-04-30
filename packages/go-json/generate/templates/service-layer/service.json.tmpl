@@ -1,0 +1,37 @@
+{
+  "name": "{{lower .Model.Name}}-service",
+  "go_json": "1",
+  "functions": {
+    "list": {
+      "steps": [
+        {"let": "rows", "call": "db.query", "with": {"query": "SELECT * FROM {{lower .Model.Name}}"}},
+        {"return": {"status": 200, "body": {"data": "rows.rows"}}}
+      ]
+    },
+    "create": {
+      "steps": [
+        {"let": "result", "call": "db.execute", "with": {"query": "INSERT INTO {{lower .Model.Name}} DEFAULT VALUES"}},
+        {"return": {"status": 201, "body": {"id": "result.last_insert_id"}}}
+      ]
+    },
+    "getById": {
+      "steps": [
+        {"let": "rows", "call": "db.query", "with": {"query": "SELECT * FROM {{lower .Model.Name}} WHERE id = ?", "args": "[request.params.id]"}},
+        {"if": "len(rows.rows) == 0", "then": [{"return": {"status": 404, "body": {"error": "'Not found'"}}}]},
+        {"return": {"status": 200, "body": "rows.rows[0]"}}
+      ]
+    },
+    "update": {
+      "steps": [
+        {"let": "result", "call": "db.execute", "with": {"query": "UPDATE {{lower .Model.Name}} SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", "args": "[request.params.id]"}},
+        {"return": {"status": 200, "body": {"affected": "result.rows_affected"}}}
+      ]
+    },
+    "delete": {
+      "steps": [
+        {"let": "result", "call": "db.execute", "with": {"query": "DELETE FROM {{lower .Model.Name}} WHERE id = ?", "args": "[request.params.id]"}},
+        {"return": {"status": 200, "body": {"affected": "result.rows_affected"}}}
+      ]
+    }
+  }
+}

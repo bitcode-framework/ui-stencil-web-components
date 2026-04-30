@@ -68,6 +68,8 @@ Commands:
   test      Run test files
   ast       Export program AST as JSON
   codegen   Generate Go/JS/Python code from program
+  generate  Scaffold CRUD, auth, or project from templates
+  openapi   Generate OpenAPI spec from server program
   migrate   Migrate deprecated syntax
 
 Flags:

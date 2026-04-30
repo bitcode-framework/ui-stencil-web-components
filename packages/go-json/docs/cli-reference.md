@@ -324,46 +324,65 @@ Generate CRUD API for a database table.
 
 | Flag | Description |
 |------|-------------|
-| `--from-db` | Use database introspection |
-| `--dsn <dsn>` | Database connection string |
-| `--table <name>` | Table name to introspect |
+| `--table <name>` | Table name (required) |
+| `--dsn <dsn>` | Database connection string (for introspection) |
 | `--fields <spec>` | Manual field definition (`name:string,age:int`) |
-| `--auth` | Include auth middleware on write endpoints |
-| `--output <dir>` | Output directory |
+| `--auth` | Include JWT auth middleware on write endpoints |
+| `--output <path>` | Output file (default: stdout) |
+| `--dry-run` | Print without writing |
+
+Either `--dsn` or `--fields` is required.
 
 ```bash
-# From database
-go-json generate crud --from-db --dsn "postgres://localhost/mydb" --table users
+# From database introspection
+go-json generate crud --table users --dsn "postgres://localhost/mydb"
 
-# Manual fields
-go-json generate crud --fields "name:string,email:string,role:string" --auth
+# Manual fields with auth
+go-json generate crud --table users --fields "name:string,email:string,role:string" --auth
+
+# Write to file
+go-json generate crud --table users --fields "name:string" --output api.json
 ```
 
 #### `go-json generate auth`
 
 Generate authentication endpoints (register, login, refresh, me, change-password).
 
+| Flag | Description |
+|------|-------------|
+| `--output <path>` | Output file (default: stdout) |
+
 ```bash
-go-json generate auth --output ./auth/
+go-json generate auth
+go-json generate auth --output auth.json
 ```
 
 #### `go-json generate project`
 
 Generate a full project scaffold.
 
+| Flag | Description |
+|------|-------------|
+| `--name <name>` | Project name (default: `my-app`) |
+| `--auth` | Include auth scaffold with JWT |
+| `--output <dir>` | Output directory (default: `./<name>`) |
+
 ```bash
-go-json generate project --name my-api --output ./my-api/
+go-json generate project my-api
+go-json generate project --name my-api --auth --output ./my-api/
 ```
 
 Generated structure:
 ```
 my-api/
 ├── api.json          # Main server program
-├── functions/        # Handler functions
 ├── templates/        # HTML templates
+│   ├── index.html
+│   └── content.html
 ├── public/           # Static files
-├── migrations/       # SQL migrations
-├── tests/            # Test files
+│   └── index.html
+├── migrations/       # SQL migrations (when --auth)
+│   └── 001_users.sql
 ├── .env.example      # Environment variables
 └── README.md         # Project documentation
 ```
