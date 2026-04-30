@@ -42,6 +42,13 @@ func (h *Hydrator) HydrateRecord(ctx context.Context, modelDef *parser.ModelDefi
 			}
 			childCollections[fieldName] = children
 		}
+		if field.Type == parser.FieldMorphMany && field.Model != "" && field.Morph != "" {
+			children, err := h.loadMorphChildren(ctx, field.Model, field.Morph, record, modelDef)
+			if err != nil {
+				continue
+			}
+			childCollections[fieldName] = children
+		}
 	}
 
 	for fieldName, field := range modelDef.Fields {
@@ -163,6 +170,35 @@ func (h *Hydrator) loadChildren(ctx context.Context, childModel string, inverseF
 		}
 	}
 
+	return results, nil
+}
+
+func (h *Hydrator) loadMorphChildren(ctx context.Context, childModel string, morphName string, parentRecord map[string]any, parentModelDef *parser.ModelDefinition) ([]map[string]any, error) {
+	parentID := resolveParentID(parentRecord, parentModelDef)
+	if parentID == "" {
+		return nil, nil
+	}
+
+	parentType := ""
+	if parentModelDef != nil {
+		parentType = parentModelDef.Name
+	}
+
+	tableName := childModel
+	if h.tableNameResolver != nil {
+		tableName = h.tableNameResolver.TableName(childModel)
+	}
+	var results []map[string]any
+	query := h.db.WithContext(ctx).Table(tableName).Where("active = ?", true)
+	query = query.Where(fmt.Sprintf("%s_type = ? AND %s_id = ?", morphName, morphName), parentType, parentID)
+
+	if err := query.Find(&results).Error; err != nil {
+		return nil, err
+	}
+
+	if results == nil {
+		results = []map[string]any{}
+	}
 	return results, nil
 }
 

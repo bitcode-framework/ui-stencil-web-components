@@ -497,3 +497,106 @@ func handleError(c *fiber.Ctx, err error, statusCode int) error {
 	}
 	return c.Status(statusCode).JSON(fiber.Map{"error": err.Error()})
 }
+
+func (h *CRUDHandler) MorphAttach(c *fiber.Ctx) error {
+	id := c.Params("id")
+	relation := c.Params("relation")
+
+	if h.modelDef == nil {
+		return c.Status(400).JSON(fiber.Map{"error": "model definition not available"})
+	}
+	fieldDef, ok := h.modelDef.Fields[relation]
+	if !ok || (fieldDef.Type != parser.FieldMorphToMany && fieldDef.Type != parser.FieldMany2Many) {
+		return c.Status(400).JSON(fiber.Map{"error": "field " + relation + " is not a morph_to_many or many2many relation"})
+	}
+
+	var body struct {
+		IDs []string `json:"ids"`
+	}
+	if err := c.BodyParser(&body); err != nil || len(body.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "ids array required"})
+	}
+
+	if fieldDef.Type == parser.FieldMorphToMany {
+		if err := h.repo.MorphAttach(c.Context(), fieldDef.Morph, fieldDef.Model, id, body.IDs); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+	} else {
+		if err := h.repo.AddMany2Many(c.Context(), id, relation, body.IDs); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+	}
+	return c.JSON(fiber.Map{"status": "ok"})
+}
+
+func (h *CRUDHandler) MorphDetach(c *fiber.Ctx) error {
+	id := c.Params("id")
+	relation := c.Params("relation")
+
+	if h.modelDef == nil {
+		return c.Status(400).JSON(fiber.Map{"error": "model definition not available"})
+	}
+	fieldDef, ok := h.modelDef.Fields[relation]
+	if !ok || (fieldDef.Type != parser.FieldMorphToMany && fieldDef.Type != parser.FieldMany2Many) {
+		return c.Status(400).JSON(fiber.Map{"error": "field " + relation + " is not a morph_to_many or many2many relation"})
+	}
+
+	var body struct {
+		IDs []string `json:"ids"`
+	}
+	if err := c.BodyParser(&body); err != nil || len(body.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "ids array required"})
+	}
+
+	if fieldDef.Type == parser.FieldMorphToMany {
+		if err := h.repo.MorphDetach(c.Context(), fieldDef.Morph, fieldDef.Model, id, body.IDs); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+	} else {
+		if err := h.repo.RemoveMany2Many(c.Context(), id, relation, body.IDs); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+	}
+	return c.JSON(fiber.Map{"status": "ok"})
+}
+
+func (h *CRUDHandler) MorphSync(c *fiber.Ctx) error {
+	id := c.Params("id")
+	relation := c.Params("relation")
+
+	if h.modelDef == nil {
+		return c.Status(400).JSON(fiber.Map{"error": "model definition not available"})
+	}
+	fieldDef, ok := h.modelDef.Fields[relation]
+	if !ok || (fieldDef.Type != parser.FieldMorphToMany && fieldDef.Type != parser.FieldMany2Many) {
+		return c.Status(400).JSON(fiber.Map{"error": "field " + relation + " is not a morph_to_many or many2many relation"})
+	}
+
+	var body struct {
+		IDs []string `json:"ids"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "ids array required"})
+	}
+
+	if fieldDef.Type == parser.FieldMorphToMany {
+		if err := h.repo.MorphSync(c.Context(), fieldDef.Morph, fieldDef.Model, id, body.IDs); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+	} else {
+		existing, _ := h.repo.LoadMany2Many(c.Context(), id, relation)
+		var existingIDs []string
+		for _, rec := range existing {
+			if recID, ok := rec["id"].(string); ok {
+				existingIDs = append(existingIDs, recID)
+			}
+		}
+		if len(existingIDs) > 0 {
+			h.repo.RemoveMany2Many(c.Context(), id, relation, existingIDs)
+		}
+		if len(body.IDs) > 0 {
+			h.repo.AddMany2Many(c.Context(), id, relation, body.IDs)
+		}
+	}
+	return c.JSON(fiber.Map{"status": "ok"})
+}

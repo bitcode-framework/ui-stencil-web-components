@@ -87,6 +87,8 @@ type ModuleDefinition struct {
 
 	App *ModuleAppConfig `json:"app,omitempty"`
 
+	MorphMap map[string]string `json:"morph_map,omitempty"`
+
 	EnvAllow   []string `json:"env_allow,omitempty"`
 	EnvDeny    []string `json:"env_deny,omitempty"`
 	ExecAllow  []string `json:"exec_allow,omitempty"`

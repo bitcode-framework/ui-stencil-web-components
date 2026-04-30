@@ -161,15 +161,25 @@ func (a *AdminPanel) renderFieldsTab(html *strings.Builder, model *parser.ModelD
 }
 
 func (a *AdminPanel) renderConnectionsTab(html *strings.Builder, model *parser.ModelDefinition) {
-	var m2o, o2m, m2m []struct{ name, model, inverse string }
+	var m2o, o2m, m2m, morph []struct{ name, model, inverse, relType string }
 	for name, field := range model.Fields {
 		switch field.Type {
 		case parser.FieldMany2One:
-			m2o = append(m2o, struct{ name, model, inverse string }{name, field.Model, ""})
+			m2o = append(m2o, struct{ name, model, inverse, relType string }{name, field.Model, "", ""})
 		case parser.FieldOne2Many:
-			o2m = append(o2m, struct{ name, model, inverse string }{name, field.Model, field.Inverse})
+			o2m = append(o2m, struct{ name, model, inverse, relType string }{name, field.Model, field.Inverse, ""})
 		case parser.FieldMany2Many:
-			m2m = append(m2m, struct{ name, model, inverse string }{name, field.Model, ""})
+			m2m = append(m2m, struct{ name, model, inverse, relType string }{name, field.Model, "", ""})
+		case parser.FieldMorphTo:
+			morph = append(morph, struct{ name, model, inverse, relType string }{name, "", "", "morph_to"})
+		case parser.FieldMorphOne:
+			morph = append(morph, struct{ name, model, inverse, relType string }{name, field.Model, field.Morph, "morph_one"})
+		case parser.FieldMorphMany:
+			morph = append(morph, struct{ name, model, inverse, relType string }{name, field.Model, field.Morph, "morph_many"})
+		case parser.FieldMorphToMany:
+			morph = append(morph, struct{ name, model, inverse, relType string }{name, field.Model, field.Morph, "morph_to_many"})
+		case parser.FieldMorphByMany:
+			morph = append(morph, struct{ name, model, inverse, relType string }{name, field.Model, field.Morph, "morph_by_many"})
 		}
 	}
 
@@ -207,7 +217,26 @@ func (a *AdminPanel) renderConnectionsTab(html *strings.Builder, model *parser.M
 		}
 		html.WriteString(`</div></div>`)
 	}
-	if len(m2o) == 0 && len(o2m) == 0 && len(m2m) == 0 {
+	if len(morph) > 0 {
+		html.WriteString(`<div class="card"><div class="card-title">Polymorphic</div><div class="conn-list">`)
+		for _, r := range morph {
+			moduleName := model.Module
+			if moduleName == "" {
+				moduleName = "base"
+			}
+			detail := fmt.Sprintf("field: <code>%s</code> type: <code>%s</code>", r.name, r.relType)
+			if r.inverse != "" {
+				detail += fmt.Sprintf(" morph: <code>%s</code>", r.inverse)
+			}
+			target := r.model
+			if target == "" {
+				target = "(any)"
+			}
+			html.WriteString(fmt.Sprintf(`<div class="conn-item"><div class="conn-model">%s</div><div class="conn-detail">%s</div></div>`, target, detail))
+		}
+		html.WriteString(`</div></div>`)
+	}
+	if len(m2o) == 0 && len(o2m) == 0 && len(m2m) == 0 && len(morph) == 0 {
 		html.WriteString(`<div class="card"><div class="empty-state">No relationships defined.</div></div>`)
 	}
 	html.WriteString(`</div>`)

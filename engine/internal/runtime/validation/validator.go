@@ -593,7 +593,8 @@ func (v *Validator) validateRelationItems(ctx context.Context, fieldName string,
 	if v.relationCounter == nil {
 		return
 	}
-	if fieldDef.Type != parser.FieldOne2Many && fieldDef.Type != parser.FieldMany2Many {
+	if fieldDef.Type != parser.FieldOne2Many && fieldDef.Type != parser.FieldMany2Many &&
+		fieldDef.Type != parser.FieldMorphMany && fieldDef.Type != parser.FieldMorphToMany && fieldDef.Type != parser.FieldMorphByMany {
 		return
 	}
 

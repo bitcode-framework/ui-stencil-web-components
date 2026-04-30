@@ -20,6 +20,7 @@ type Router struct {
 	encryptor         *security.FieldEncryptor
 	modelRegistry     interface{ Get(string) (*parser.ModelDefinition, error) }
 	tableNameResolver interface{ TableName(string) string }
+	morphTypeResolver persistence.MorphTypeResolver
 	hookDispatcher    persistence.HookDispatcher
 	validator         persistence.FieldValidator
 	sanitizer         persistence.FieldSanitizer
@@ -76,6 +77,10 @@ func (r *Router) SetRecordRuleService(svc *persistence.RecordRuleService) {
 	r.recordRuleService = svc
 }
 
+func (r *Router) SetMorphTypeResolver(resolver persistence.MorphTypeResolver) {
+	r.morphTypeResolver = resolver
+}
+
 func (r *Router) RegisterAPI(apiDef *parser.APIDefinition) {
 	basePath := apiDef.GetBasePath()
 	endpoints := apiDef.ExpandAutoCRUD()
@@ -112,6 +117,9 @@ func (r *Router) RegisterAPI(apiDef *parser.APIDefinition) {
 				repo.SetTableNameResolver(tnr)
 			}
 		}
+		if r.morphTypeResolver != nil {
+			repo.SetMorphTypeResolver(r.morphTypeResolver)
+		}
 		if r.hookDispatcher != nil {
 			repo.SetHookDispatcher(r.hookDispatcher)
 		}
@@ -133,6 +141,12 @@ func (r *Router) RegisterAPI(apiDef *parser.APIDefinition) {
 
 		if apiDef.Model != "" && crud.modelDef != nil && crud.modelDef.Events != nil && len(crud.modelDef.Events.OnChange) > 0 {
 			group.Post("/onchange", crud.OnChange)
+		}
+
+		if crud.modelDef != nil {
+			group.Post("/:id/:relation/attach", crud.MorphAttach)
+			group.Post("/:id/:relation/detach", crud.MorphDetach)
+			group.Post("/:id/:relation/sync", crud.MorphSync)
 		}
 
 		for _, ep := range endpoints {

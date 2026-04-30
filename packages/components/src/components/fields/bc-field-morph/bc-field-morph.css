@@ -1,0 +1,45 @@
+.bc-morph-wrap {
+  position: relative;
+}
+
+.bc-morph-selectors {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.bc-morph-type-select {
+  flex: 0 0 40%;
+  min-width: 120px;
+}
+
+.bc-morph-record-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.bc-morph-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--bc-surface, #fff);
+  border: 1px solid var(--bc-border, #e2e8f0);
+  border-radius: var(--bc-radius, 6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 2px;
+}
+
+.bc-morph-option {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+}
+
+.bc-morph-option:hover {
+  background: var(--bc-hover, #f1f5f9);
+}

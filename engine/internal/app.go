@@ -68,6 +68,7 @@ type AppConfig struct {
 	ModuleDir       string
 	GlobalModuleDir string
 	AppMode         string
+	MorphMap        map[string]string
 }
 
 type SecurityConfig struct {
@@ -170,6 +171,9 @@ func NewApp(cfg AppConfig) (*App, error) {
 
 	modelReg := domainModel.NewRegistry()
 	modelReg.ProjectAppMode = cfg.AppMode
+	if len(cfg.MorphMap) > 0 {
+		modelReg.SetMorphMap(cfg.MorphMap)
+	}
 
 	var db *gorm.DB
 	var mongoConn *persistence.MongoConnection
@@ -1255,6 +1259,7 @@ func (a *App) handleViewPost(c *fiber.Ctx) error {
 	repo.SetRevisionRepo(revisionRepo)
 	repo.SetModelName(entry.Def.Model)
 	repo.SetTableNameResolver(a.ModelRegistry)
+	repo.SetMorphTypeResolver(a.ModelRegistry)
 	token := c.Cookies("token")
 	if token != "" {
 		if claims, clErr := security.ValidateToken(a.JWTConfig, token); clErr == nil {
@@ -1663,6 +1668,10 @@ func (a *App) installModule(modPath string) error {
 
 	modName := loaded.Definition.Name
 
+	if len(loaded.Definition.MorphMap) > 0 {
+		a.ModelRegistry.SetMorphMap(loaded.Definition.MorphMap)
+	}
+
 	for _, m := range loaded.Models {
 		if m.Inherit != "" {
 			parent, err := a.ModelRegistry.Get(m.Inherit)
@@ -1728,6 +1737,7 @@ func (a *App) installModule(modPath string) error {
 	}
 	router.SetModelRegistry(a.ModelRegistry)
 	router.SetTableNameResolver(a.ModelRegistry)
+	router.SetMorphTypeResolver(a.ModelRegistry)
 	if a.HookDispatcher != nil {
 		router.SetHookDispatcher(a.HookDispatcher)
 	}

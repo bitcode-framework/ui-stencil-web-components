@@ -75,8 +75,30 @@ func (b *SchemaBuilder) buildObjectType(model *parser.ModelDefinition) *graphql.
 	}
 
 	for name, field := range model.Fields {
+		if field.Type == parser.FieldMorphTo {
+			fields[name+"_type"] = &graphql.Field{Type: graphql.String}
+			fields[name+"_id"] = &graphql.Field{Type: graphql.String}
+			if len(field.Models) > 0 {
+				unionTypes := b.buildMorphUnion(model.Name, name, field.Models)
+				if unionTypes != nil {
+					fields["_"+name] = &graphql.Field{Type: unionTypes}
+				}
+			} else {
+				fields["_"+name] = &graphql.Field{Type: graphql.String}
+			}
+			continue
+		}
 		gqlType := fieldTypeToGraphQL(field.Type)
 		if gqlType == nil {
+			if field.Type == parser.FieldMorphMany || field.Type == parser.FieldMorphToMany || field.Type == parser.FieldMorphByMany {
+				if relType, ok := b.types[field.Model]; ok {
+					fields["_"+name] = &graphql.Field{Type: graphql.NewList(relType)}
+				}
+			} else if field.Type == parser.FieldMorphOne {
+				if relType, ok := b.types[field.Model]; ok {
+					fields["_"+name] = &graphql.Field{Type: relType}
+				}
+			}
 			continue
 		}
 		f := &graphql.Field{Type: gqlType}
@@ -89,6 +111,35 @@ func (b *SchemaBuilder) buildObjectType(model *parser.ModelDefinition) *graphql.
 	return graphql.NewObject(graphql.ObjectConfig{
 		Name:   model.Name,
 		Fields: fields,
+	})
+}
+
+func (b *SchemaBuilder) buildMorphUnion(modelName string, fieldName string, models []string) *graphql.Union {
+	var types []*graphql.Object
+	for _, m := range models {
+		if t, ok := b.types[m]; ok {
+			types = append(types, t)
+		}
+	}
+	if len(types) == 0 {
+		return nil
+	}
+	return graphql.NewUnion(graphql.UnionConfig{
+		Name:  modelName + "_" + fieldName + "_union",
+		Types: types,
+		ResolveType: func(p graphql.ResolveTypeParams) *graphql.Object {
+			if m, ok := p.Value.(map[string]any); ok {
+				if typeName, ok := m["_type"].(string); ok {
+					if t, ok := b.types[typeName]; ok {
+						return t
+					}
+				}
+			}
+			if len(types) > 0 {
+				return types[0]
+			}
+			return nil
+		},
 	})
 }
 

@@ -178,6 +178,15 @@ func fieldToSwaggerSchema(field parser.FieldDefinition) map[string]any {
 		return map[string]any{"type": "array", "items": map[string]any{"type": "object"}}
 	case parser.FieldMany2Many:
 		return map[string]any{"type": "array", "items": map[string]any{"type": "string"}}
+	case parser.FieldMorphTo:
+		return map[string]any{"type": "object", "description": "Polymorphic relation (type + id)", "properties": map[string]any{
+			"_type": map[string]any{"type": "string"},
+			"_id":   map[string]any{"type": "string"},
+		}}
+	case parser.FieldMorphOne:
+		return map[string]any{"type": "object", "description": "Polymorphic has-one (" + field.Model + ")"}
+	case parser.FieldMorphMany, parser.FieldMorphToMany, parser.FieldMorphByMany:
+		return map[string]any{"type": "array", "items": map[string]any{"type": "object"}, "description": "Polymorphic relation (" + field.Model + ")"}
 	case parser.FieldFile, parser.FieldImage:
 		return map[string]any{"type": "string", "format": "uri"}
 	case parser.FieldPassword:

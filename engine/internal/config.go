@@ -202,10 +202,13 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 		rateLimitAuthWindow = 1 * time.Minute
 	}
 
+	morphMap := v.GetStringMapString("morph_map")
+
 	cfg := AppConfig{
 		Port:            v.GetString("port"),
 		ModuleDir:       v.GetString("module_dir"),
 		GlobalModuleDir: v.GetString("global_module_dir"),
+		MorphMap:        morphMap,
 		JWTSecret:       v.GetString("jwt_secret"),
 		EncryptionKey:   v.GetString("encryption_key"),
 		DB: persistence.DatabaseConfig{
