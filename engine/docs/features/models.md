@@ -180,6 +180,90 @@ No column created. Resolved by querying `order_lines WHERE order_id = this.id`.
 
 Creates a junction table `model_tags` with both FKs.
 
+### Polymorphic Relations (Morphs)
+
+Five morph types allow a model to relate to multiple different model types through a single relation.
+
+#### morph_to — "belongs to any model"
+
+```json
+"commentable": { "type": "morph_to", "models": ["post", "video"] }
+```
+
+Creates two columns: `commentable_type` (VARCHAR) + `commentable_id` (VARCHAR(36)). `models` is optional — if omitted, any model is allowed.
+
+#### morph_one — "has one polymorphic child"
+
+```json
+"avatar": { "type": "morph_one", "model": "image", "morph": "imageable" }
+```
+
+No column created. Queries child table: `WHERE imageable_type = 'user' AND imageable_id = this.id`.
+
+#### morph_many — "has many polymorphic children"
+
+```json
+"comments": { "type": "morph_many", "model": "comment", "morph": "commentable" }
+```
+
+No column created. Same as morph_one but returns array.
+
+#### morph_to_many — "many-to-many polymorphic (parent side)"
+
+```json
+"tags": { "type": "morph_to_many", "model": "tag", "morph": "taggable" }
+```
+
+Creates junction table `taggables` with columns: `id`, `tag_id`, `taggable_id`, `taggable_type`.
+
+#### morph_by_many — "many-to-many polymorphic (inverse side)"
+
+```json
+"posts": { "type": "morph_by_many", "model": "post", "morph": "taggable" }
+```
+
+No table created — uses the same junction table from morph_to_many.
+
+#### Morph Map (Type Aliasing)
+
+Configure in `bitcode.toml` to use short aliases instead of model names:
+
+```toml
+[morph_map]
+post = "p"
+video = "v"
+```
+
+Or in `module.json`:
+
+```json
+{ "morph_map": { "post": "p", "video": "v" } }
+```
+
+Default: model name used as-is (no config needed).
+
+#### Bridge API
+
+```javascript
+await bitcode.db.morphAttach("post", postId, "tags", [tagId1, tagId2]);
+await bitcode.db.morphDetach("post", postId, "tags", [tagId1]);
+await bitcode.db.morphSync("post", postId, "tags", [tagId1, tagId2, tagId3]);
+```
+
+#### REST API
+
+```
+POST /api/v1/{module}/{model}/:id/:relation/attach  { "ids": ["1", "2"] }
+POST /api/v1/{module}/{model}/:id/:relation/detach   { "ids": ["1"] }
+POST /api/v1/{module}/{model}/:id/:relation/sync     { "ids": ["1", "2", "3"] }
+```
+
+#### Limitations
+
+- No automatic cascade delete (use model events for cleanup)
+- No morph-aware record rules (parent record rules not applied during morph_to loading)
+- MongoDB: morph relations loaded via standalone methods, not eager loading (planned for Phase 6C)
+
 ## Record Rules (Row-Level Security)
 
 ```json

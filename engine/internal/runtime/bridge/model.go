@@ -386,7 +386,7 @@ func (m *modelBridge) MorphAttach(id string, relation string, relatedIDs []strin
 	}
 	fieldDef, ok := modelDef.Fields[relation]
 	if !ok {
-		return NewError(ErrNotFound, "field "+relation+" not found")
+		return NewError(ErrModelNotFound, "field "+relation+" not found")
 	}
 	return repo.MorphAttach(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
 }
@@ -401,7 +401,7 @@ func (m *modelBridge) MorphDetach(id string, relation string, relatedIDs []strin
 	}
 	fieldDef, ok := modelDef.Fields[relation]
 	if !ok {
-		return NewError(ErrNotFound, "field "+relation+" not found")
+		return NewError(ErrModelNotFound, "field "+relation+" not found")
 	}
 	return repo.MorphDetach(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
 }
@@ -416,7 +416,7 @@ func (m *modelBridge) MorphSync(id string, relation string, relatedIDs []string)
 	}
 	fieldDef, ok := modelDef.Fields[relation]
 	if !ok {
-		return NewError(ErrNotFound, "field "+relation+" not found")
+		return NewError(ErrModelNotFound, "field "+relation+" not found")
 	}
 	return repo.MorphSync(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
 }
@@ -631,7 +631,7 @@ func (s *sudoModelBridge) MorphAttach(id string, relation string, relatedIDs []s
 	}
 	fieldDef, ok := modelDef.Fields[relation]
 	if !ok {
-		return NewError(ErrNotFound, "field "+relation+" not found")
+		return NewError(ErrModelNotFound, "field "+relation+" not found")
 	}
 	return repo.MorphAttach(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
 }
@@ -643,7 +643,7 @@ func (s *sudoModelBridge) MorphDetach(id string, relation string, relatedIDs []s
 	}
 	fieldDef, ok := modelDef.Fields[relation]
 	if !ok {
-		return NewError(ErrNotFound, "field "+relation+" not found")
+		return NewError(ErrModelNotFound, "field "+relation+" not found")
 	}
 	return repo.MorphDetach(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
 }
@@ -655,7 +655,7 @@ func (s *sudoModelBridge) MorphSync(id string, relation string, relatedIDs []str
 	}
 	fieldDef, ok := modelDef.Fields[relation]
 	if !ok {
-		return NewError(ErrNotFound, "field "+relation+" not found")
+		return NewError(ErrModelNotFound, "field "+relation+" not found")
 	}
 	return repo.MorphSync(context.Background(), fieldDef.Morph, fieldDef.Model, id, relatedIDs)
 }
