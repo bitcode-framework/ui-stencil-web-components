@@ -210,6 +210,70 @@ func RegisterArraysExt(r *Registry) {
 		copy(result, arr[len(arr)-n:])
 		return result, nil
 	}))
+
+	r.Register(expr.Function("flatMap", func(params ...any) (any, error) {
+		arr, ok := toAnySlice(params[0])
+		if !ok {
+			return nil, fmt.Errorf("flatMap: first argument must be an array")
+		}
+		field, ok := params[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("flatMap: second argument must be a field name (string)")
+		}
+		var result []any
+		for _, item := range arr {
+			m, ok := item.(map[string]any)
+			if !ok {
+				continue
+			}
+			val, exists := m[field]
+			if !exists {
+				continue
+			}
+			if nested, ok := toAnySlice(val); ok {
+				result = append(result, nested...)
+			} else {
+				result = append(result, val)
+			}
+		}
+		if result == nil {
+			result = []any{}
+		}
+		return result, nil
+	}))
+
+	r.Register(expr.Function("partition", func(params ...any) (any, error) {
+		arr, ok := toAnySlice(params[0])
+		if !ok {
+			return nil, fmt.Errorf("partition: first argument must be an array")
+		}
+		field, ok := params[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("partition: second argument must be a field name (string)")
+		}
+		var matches []any
+		var nonMatches []any
+		for _, item := range arr {
+			m, ok := item.(map[string]any)
+			if !ok {
+				nonMatches = append(nonMatches, item)
+				continue
+			}
+			val := m[field]
+			if isTruthy(val) {
+				matches = append(matches, item)
+			} else {
+				nonMatches = append(nonMatches, item)
+			}
+		}
+		if matches == nil {
+			matches = []any{}
+		}
+		if nonMatches == nil {
+			nonMatches = []any{}
+		}
+		return []any{matches, nonMatches}, nil
+	}))
 }
 
 func toAnySlice(v any) ([]any, bool) {
@@ -217,6 +281,24 @@ func toAnySlice(v any) ([]any, bool) {
 		return arr, true
 	}
 	return nil, false
+}
+
+func isTruthy(v any) bool {
+	if v == nil {
+		return false
+	}
+	switch val := v.(type) {
+	case bool:
+		return val
+	case int:
+		return val != 0
+	case float64:
+		return val != 0
+	case string:
+		return val != ""
+	default:
+		return true
+	}
 }
 
 func equalValues(a, b any) bool {

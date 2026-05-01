@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/expr-lang/expr"
 )
@@ -19,10 +20,50 @@ type EnvAccessConfig struct {
 	Deny  []string
 }
 
+// EnvHandle is a mutable handle to the env() function's configuration.
+// Runtime uses this to override resolver/access after registry construction.
+type EnvHandle struct {
+	mu       sync.RWMutex
+	resolver EnvResolver
+	access   *EnvAccessConfig
+}
+
+// SetResolver overrides the env resolver.
+func (h *EnvHandle) SetResolver(resolver EnvResolver) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.resolver = resolver
+}
+
+// SetAccess overrides the env access config.
+func (h *EnvHandle) SetAccess(access *EnvAccessConfig) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.access = access
+}
+
+func (h *EnvHandle) resolve(key string) (string, error) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	if h.access != nil {
+		if err := checkEnvAccess(key, h.access); err != nil {
+			return "", err
+		}
+	}
+	return h.resolver(key), nil
+}
+
 // RegisterEnvFunc registers the env() function with optional resolver and access control.
-func RegisterEnvFunc(r *Registry, resolver EnvResolver, access *EnvAccessConfig) {
+// Returns an EnvHandle that can be used to override resolver/access after registration.
+func RegisterEnvFunc(r *Registry, resolver EnvResolver, access *EnvAccessConfig) *EnvHandle {
 	if resolver == nil {
 		resolver = os.Getenv
+	}
+
+	handle := &EnvHandle{
+		resolver: resolver,
+		access:   access,
 	}
 
 	r.Register(expr.Function("env", func(params ...any) (any, error) {
@@ -34,13 +75,11 @@ func RegisterEnvFunc(r *Registry, resolver EnvResolver, access *EnvAccessConfig)
 			return nil, fmt.Errorf("env: key must be a string")
 		}
 
-		if access != nil {
-			if err := checkEnvAccess(key, access); err != nil {
-				return nil, err
-			}
+		val, err := handle.resolve(key)
+		if err != nil {
+			return nil, err
 		}
 
-		val := resolver(key)
 		if val == "" && len(params) > 1 {
 			if def, ok := params[1].(string); ok {
 				return def, nil
@@ -49,6 +88,8 @@ func RegisterEnvFunc(r *Registry, resolver EnvResolver, access *EnvAccessConfig)
 		}
 		return val, nil
 	}))
+
+	return handle
 }
 
 func checkEnvAccess(key string, config *EnvAccessConfig) error {

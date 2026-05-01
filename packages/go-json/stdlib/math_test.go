@@ -10,17 +10,17 @@ func evalExpr(t *testing.T, expression string, env map[string]any) any {
 	t.Helper()
 	reg := DefaultRegistry()
 	opts := reg.All()
-	opts = append(opts, expr.Env(env))
-	program, err := expr.Compile(expression, opts...)
-	if err != nil {
-		t.Fatalf("compile error for %q: %v", expression, err)
-	}
 	mergedEnv := make(map[string]any)
 	for k, v := range reg.EnvVars() {
 		mergedEnv[k] = v
 	}
 	for k, v := range env {
 		mergedEnv[k] = v
+	}
+	opts = append(opts, expr.Env(mergedEnv))
+	program, err := expr.Compile(expression, opts...)
+	if err != nil {
+		t.Fatalf("compile error for %q: %v", expression, err)
 	}
 	result, err := expr.Run(program, mergedEnv)
 	if err != nil {
@@ -33,17 +33,17 @@ func evalExprError(t *testing.T, expression string, env map[string]any) error {
 	t.Helper()
 	reg := DefaultRegistry()
 	opts := reg.All()
-	opts = append(opts, expr.Env(env))
-	program, err := expr.Compile(expression, opts...)
-	if err != nil {
-		return err
-	}
 	mergedEnv := make(map[string]any)
 	for k, v := range reg.EnvVars() {
 		mergedEnv[k] = v
 	}
 	for k, v := range env {
 		mergedEnv[k] = v
+	}
+	opts = append(opts, expr.Env(mergedEnv))
+	program, err := expr.Compile(expression, opts...)
+	if err != nil {
+		return err
 	}
 	_, err = expr.Run(program, mergedEnv)
 	return err

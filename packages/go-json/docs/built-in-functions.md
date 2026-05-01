@@ -401,7 +401,7 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `escapeHTML(s)` | `string → string` | HTML entity encoding | `escapeHTML("<b>hi</b>")` → `"&lt;b&gt;hi&lt;/b&gt;"` |
 | `unescapeHTML(s)` | `string → string` | HTML entity decoding | `unescapeHTML("&lt;b&gt;")` → `"<b>"` |
 
-### Array (17 functions)
+### Array (19 functions)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -420,8 +420,10 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `fill(n, value)` | `int, any → []any` | Create array of N identical values | `fill(3, 0)` → `[0,0,0]` |
 | `drop(arr, n)` | `[]any, int → []any` | Remove first N elements | `drop([1,2,3,4], 2)` → `[3,4]` |
 | `takeRight(arr, n)` | `[]any, int → []any` | Last N elements | `takeRight([1,2,3,4], 2)` → `[3,4]` |
+| `flatMap(arr, field)` | `[]map, string → []any` | Extract array field from each item, flatten | `flatMap(users, "tags")` → all tags |
+| `partition(arr, field)` | `[]map, string → [[]any, []any]` | Split by truthy/falsy field value | `partition(users, "active")` → `[[active], [inactive]]` |
 
-### Map/Object (11 functions)
+### Map/Object (13 functions)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -436,6 +438,8 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `setIn(obj, path, value)` | `map, string, any → map` | Set nested value by dot-path (immutable) | `setIn(config, "db.host", "localhost")` |
 | `deleteIn(obj, path)` | `map, string → map` | Delete nested key by dot-path (immutable) | `deleteIn(user, "password")` |
 | `defaults(obj, defaults)` | `map, map → map` | Fill missing keys from defaults | `defaults(config, {"port": 8080})` |
+| `mapKeys(obj, transform)` | `map, string → map` | Transform all keys (camelCase, snakeCase, kebabCase, pascalCase, upper, lower) | `mapKeys(obj, "camelCase")` |
+| `mapValues(obj, transform)` | `map, string → map` | Transform all values (upper, lower, trim, string, int, float) | `mapValues(obj, "trim")` |
 
 ### DateTime (15 functions)
 

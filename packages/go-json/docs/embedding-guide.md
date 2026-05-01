@@ -212,9 +212,32 @@ rt := gojson.NewRuntime(
 | `WithIO` | `(modules ...IOModule)` | Enable I/O modules (HTTP, filesystem, etc.) |
 | `WithoutIO` | `()` | Explicitly disable all I/O (this is the default) |
 | `WithIOSecurity` | `(cfg *SecurityConfig)` | Configure I/O security policies |
-| `WithEnvResolver` | `(resolver EnvResolver)` | Custom resolver for `env()` function (default: `os.Getenv`) |
-| `WithEnvAccess` | `(config *EnvAccessConfig)` | Access control for `env()` (allow/deny glob patterns) |
+| `WithEnvHandle` | `(h *stdlib.EnvHandle)` | Provide env handle from registry (enables WithEnvResolver/WithEnvAccess) |
+| `WithEnvResolver` | `(resolver stdlib.EnvResolver)` | Override env() resolver (requires WithEnvHandle) |
+| `WithEnvAccess` | `(config *stdlib.EnvAccessConfig)` | Override env() access control (requires WithEnvHandle) |
 | `WithExtension` | `(name string, ext Extension)` | Register a host extension |
+
+**Customizing `env()` function:**
+
+```go
+// Option A: Override at runtime (recommended for dynamic config)
+reg := stdlib.DefaultRegistry()
+rt := gojson.NewRuntime(
+    gojson.WithStdlib(reg.All()),
+    gojson.WithStdlibEnv(reg.EnvVars()),
+    gojson.WithEnvHandle(reg.EnvHandle()),
+    gojson.WithEnvResolver(viper.GetString),
+    gojson.WithEnvAccess(&stdlib.EnvAccessConfig{
+        Allow: []string{"APP_*", "PUBLIC_*"},
+        Deny:  []string{"*_SECRET", "*_PASSWORD"},
+    }),
+)
+
+// Option B: Configure at registry creation (simpler, static config)
+reg := stdlib.DefaultRegistryWithEnv(viper.GetString, &stdlib.EnvAccessConfig{
+    Deny: []string{"*_SECRET"},
+})
+```
 
 ---
 

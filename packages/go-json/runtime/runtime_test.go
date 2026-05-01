@@ -195,3 +195,86 @@ func toInt(v any) (int, bool) {
 		return 0, false
 	}
 }
+
+func TestRuntime_WithEnvResolver(t *testing.T) {
+	customResolver := func(key string) string {
+		if key == "MY_CUSTOM_VAR" {
+			return "custom_value"
+		}
+		return ""
+	}
+
+	reg := stdlib.DefaultRegistry()
+	rt := NewRuntime(
+		WithStdlib(reg.All()),
+		WithStdlibEnv(reg.EnvVars()),
+		WithEnvHandle(reg.EnvHandle()),
+		WithEnvResolver(customResolver),
+	)
+
+	result, err := rt.ExecuteJSON([]byte(`{
+		"steps": [{"return": "env('MY_CUSTOM_VAR')"}]
+	}`), nil)
+	if err != nil {
+		t.Fatalf("execution error: %v", err)
+	}
+	if result.Value != "custom_value" {
+		t.Errorf("expected 'custom_value', got %v", result.Value)
+	}
+}
+
+func TestRuntime_WithEnvAccess_Deny(t *testing.T) {
+	reg := stdlib.DefaultRegistry()
+	rt := NewRuntime(
+		WithStdlib(reg.All()),
+		WithStdlibEnv(reg.EnvVars()),
+		WithEnvHandle(reg.EnvHandle()),
+		WithEnvAccess(&stdlib.EnvAccessConfig{
+			Deny: []string{"*_SECRET", "*_PASSWORD"},
+		}),
+	)
+
+	_, err := rt.ExecuteJSON([]byte(`{
+		"steps": [{"return": "env('JWT_SECRET')"}]
+	}`), nil)
+	if err == nil {
+		t.Fatal("expected error for denied env key, got nil")
+	}
+}
+
+func TestRuntime_WithEnvAccess_Allow(t *testing.T) {
+	customResolver := func(key string) string {
+		if key == "APP_NAME" {
+			return "myapp"
+		}
+		return ""
+	}
+
+	reg := stdlib.DefaultRegistry()
+	rt := NewRuntime(
+		WithStdlib(reg.All()),
+		WithStdlibEnv(reg.EnvVars()),
+		WithEnvHandle(reg.EnvHandle()),
+		WithEnvResolver(customResolver),
+		WithEnvAccess(&stdlib.EnvAccessConfig{
+			Allow: []string{"APP_*"},
+		}),
+	)
+
+	result, err := rt.ExecuteJSON([]byte(`{
+		"steps": [{"return": "env('APP_NAME')"}]
+	}`), nil)
+	if err != nil {
+		t.Fatalf("execution error: %v", err)
+	}
+	if result.Value != "myapp" {
+		t.Errorf("expected 'myapp', got %v", result.Value)
+	}
+
+	_, err = rt.ExecuteJSON([]byte(`{
+		"steps": [{"return": "env('DB_HOST')"}]
+	}`), nil)
+	if err == nil {
+		t.Fatal("expected error for non-allowed env key, got nil")
+	}
+}

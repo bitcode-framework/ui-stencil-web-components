@@ -80,6 +80,99 @@ func RegisterMapsExt(r *Registry) {
 		}
 		return result, nil
 	}))
+
+	r.Register(expr.Function("mapKeys", func(params ...any) (any, error) {
+		obj, ok := params[0].(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("mapKeys: first argument must be a map")
+		}
+		transform, ok := params[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("mapKeys: second argument must be a transform name (camelCase, snakeCase, kebabCase, pascalCase, upper, lower)")
+		}
+		var fn func(string) string
+		switch transform {
+		case "camelCase":
+			fn = func(s string) string { return toCamelCase(s, false) }
+		case "snakeCase":
+			fn = toSnakeCase
+		case "kebabCase":
+			fn = toKebabCase
+		case "pascalCase":
+			fn = func(s string) string { return toCamelCase(s, true) }
+		case "upper":
+			fn = strings.ToUpper
+		case "lower":
+			fn = strings.ToLower
+		default:
+			return nil, fmt.Errorf("mapKeys: unknown transform '%s' (use camelCase, snakeCase, kebabCase, pascalCase, upper, lower)", transform)
+		}
+		result := make(map[string]any, len(obj))
+		for k, v := range obj {
+			result[fn(k)] = v
+		}
+		return result, nil
+	}))
+
+	r.Register(expr.Function("mapValues", func(params ...any) (any, error) {
+		obj, ok := params[0].(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("mapValues: first argument must be a map")
+		}
+		transform, ok := params[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("mapValues: second argument must be a transform name (upper, lower, trim, string, int, float)")
+		}
+		var fn func(any) any
+		switch transform {
+		case "upper":
+			fn = func(v any) any {
+				if s, ok := v.(string); ok {
+					return strings.ToUpper(s)
+				}
+				return v
+			}
+		case "lower":
+			fn = func(v any) any {
+				if s, ok := v.(string); ok {
+					return strings.ToLower(s)
+				}
+				return v
+			}
+		case "trim":
+			fn = func(v any) any {
+				if s, ok := v.(string); ok {
+					return strings.TrimSpace(s)
+				}
+				return v
+			}
+		case "string":
+			fn = func(v any) any {
+				return fmt.Sprintf("%v", v)
+			}
+		case "int":
+			fn = func(v any) any {
+				if f, ok := toFloat64(v); ok {
+					return int(f)
+				}
+				return v
+			}
+		case "float":
+			fn = func(v any) any {
+				if f, ok := toFloat64(v); ok {
+					return f
+				}
+				return v
+			}
+		default:
+			return nil, fmt.Errorf("mapValues: unknown transform '%s' (use upper, lower, trim, string, int, float)", transform)
+		}
+		result := make(map[string]any, len(obj))
+		for k, v := range obj {
+			result[k] = fn(v)
+		}
+		return result, nil
+	}))
 }
 
 func deepMergeMap(a, b map[string]any) map[string]any {

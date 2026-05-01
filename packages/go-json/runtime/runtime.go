@@ -76,14 +76,25 @@ func WithIOSecurity(cfg *goio.SecurityConfig) Option {
 	return func(r *Runtime) { r.ioSecurity = cfg }
 }
 
-// WithEnvResolver sets a custom resolver for the env() stdlib function.
+// WithEnvResolver overrides the env() function's resolver after registry construction.
+// Requires that the registry was created with RegisterEnvFunc (DefaultRegistry does this).
 func WithEnvResolver(resolver stdlib.EnvResolver) Option {
 	return func(r *Runtime) { r.envResolver = resolver }
 }
 
-// WithEnvAccess sets access control for the env() stdlib function.
+// WithEnvAccess overrides the env() function's access control after registry construction.
+// Requires that the registry was created with RegisterEnvFunc (DefaultRegistry does this).
 func WithEnvAccess(config *stdlib.EnvAccessConfig) Option {
 	return func(r *Runtime) { r.envAccess = config }
+}
+
+// WithEnvHandle provides the EnvHandle from a Registry, enabling WithEnvResolver/WithEnvAccess
+// to wire properly. Called automatically when using the standard pattern:
+//
+//	reg := stdlib.DefaultRegistry()
+//	rt := NewRuntime(WithStdlib(reg.All()), WithStdlibEnv(reg.EnvVars()), WithEnvHandle(reg.EnvHandle()))
+func WithEnvHandle(h *stdlib.EnvHandle) Option {
+	return func(r *Runtime) { r.envHandle = h }
 }
 
 type Runtime struct {
@@ -101,6 +112,7 @@ type Runtime struct {
 	ioSecurity *goio.SecurityConfig
 	ioDisabled bool
 
+	envHandle   *stdlib.EnvHandle
 	envResolver stdlib.EnvResolver
 	envAccess   *stdlib.EnvAccessConfig
 
@@ -125,11 +137,19 @@ func NewRuntime(opts ...Option) *Runtime {
 		opt(r)
 	}
 
+	if r.envHandle != nil {
+		if r.envResolver != nil {
+			r.envHandle.SetResolver(r.envResolver)
+		}
+		if r.envAccess != nil {
+			r.envHandle.SetAccess(r.envAccess)
+		}
+	}
+
 	if len(r.stdlibOpts) > 0 {
 		r.engine.AddOptions(r.stdlibOpts...)
 	}
 
-	// Register I/O module functions in expr-lang engine.
 	if !r.ioDisabled {
 		ioOpts := r.ioRegistry.ExprOptions()
 		if len(ioOpts) > 0 {

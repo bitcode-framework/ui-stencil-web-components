@@ -7,6 +7,7 @@ import (
 type Registry struct {
 	functions []expr.Option
 	envVars   map[string]any
+	envHandle *EnvHandle
 }
 
 func NewRegistry() *Registry {
@@ -34,6 +35,12 @@ func (r *Registry) EnvVars() map[string]any {
 	return r.envVars
 }
 
+// EnvHandle returns the mutable handle for the env() function, allowing
+// runtime to override resolver/access after registry construction.
+func (r *Registry) EnvHandle() *EnvHandle {
+	return r.envHandle
+}
+
 func DefaultRegistry() *Registry {
 	r := NewRegistry()
 	RegisterMath(r)
@@ -53,7 +60,7 @@ func DefaultRegistry() *Registry {
 	RegisterRegex(r)
 	RegisterPath(r)
 	RegisterJSON(r)
-	RegisterEnvFunc(r, nil, nil)
+	r.envHandle = RegisterEnvFunc(r, nil, nil)
 	r.RegisterEnv("crypto", CryptoNamespace())
 	r.RegisterEnv("validate", ValidateNamespace())
 	return r
@@ -79,7 +86,7 @@ func DefaultRegistryWithEnv(resolver EnvResolver, access *EnvAccessConfig) *Regi
 	RegisterRegex(r)
 	RegisterPath(r)
 	RegisterJSON(r)
-	RegisterEnvFunc(r, resolver, access)
+	r.envHandle = RegisterEnvFunc(r, resolver, access)
 	r.RegisterEnv("crypto", CryptoNamespace())
 	r.RegisterEnv("validate", ValidateNamespace())
 	return r
