@@ -102,10 +102,10 @@ func RegisterStringsExt(r *Registry) {
 		return slugify(s), nil
 	}))
 
-	r.Register(expr.Function("reverse", func(params ...any) (any, error) {
+	r.Register(expr.Function("strReverse", func(params ...any) (any, error) {
 		s, ok := params[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("reverse: argument must be a string")
+			return nil, fmt.Errorf("strReverse: argument must be a string")
 		}
 		runes := []rune(s)
 		for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
@@ -114,14 +114,14 @@ func RegisterStringsExt(r *Registry) {
 		return string(runes), nil
 	}))
 
-	r.Register(expr.Function("count", func(params ...any) (any, error) {
+	r.Register(expr.Function("strCount", func(params ...any) (any, error) {
 		s, ok := params[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("count: first argument must be a string")
+			return nil, fmt.Errorf("strCount: first argument must be a string")
 		}
 		sub, ok := params[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("count: second argument must be a string")
+			return nil, fmt.Errorf("strCount: second argument must be a string")
 		}
 		return strings.Count(s, sub), nil
 	}))
