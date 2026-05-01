@@ -853,3 +853,166 @@ The `_c` step key provides **semantic comments** that are preserved in the AST (
   ]
 }
 ```
+
+---
+
+## Lambda Expressions
+
+Lambda expressions create anonymous functions using the syntax `fn(params) => body`.
+
+### Syntax
+
+```jsonc
+{"let": "double", "expr": "fn(x) => x * 2"}
+{"let": "add", "expr": "fn(a, b) => a + b"}
+{"let": "greet", "expr": "fn() => 'Hello!'"}
+{"let": "classify", "expr": "fn(age) => age >= 18 ? 'adult' : 'minor'"}
+```
+
+### Calling Lambdas
+
+```jsonc
+{"let": "result", "expr": "double(5)"}           // 10
+{"let": "result", "expr": "add(3, 7)"}           // 10
+```
+
+### Inline Lambdas with Higher-Order Functions
+
+```jsonc
+{"let": "evens", "expr": "filterFn([1,2,3,4], fn(x) => x % 2 == 0)"}
+{"let": "squares", "expr": "mapFn([1,2,3], fn(x) => x * x)"}
+{"let": "total", "expr": "reduceFn([1,2,3,4,5], fn(acc, x) => acc + x, 0)"}
+```
+
+### Scope Capture (Snapshot)
+
+Lambdas capture variables at **definition time**. Subsequent mutations to captured variables are NOT visible to the lambda:
+
+```jsonc
+{"let": "factor", "value": 3},
+{"let": "multiply", "expr": "fn(x) => x * factor"},
+{"set": "factor", "value": 10},
+{"let": "result", "expr": "multiply(5)"}
+// result = 15 (captured factor=3, NOT current 10)
+```
+
+### Known Limitations
+
+| Limitation | Reason | Workaround |
+|-----------|--------|------------|
+| No self-recursion | Snapshot capture — lambda not in own env at definition time | Use named `functions` block for recursion |
+| No outer scope mutation | Lambdas are pure — snapshot env is read-only | Use `reduceFn` to accumulate, or step-level `set` |
+| Runtime-only type checking | Gradual typing — expressions validated at runtime | Use `assert` before lambda calls for validation |
+
+---
+
+## Constants
+
+Declare immutable values accessible throughout the program:
+
+```jsonc
+{
+  "constants": {
+    "MAX_RETRIES": 3,
+    "TAX_RATE": 0.11,
+    "STATUS_ACTIVE": "active"
+  },
+  "steps": [
+    {"let": "total", "expr": "price * (1 + TAX_RATE)"}
+  ]
+}
+```
+
+Attempting to `set` a constant produces a **compile-time error**:
+
+```jsonc
+{"set": "MAX_RETRIES", "value": 5}  // ❌ CONST_REASSIGN error
+```
+
+---
+
+## Enums
+
+Define named value sets:
+
+```jsonc
+{
+  "enums": {
+    "Status": ["draft", "confirmed", "done", "cancelled"],
+    "Priority": {"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
+  }
+}
+```
+
+Access via dot notation:
+
+```jsonc
+{"let": "s", "expr": "Status.draft"}        // "draft"
+{"let": "p", "expr": "Priority.HIGH"}       // 3
+{"if": "order.status == Status.confirmed", "then": [...]}
+```
+
+Array enums map each value to itself (`"draft" → "draft"`). Map enums use the declared key-value pairs.
+
+Attempting to `set` an enum produces a **compile-time error**.
+
+---
+
+## Sleep
+
+Pause execution for a specified duration (milliseconds):
+
+```jsonc
+{"sleep": 1000}                    // literal: 1 second
+{"sleep": "delay * 1000"}          // expression
+```
+
+Constraints:
+- Maximum: 300,000ms (5 minutes)
+- Zero or negative: no-op
+- Respects program timeout (context cancellation)
+
+---
+
+## Retry
+
+Retry a block of steps with configurable backoff:
+
+```jsonc
+{
+  "retry": {
+    "steps": [
+      {"let": "resp", "call": "http.get", "args": ["https://api.example.com/data"]},
+      {"assert": "resp.status == 200"}
+    ],
+    "max": 3,
+    "delay": 1000,
+    "backoff": "exponential"
+  }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `steps` | array | required | Steps to retry on error |
+| `max` | int | 3 | Maximum attempts |
+| `delay` | int | 1000 | Base delay in ms |
+| `backoff` | string | "fixed" | `"fixed"`, `"linear"`, `"exponential"` |
+
+Backoff calculation:
+- **fixed**: `delay` ms every time
+- **linear**: `delay × attempt` ms
+- **exponential**: `delay × 2^(attempt-1)` ms
+
+---
+
+## Assert
+
+Validate a condition at runtime:
+
+```jsonc
+{"assert": "len(items) > 0", "message": "'Items cannot be empty'"}
+{"assert": "total >= 0"}
+```
+
+If the condition is false, throws `ASSERTION_FAILED` error with the condition text or custom message.

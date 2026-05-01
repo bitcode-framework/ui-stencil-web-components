@@ -14,7 +14,15 @@ go-json is a general-purpose programming language where programs are valid JSON 
 | | Loops (`for`-each, `for`-range, `while`) with `break`/`continue` | Done |
 | | Functions with typed params, defaults, returns | Done |
 | | Recursion with configurable depth limits | Done |
+| | Lambda expressions (`fn(params) => body`) with scope capture | Done |
+| | Higher-order functions (`mapFn`, `filterFn`, `reduceFn`, `sortFn`, `applyEach`) | Done |
+| | Dynamic function dispatch (call_ref from variable) | Done |
 | | Error handling (`try`/`catch`/`finally`, `error`) | Done |
+| | `sleep` step (literal/expression, context-aware) | Done |
+| | `retry` step (max/delay/backoff: fixed/linear/exponential) | Done |
+| | `assert` step (condition + optional message) | Done |
+| | Constants block (immutable, compile-time protection) | Done |
+| | Enum system (array + map enums, dot access) | Done |
 | | JSONC support (comments, trailing commas) | Done |
 | | Semantic comments (`_c`) | Done |
 | **Expression Engine** | [expr-lang/expr](https://github.com/expr-lang/expr) integration (~68 built-in functions) | Done |
@@ -478,15 +486,33 @@ go-json test tests/
 
 ---
 
+## Known Limitations
+
+These are intentional design decisions with documented rationale and workarounds.
+
+| Limitation | Reason | Workaround |
+|-----------|--------|------------|
+| Lambda cannot self-recurse | Snapshot capture — lambda not in own env at definition time | Use named `functions` for recursion |
+| Lambda cannot mutate outer scope | Lambdas are pure (snapshot env is read-only) | Use `reduceFn` to accumulate, or step-level `set` |
+| Lambda type checking is runtime-only | Gradual typing — expressions validated at runtime | Use `assert` before lambda calls |
+| Test runner `before`/`after` not executed | Requires API change to inject steps into wrapper | Include setup in tested program |
+| Test runner per-case `timeout` not enforced | `Runtime.Execute()` doesn't support per-call options | Use program-level `limits.timeout` |
+
+See [Language Reference](docs/language-reference.md#known-limitations) for detailed examples and alternatives.
+
+---
+
 ## Project Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Go source files | ~143 |
-| Total lines of code | ~18,000 |
-| Test count | 723 |
-| Test files | 50 |
-| Stdlib functions (Layer 2) | 42+ |
+| Total Go source files | ~150 |
+| Total lines of code | ~20,000 |
+| Test count | 925 |
+| Test files | 55 |
+| Step types | 19 |
+| Stdlib functions (Layer 2) | 120+ |
+| Higher-order functions | 5 (mapFn, filterFn, reduceFn, applyEach, sortFn) |
 | expr-lang built-ins (Layer 1) | ~68 |
 | I/O modules | 6 |
 | Server framework adapters | 5 |
