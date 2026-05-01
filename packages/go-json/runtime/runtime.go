@@ -10,6 +10,7 @@ import (
 
 	goio "github.com/bitcode-framework/go-json/io"
 	"github.com/bitcode-framework/go-json/lang"
+	"github.com/bitcode-framework/go-json/stdlib"
 	"github.com/expr-lang/expr"
 )
 
@@ -75,6 +76,16 @@ func WithIOSecurity(cfg *goio.SecurityConfig) Option {
 	return func(r *Runtime) { r.ioSecurity = cfg }
 }
 
+// WithEnvResolver sets a custom resolver for the env() stdlib function.
+func WithEnvResolver(resolver stdlib.EnvResolver) Option {
+	return func(r *Runtime) { r.envResolver = resolver }
+}
+
+// WithEnvAccess sets access control for the env() stdlib function.
+func WithEnvAccess(config *stdlib.EnvAccessConfig) Option {
+	return func(r *Runtime) { r.envAccess = config }
+}
+
 type Runtime struct {
 	engine       *lang.ExprLangEngine
 	limits       Limits
@@ -89,6 +100,9 @@ type Runtime struct {
 	ioRegistry *goio.IORegistry
 	ioSecurity *goio.SecurityConfig
 	ioDisabled bool
+
+	envResolver stdlib.EnvResolver
+	envAccess   *stdlib.EnvAccessConfig
 
 	extensions *extensionRegistry
 
