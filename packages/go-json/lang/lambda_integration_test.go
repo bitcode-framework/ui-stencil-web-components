@@ -304,3 +304,111 @@ func TestLambda_HigherOrder_FilterThenMap(t *testing.T) {
 		t.Fatalf("expected [4, 8, 12], got %v", arr)
 	}
 }
+
+func TestLambda_HigherOrder_RejectFn(t *testing.T) {
+	result := compileAndRunWithStdlib(t, `{
+		"steps": [
+			{"let": "odds", "expr": "rejectFn([1, 2, 3, 4, 5, 6], fn(x) => x % 2 == 0)"},
+			{"return": "odds"}
+		]
+	}`, nil)
+	arr, ok := result.Value.([]any)
+	if !ok {
+		t.Fatalf("expected []any, got %T", result.Value)
+	}
+	if len(arr) != 3 || !numEq(arr[0], 1) || !numEq(arr[1], 3) || !numEq(arr[2], 5) {
+		t.Fatalf("expected [1, 3, 5], got %v", arr)
+	}
+}
+
+func TestLambda_HigherOrder_TakeWhileFn(t *testing.T) {
+	result := compileAndRunWithStdlib(t, `{
+		"steps": [
+			{"let": "result", "expr": "takeWhileFn([1, 2, 3, 5, 1], fn(x) => x < 4)"},
+			{"return": "result"}
+		]
+	}`, nil)
+	arr, ok := result.Value.([]any)
+	if !ok {
+		t.Fatalf("expected []any, got %T", result.Value)
+	}
+	if len(arr) != 3 || !numEq(arr[0], 1) || !numEq(arr[1], 2) || !numEq(arr[2], 3) {
+		t.Fatalf("expected [1, 2, 3], got %v", arr)
+	}
+}
+
+func TestLambda_HigherOrder_DropWhileFn(t *testing.T) {
+	result := compileAndRunWithStdlib(t, `{
+		"steps": [
+			{"let": "result", "expr": "dropWhileFn([1, 2, 3, 5, 1], fn(x) => x < 4)"},
+			{"return": "result"}
+		]
+	}`, nil)
+	arr, ok := result.Value.([]any)
+	if !ok {
+		t.Fatalf("expected []any, got %T", result.Value)
+	}
+	if len(arr) != 2 || !numEq(arr[0], 5) || !numEq(arr[1], 1) {
+		t.Fatalf("expected [5, 1], got %v", arr)
+	}
+}
+
+func TestLambda_HigherOrder_FindFn(t *testing.T) {
+	result := compileAndRunWithStdlib(t, `{
+		"steps": [
+			{"let": "found", "expr": "findFn([1, 2, 3, 4, 5], fn(x) => x > 3)"},
+			{"return": "found"}
+		]
+	}`, nil)
+	if !numEq(result.Value, 4) {
+		t.Fatalf("expected 4, got %v", result.Value)
+	}
+}
+
+func TestLambda_HigherOrder_EveryFn(t *testing.T) {
+	result := compileAndRunWithStdlib(t, `{
+		"steps": [
+			{"let": "allPositive", "expr": "everyFn([1, 2, 3], fn(x) => x > 0)"},
+			{"return": "allPositive"}
+		]
+	}`, nil)
+	if result.Value != true {
+		t.Fatalf("expected true, got %v", result.Value)
+	}
+}
+
+func TestLambda_HigherOrder_SomeFn(t *testing.T) {
+	result := compileAndRunWithStdlib(t, `{
+		"steps": [
+			{"let": "hasNeg", "expr": "someFn([1, -2, 3], fn(x) => x < 0)"},
+			{"return": "hasNeg"}
+		]
+	}`, nil)
+	if result.Value != true {
+		t.Fatalf("expected true, got %v", result.Value)
+	}
+}
+
+func TestLambda_HigherOrder_PartitionFn(t *testing.T) {
+	result := compileAndRunWithStdlib(t, `{
+		"steps": [
+			{"let": "parts", "expr": "partitionFn([1, 2, 3, 4, 5, 6], fn(x) => x % 2 == 0)"},
+			{"return": "parts"}
+		]
+	}`, nil)
+	arr, ok := result.Value.([]any)
+	if !ok {
+		t.Fatalf("expected []any, got %T", result.Value)
+	}
+	if len(arr) != 2 {
+		t.Fatalf("expected 2 partitions, got %d", len(arr))
+	}
+	evens := arr[0].([]any)
+	odds := arr[1].([]any)
+	if len(evens) != 3 {
+		t.Fatalf("expected 3 evens, got %v", evens)
+	}
+	if len(odds) != 3 {
+		t.Fatalf("expected 3 odds, got %v", odds)
+	}
+}
