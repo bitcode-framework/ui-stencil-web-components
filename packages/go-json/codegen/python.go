@@ -175,6 +175,31 @@ func (g *PythonGenerator) generateStep(b *strings.Builder, node lang.Node, level
 			g.generateSteps(b, steps, level)
 		}
 
+	case *lang.SleepNode:
+		switch v := n.Duration.(type) {
+		case int:
+			b.WriteString(fmt.Sprintf("%sawait asyncio.sleep(%g)\n", pyIndent(level), float64(v)/1000.0))
+		case string:
+			b.WriteString(fmt.Sprintf("%sawait asyncio.sleep((%s) / 1000)\n", pyIndent(level), v))
+		}
+
+	case *lang.RetryNode:
+		b.WriteString(fmt.Sprintf("%sfor _attempt in range(1, %d + 1):\n", pyIndent(level), n.Max))
+		b.WriteString(fmt.Sprintf("%stry:\n", pyIndent(level+1)))
+		g.generateSteps(b, n.Steps, level+2)
+		b.WriteString(fmt.Sprintf("%sbreak\n", pyIndent(level+2)))
+		b.WriteString(fmt.Sprintf("%sexcept Exception as _e:\n", pyIndent(level+1)))
+		b.WriteString(fmt.Sprintf("%sif _attempt >= %d:\n", pyIndent(level+2), n.Max))
+		b.WriteString(fmt.Sprintf("%sraise\n", pyIndent(level+3)))
+		b.WriteString(fmt.Sprintf("%sawait asyncio.sleep(%g)\n", pyIndent(level+2), float64(n.Delay)/1000.0))
+
+	case *lang.AssertNode:
+		if n.Message != "" {
+			b.WriteString(fmt.Sprintf("%sassert %s, %s\n", pyIndent(level), n.Condition, n.Message))
+		} else {
+			b.WriteString(fmt.Sprintf("%sassert %s\n", pyIndent(level), n.Condition))
+		}
+
 	case *lang.BreakNode:
 		b.WriteString(fmt.Sprintf("%sbreak\n", pyIndent(level)))
 

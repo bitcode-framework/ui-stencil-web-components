@@ -127,6 +127,30 @@ func (vm *VM) Execute(input map[string]any) (*ExecutionResult, error) {
 		"step_count": 0,
 	}, "map")
 
+	// Inject constants into scope.
+	if vm.program.AST.Constants != nil {
+		for name, value := range vm.program.AST.Constants {
+			vm.scope.Declare(name, value, "const")
+		}
+	}
+
+	// Inject enums into scope.
+	if vm.program.AST.Enums != nil {
+		for name, def := range vm.program.AST.Enums {
+			switch v := def.(type) {
+			case []any:
+				enumMap := make(map[string]any, len(v))
+				for _, item := range v {
+					s := fmt.Sprintf("%v", item)
+					enumMap[s] = s
+				}
+				vm.scope.Declare(name, enumMap, "enum")
+			case map[string]any:
+				vm.scope.Declare(name, v, "enum")
+			}
+		}
+	}
+
 	// Register functions in scope for expression-level calls.
 	for name, fn := range vm.program.Functions {
 		wrapped := vm.wrapFunction(fn)
@@ -309,6 +333,12 @@ func (vm *VM) executeStep(node Node) (any, error) {
 		return nil, vm.executeLog(n)
 	case *ParallelNode:
 		return vm.executeParallel(n)
+	case *SleepNode:
+		return nil, vm.executeSleep(n)
+	case *RetryNode:
+		return vm.executeRetry(n)
+	case *AssertNode:
+		return nil, vm.executeAssert(n)
 	case *BreakNode:
 		return breakSignal{}, nil
 	case *ContinueNode:
@@ -901,16 +931,37 @@ func (vm *VM) callFunctionUnified(name string, namedWith map[string]string, posi
 
 	fn, ok := vm.program.Functions[name]
 	if !ok {
-		funcNames := make([]string, 0, len(vm.program.Functions))
-		for n := range vm.program.Functions {
-			funcNames = append(funcNames, n)
+		// Dynamic call_ref: check if name is a variable containing a function name or callable.
+		if val, _, found := vm.scope.Get(name); found {
+			switch v := val.(type) {
+			case string:
+				fn, ok = vm.program.Functions[v]
+				if !ok {
+					if scopeVal, _, scopeFound := vm.scope.Get(v); scopeFound {
+						if callable, isFunc := scopeVal.(func(...any) (any, error)); isFunc {
+							return vm.callNativeFunc(callable, positionalWith, literalArgs, stepIndex)
+						}
+					}
+					return nil, RuntimeError("FUNC_NOT_FOUND",
+						fmt.Sprintf("function '%s' (resolved from variable '%s') not defined", v, name), stepIndex)
+				}
+			case func(...any) (any, error):
+				return vm.callNativeFunc(v, positionalWith, literalArgs, stepIndex)
+			}
 		}
-		gjErr := RuntimeError("FUNC_NOT_FOUND",
-			fmt.Sprintf("function '%s' not defined", name), stepIndex)
-		if suggestions := SuggestSimilar(name, funcNames, 3, 3); len(suggestions) > 0 {
-			gjErr.WithSuggestions(suggestions...)
+
+		if !ok {
+			funcNames := make([]string, 0, len(vm.program.Functions))
+			for n := range vm.program.Functions {
+				funcNames = append(funcNames, n)
+			}
+			gjErr := RuntimeError("FUNC_NOT_FOUND",
+				fmt.Sprintf("function '%s' not defined", name), stepIndex)
+			if suggestions := SuggestSimilar(name, funcNames, 3, 3); len(suggestions) > 0 {
+				gjErr.WithSuggestions(suggestions...)
+			}
+			return nil, gjErr
 		}
-		return nil, gjErr
 	}
 
 	vm.depth++
@@ -1739,6 +1790,18 @@ func (vm *VM) evalExpr(expression string, stepIndex int) (any, error) {
 		}
 	}
 
+	// Lambda preprocessing: detect and compile lambda expressions.
+	processedExpr, lambdaFuncs := PreprocessLambdas(expression, vm.engine, env)
+	if lambdaFuncs != nil {
+		if directFn, isDirect := lambdaFuncs["__direct_lambda"]; isDirect {
+			return directFn, nil
+		}
+		for name, fn := range lambdaFuncs {
+			env[name] = fn
+		}
+		expression = processedExpr
+	}
+
 	result, err := vm.engine.Eval(expression, env)
 	if err != nil {
 		if gjErr, ok := err.(*GoJSONError); ok {
@@ -2095,6 +2158,123 @@ func estimateSize(v any) int {
 	default:
 		return 64
 	}
+}
+
+func (vm *VM) callNativeFunc(fn func(...any) (any, error), positionalWith []string, literalArgs []any, stepIndex int) (any, error) {
+	var callArgs []any
+	if literalArgs != nil {
+		callArgs = literalArgs
+	} else if positionalWith != nil {
+		callArgs = make([]any, len(positionalWith))
+		for i, expr := range positionalWith {
+			val, err := vm.evalExpr(expr, stepIndex)
+			if err != nil {
+				return nil, err
+			}
+			callArgs[i] = val
+		}
+	}
+	return fn(callArgs...)
+}
+
+// --- Sleep / Retry / Assert ---
+
+func (vm *VM) executeSleep(n *SleepNode) error {
+	var ms int
+	switch v := n.Duration.(type) {
+	case int:
+		ms = v
+	case string:
+		val, err := vm.evalExpr(v, n.StepIndex)
+		if err != nil {
+			return err
+		}
+		f, ok := toFloat64Val(val)
+		if !ok {
+			return RuntimeError("TYPE_ERROR", "sleep duration must evaluate to a number", n.StepIndex)
+		}
+		ms = int(f)
+	}
+
+	if ms <= 0 {
+		return nil
+	}
+	if ms > 300000 {
+		return LimitError("SLEEP_LIMIT", "sleep duration cannot exceed 300000ms (5 minutes)", n.StepIndex)
+	}
+
+	select {
+	case <-time.After(time.Duration(ms) * time.Millisecond):
+		return nil
+	case <-vm.ctx.Done():
+		return LimitError("TIMEOUT", "execution cancelled during sleep", n.StepIndex)
+	}
+}
+
+func (vm *VM) executeRetry(n *RetryNode) (any, error) {
+	var lastErr error
+	for attempt := 1; attempt <= n.Max; attempt++ {
+		childScope := vm.scope.NewChild(fmt.Sprintf("retry-attempt-%d", attempt))
+		result, err := vm.withScope(childScope, func() (any, error) {
+			return vm.executeSteps(n.Steps)
+		})
+		if err == nil {
+			return result, nil
+		}
+		lastErr = err
+
+		if attempt < n.Max {
+			delay := calculateBackoff(n.Delay, attempt, n.Backoff)
+			select {
+			case <-time.After(time.Duration(delay) * time.Millisecond):
+			case <-vm.ctx.Done():
+				return nil, LimitError("TIMEOUT", "execution cancelled during retry delay", n.StepIndex)
+			}
+		}
+	}
+	return nil, RuntimeError("RETRY_EXHAUSTED",
+		fmt.Sprintf("retry exhausted after %d attempts: %v", n.Max, lastErr), n.StepIndex)
+}
+
+func calculateBackoff(baseDelay, attempt int, strategy string) int {
+	switch strategy {
+	case "linear":
+		return baseDelay * attempt
+	case "exponential":
+		return baseDelay * (1 << (attempt - 1))
+	default:
+		return baseDelay
+	}
+}
+
+func (vm *VM) executeAssert(n *AssertNode) error {
+	result, err := vm.evalExpr(n.Condition, n.StepIndex)
+	if err != nil {
+		return err
+	}
+	if !toBool(result) {
+		msg := fmt.Sprintf("assertion failed: %s", n.Condition)
+		if n.Message != "" {
+			msgVal, err := vm.evalExpr(n.Message, n.StepIndex)
+			if err == nil {
+				msg = fmt.Sprintf("%v", msgVal)
+			}
+		}
+		return RuntimeError("ASSERTION_FAILED", msg, n.StepIndex)
+	}
+	return nil
+}
+
+func toFloat64Val(v any) (float64, bool) {
+	switch n := v.(type) {
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case float64:
+		return n, true
+	}
+	return 0, false
 }
 
 // --- Helpers ---

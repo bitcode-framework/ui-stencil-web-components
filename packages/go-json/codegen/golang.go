@@ -176,6 +176,28 @@ func (g *GoGenerator) generateStep(b *strings.Builder, node lang.Node, level int
 			g.generateSteps(b, steps, level)
 		}
 
+	case *lang.SleepNode:
+		switch v := n.Duration.(type) {
+		case int:
+			b.WriteString(fmt.Sprintf("%stime.Sleep(%d * time.Millisecond)\n", indent(level), v))
+		case string:
+			b.WriteString(fmt.Sprintf("%stime.Sleep(time.Duration(%s) * time.Millisecond)\n", indent(level), v))
+		}
+
+	case *lang.RetryNode:
+		b.WriteString(fmt.Sprintf("%sfor _attempt := 1; _attempt <= %d; _attempt++ {\n", indent(level), n.Max))
+		g.generateSteps(b, n.Steps, level+1)
+		b.WriteString(fmt.Sprintf("%s}\n", indent(level)))
+
+	case *lang.AssertNode:
+		b.WriteString(fmt.Sprintf("%sif !(%s) {\n", indent(level), n.Condition))
+		if n.Message != "" {
+			b.WriteString(fmt.Sprintf("%spanic(fmt.Sprintf(\"assertion failed: %%s\", %s))\n", indent(level+1), n.Message))
+		} else {
+			b.WriteString(fmt.Sprintf("%spanic(\"assertion failed: %s\")\n", indent(level+1), n.Condition))
+		}
+		b.WriteString(fmt.Sprintf("%s}\n", indent(level)))
+
 	case *lang.BreakNode:
 		b.WriteString(fmt.Sprintf("%sbreak\n", indent(level)))
 

@@ -249,6 +249,8 @@ type Program struct {
 	Functions map[string]*FuncDef
 	Steps     []Node
 	Limits    *LimitsDef
+	Constants map[string]any
+	Enums     map[string]any
 
 	// Server mode fields
 	Server     *ServerConfig  `json:"server,omitempty"`
@@ -449,6 +451,37 @@ type LogNode struct {
 
 func (n *LogNode) nodeType() string { return "log" }
 func (n *LogNode) Meta() *NodeMeta  { return &n.NodeMeta }
+
+// SleepNode pauses execution for a specified duration.
+type SleepNode struct {
+	NodeMeta
+	Duration any // int (literal ms) or string (expression)
+}
+
+func (n *SleepNode) nodeType() string { return "sleep" }
+func (n *SleepNode) Meta() *NodeMeta  { return &n.NodeMeta }
+
+// RetryNode retries a block of steps with configurable backoff.
+type RetryNode struct {
+	NodeMeta
+	Steps   []Node
+	Max     int
+	Delay   int
+	Backoff string // "fixed", "linear", "exponential"
+}
+
+func (n *RetryNode) nodeType() string { return "retry" }
+func (n *RetryNode) Meta() *NodeMeta  { return &n.NodeMeta }
+
+// AssertNode validates a condition and throws ASSERTION_FAILED if false.
+type AssertNode struct {
+	NodeMeta
+	Condition string
+	Message   string
+}
+
+func (n *AssertNode) nodeType() string { return "assert" }
+func (n *AssertNode) Meta() *NodeMeta  { return &n.NodeMeta }
 
 // CommentNode is a standalone comment step (only "_c", no other keys).
 // It is preserved in the AST but not executed.

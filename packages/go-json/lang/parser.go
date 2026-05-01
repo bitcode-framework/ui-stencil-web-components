@@ -91,6 +91,16 @@ func parseProgram(raw map[string]any, cleanedJSON []byte) (*Program, error) {
 		prog.Limits = parseLimits(limitsRaw)
 	}
 
+	// Parse constants.
+	if constRaw, ok := raw["constants"].(map[string]any); ok {
+		prog.Constants = constRaw
+	}
+
+	// Parse enums.
+	if enumsRaw, ok := raw["enums"].(map[string]any); ok {
+		prog.Enums = enumsRaw
+	}
+
 	// Parse functions — need ordered params from raw JSON.
 	if funcsRaw, ok := raw["functions"].(map[string]any); ok {
 		for name, fRaw := range funcsRaw {
@@ -592,6 +602,15 @@ func parseStep(m map[string]any, index int) (Node, error) {
 	if _, ok := m["parallel"]; ok {
 		return parseParallelNode(m, index)
 	}
+	if _, ok := m["sleep"]; ok {
+		return parseSleepNode(m, index)
+	}
+	if _, ok := m["retry"]; ok {
+		return parseRetryNode(m, index)
+	}
+	if _, ok := m["assert"]; ok {
+		return parseAssertNode(m, index)
+	}
 	if _, ok := m["break"]; ok {
 		return parseBreakNode(m, index)
 	}
@@ -1053,6 +1072,79 @@ func parseContinueNode(m map[string]any, index int) (*ContinueNode, error) {
 	node := &ContinueNode{}
 	node.StepIndex = index
 	parseComment(&node.NodeMeta, m)
+	return node, nil
+}
+
+func parseSleepNode(m map[string]any, index int) (*SleepNode, error) {
+	node := &SleepNode{}
+	node.StepIndex = index
+	parseComment(&node.NodeMeta, m)
+
+	switch v := m["sleep"].(type) {
+	case float64:
+		node.Duration = int(v)
+	case string:
+		node.Duration = v
+	default:
+		return nil, CompileError("INVALID_SLEEP", "sleep value must be a number or expression string", index)
+	}
+	return node, nil
+}
+
+func parseRetryNode(m map[string]any, index int) (*RetryNode, error) {
+	node := &RetryNode{Max: 3, Delay: 1000, Backoff: "fixed"}
+	node.StepIndex = index
+	parseComment(&node.NodeMeta, m)
+
+	retryRaw, ok := m["retry"].(map[string]any)
+	if !ok {
+		return nil, CompileError("INVALID_RETRY", "retry value must be an object with 'steps'", index)
+	}
+
+	stepsRaw, ok := retryRaw["steps"].([]any)
+	if !ok || len(stepsRaw) == 0 {
+		return nil, CompileError("INVALID_RETRY", "retry requires non-empty 'steps' array", index)
+	}
+	steps, err := parseSteps(stepsRaw)
+	if err != nil {
+		return nil, err
+	}
+	node.Steps = steps
+
+	if maxF, ok := retryRaw["max"].(float64); ok {
+		node.Max = int(maxF)
+	}
+	if delayF, ok := retryRaw["delay"].(float64); ok {
+		node.Delay = int(delayF)
+	}
+	if backoff, ok := retryRaw["backoff"].(string); ok {
+		switch backoff {
+		case "fixed", "linear", "exponential":
+			node.Backoff = backoff
+		default:
+			return nil, CompileError("INVALID_RETRY",
+				fmt.Sprintf("invalid backoff strategy '%s' (must be fixed, linear, or exponential)", backoff), index)
+		}
+	}
+
+	return node, nil
+}
+
+func parseAssertNode(m map[string]any, index int) (*AssertNode, error) {
+	node := &AssertNode{}
+	node.StepIndex = index
+	parseComment(&node.NodeMeta, m)
+
+	cond, ok := m["assert"].(string)
+	if !ok {
+		return nil, CompileError("INVALID_ASSERT", "assert condition must be a string expression", index)
+	}
+	node.Condition = cond
+
+	if msg, ok := m["message"].(string); ok {
+		node.Message = msg
+	}
+
 	return node, nil
 }
 

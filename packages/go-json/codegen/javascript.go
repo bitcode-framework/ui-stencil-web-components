@@ -149,6 +149,34 @@ func (g *JSGenerator) generateStep(b *strings.Builder, node lang.Node, level int
 		}
 		b.WriteString(fmt.Sprintf("%s]);\n", indent(level)))
 
+	case *lang.SleepNode:
+		switch v := n.Duration.(type) {
+		case int:
+			b.WriteString(fmt.Sprintf("%sawait new Promise(r => setTimeout(r, %d));\n", indent(level), v))
+		case string:
+			b.WriteString(fmt.Sprintf("%sawait new Promise(r => setTimeout(r, %s));\n", indent(level), v))
+		}
+
+	case *lang.RetryNode:
+		b.WriteString(fmt.Sprintf("%sfor (let _attempt = 1; _attempt <= %d; _attempt++) {\n", indent(level), n.Max))
+		b.WriteString(fmt.Sprintf("%stry {\n", indent(level+1)))
+		g.generateSteps(b, n.Steps, level+2)
+		b.WriteString(fmt.Sprintf("%sbreak;\n", indent(level+2)))
+		b.WriteString(fmt.Sprintf("%s} catch (_e) {\n", indent(level+1)))
+		b.WriteString(fmt.Sprintf("%sif (_attempt >= %d) throw _e;\n", indent(level+2), n.Max))
+		b.WriteString(fmt.Sprintf("%sawait new Promise(r => setTimeout(r, %d));\n", indent(level+2), n.Delay))
+		b.WriteString(fmt.Sprintf("%s}\n", indent(level+1)))
+		b.WriteString(fmt.Sprintf("%s}\n", indent(level)))
+
+	case *lang.AssertNode:
+		b.WriteString(fmt.Sprintf("%sif (!(%s)) {\n", indent(level), n.Condition))
+		if n.Message != "" {
+			b.WriteString(fmt.Sprintf("%sthrow new Error(%s);\n", indent(level+1), n.Message))
+		} else {
+			b.WriteString(fmt.Sprintf("%sthrow new Error('assertion failed: %s');\n", indent(level+1), n.Condition))
+		}
+		b.WriteString(fmt.Sprintf("%s}\n", indent(level)))
+
 	case *lang.BreakNode:
 		b.WriteString(fmt.Sprintf("%sbreak;\n", indent(level)))
 

@@ -11,6 +11,7 @@ Standalone JSON/JSONC programming language engine. Embeddable in Go applications
 **Phase 4.5a design:** `docs/plans/2026-07-14-runtime-engine-phase-4.5a-go-json-core-language.md`
 **Phase 4.5b design:** `docs/plans/2026-07-14-runtime-engine-phase-4.5b-go-json-modularity.md`
 **Phase 4.5b plan:** `docs/plans/2026-07-14-runtime-engine-phase-4.5b-go-json-modularity-plan.md`
+**Phase 4.5g design:** `docs/plans/2026-07-15-phase-4.5g-lambda-language-core.md`
 **Decisions:** `docs/plans/2026-04-28-go-json-brainstorming-design.md`
 
 ## Package Structure
@@ -42,9 +43,9 @@ packages/go-json/
 9. **Implicit scope variables** — `session.*` (user_id, locale, tenant_id, groups) and `execution.*` (id, program, started_at, depth, step_count) injected automatically into every execution.
 10. **Trace enrichment** — `TraceEntry` captures Var/Value for let/set, Condition/Result for if/while/switch, per step type via `enrichTraceEntry()`.
 
-## Step Types (16)
+## Step Types (19)
 
-`let`, `set`, `if`/`elif`/`else`, `switch`, `for` (each + range), `while`, `break`, `continue`, `return`, `call`, `try`/`catch`/`finally`, `error`, `log`, `parallel`, `_c` (comment)
+`let`, `set`, `if`/`elif`/`else`, `switch`, `for` (each + range), `while`, `break`, `continue`, `return`, `call`, `try`/`catch`/`finally`, `error`, `log`, `parallel`, `sleep`, `retry`, `assert`, `_c` (comment)
 
 ## Struct System (Phase 4.5b)
 
@@ -99,7 +100,7 @@ packages/go-json/
 
 ```bash
 cd packages/go-json
-go test ./... -v          # All tests (579)
+go test ./... -v          # All tests (925)
 go test ./lang/ -v        # Language engine tests
 go test ./lang/ -run TestStruct -v       # Struct tests
 go test ./lang/ -run TestMethod -v       # Method tests
@@ -184,6 +185,21 @@ go test ./generate/ -v                   # CRUD generator, auth scaffold, projec
 - **Graceful shutdown**: SIGINT/SIGTERM handling with configurable timeout
 - 723 tests total across 9 packages (includes Phase 4.5a–d cumulative)
 - Pattern templates: 4 built-in patterns (simple, service-layer, ddd, hexagonal) with actual template files
+
+## What's Done (Phase 4.5g)
+
+- **Lambda expressions**: `fn(params) => body` syntax with scope capture (snapshot at definition time)
+- **Lambda preprocessing**: standalone lambda detection, inline lambda extraction, placeholder replacement
+- **Higher-order functions**: `mapFn`, `filterFn`, `reduceFn`, `applyEach`, `sortFn` — accept callable lambdas
+- **Dynamic call_ref**: `call` resolves variable containing function name (string) or callable (lambda)
+- **Sleep step**: `{"sleep": ms}` with literal or expression duration, context cancellation, 5-minute max
+- **Retry step**: `{"retry": {steps, max, delay, backoff}}` with fixed/linear/exponential backoff
+- **Assert step**: `{"assert": "condition", "message": "..."}` — throws ASSERTION_FAILED on false
+- **Constants block**: `"constants": {...}` — immutable values, compile-time reassignment protection
+- **Enum system**: `"enums": {...}` — array enums (value=value) and map enums (key=value), dot access
+- **Enhanced test runner**: `expect_error`, `before`/`after`, `skip`/`only`, `table` (parameterized), per-case timeout
+- **Codegen updates**: sleep/retry/assert generation for Go, JavaScript, Python
+- 925 tests total across 9 packages (includes Phase 4.5a–g cumulative)
 
 ## What's NOT Done
 

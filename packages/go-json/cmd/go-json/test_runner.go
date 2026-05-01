@@ -16,17 +16,29 @@ import (
 )
 
 type testFile struct {
-	Name   string     `json:"name"`
-	Test   bool       `json:"test"`
+	Name   string            `json:"name"`
+	Test   bool              `json:"test"`
 	Import map[string]string `json:"import"`
-	Cases  []testCase `json:"cases"`
+	Cases  []testCase        `json:"cases"`
+	Before []any             `json:"before"`
+	After  []any             `json:"after"`
 }
 
 type testCase struct {
-	Comment string         `json:"_c"`
-	Call    string         `json:"call"`
-	With    map[string]any `json:"with"`
-	Expect  any            `json:"expect"`
+	Comment     string         `json:"_c"`
+	Call        string         `json:"call"`
+	With        map[string]any `json:"with"`
+	Expect      any            `json:"expect"`
+	ExpectError any            `json:"expect_error"`
+	Skip        bool           `json:"skip"`
+	Only        bool           `json:"only"`
+	Timeout     int            `json:"timeout"`
+	Table       []tableEntry   `json:"table"`
+}
+
+type tableEntry struct {
+	With   map[string]any `json:"with"`
+	Expect any            `json:"expect"`
 }
 
 type testResult struct {
@@ -164,43 +176,106 @@ func runTestFile(path, filter string, verbose bool) []testResult {
 	dir := filepath.Dir(path)
 	var results []testResult
 
+	hasOnly := false
 	for _, tc := range tf.Cases {
+		if tc.Only {
+			hasOnly = true
+			break
+		}
+	}
+
+	for _, tc := range tf.Cases {
+		if tc.Skip {
+			results = append(results, testResult{
+				Name: tf.Name, Comment: tc.Comment + " [SKIPPED]", Passed: true,
+			})
+			continue
+		}
+		if hasOnly && !tc.Only {
+			continue
+		}
 		if filter != "" && !strings.Contains(tc.Comment, filter) && !strings.Contains(tc.Call, filter) {
 			continue
 		}
 
-		start := time.Now()
-		result, err := executeTestCase(rt, dir, tf, tc)
-		duration := time.Since(start)
-
-		tr := testResult{
-			Name:     tf.Name,
-			Comment:  tc.Comment,
-			Duration: duration,
-			Expected: tc.Expect,
-			Got:      result,
+		if tc.Table != nil {
+			for i, entry := range tc.Table {
+				tableTc := tc
+				tableTc.With = entry.With
+				tableTc.Expect = entry.Expect
+				tableTc.Table = nil
+				tableComment := fmt.Sprintf("%s [%d]", tc.Comment, i)
+				tr := runSingleCase(rt, dir, tf, tableTc, tableComment, verbose)
+				results = append(results, tr)
+			}
+			continue
 		}
 
-		if err != nil {
-			tr.Error = err.Error()
-			tr.Passed = false
-		} else {
-			tr.Passed = deepEqual(result, tc.Expect)
-		}
-
-		if verbose {
-			fmt.Printf("  [%s] %s\n", tf.Name, tc.Comment)
-			fmt.Printf("    Call: %s\n", tc.Call)
-			withJSON, _ := json.Marshal(tc.With)
-			fmt.Printf("    With: %s\n", string(withJSON))
-			resultJSON, _ := json.Marshal(result)
-			fmt.Printf("    Result: %s\n", string(resultJSON))
-		}
-
+		tr := runSingleCase(rt, dir, tf, tc, tc.Comment, verbose)
 		results = append(results, tr)
 	}
 
 	return results
+}
+
+func runSingleCase(rt *runtime.Runtime, dir string, tf testFile, tc testCase, comment string, verbose bool) testResult {
+	start := time.Now()
+	result, err := executeTestCase(rt, dir, tf, tc)
+	duration := time.Since(start)
+
+	tr := testResult{
+		Name:     tf.Name,
+		Comment:  comment,
+		Duration: duration,
+		Expected: tc.Expect,
+		Got:      result,
+	}
+
+	if tc.ExpectError != nil {
+		if err == nil {
+			tr.Passed = false
+			tr.Error = "expected error but got none"
+		} else {
+			tr.Passed = matchExpectError(err, tc.ExpectError)
+			if !tr.Passed {
+				tr.Error = fmt.Sprintf("error mismatch: got '%s'", err.Error())
+			}
+		}
+	} else if err != nil {
+		tr.Error = err.Error()
+		tr.Passed = false
+	} else {
+		tr.Passed = deepEqual(result, tc.Expect)
+	}
+
+	if verbose {
+		fmt.Printf("  [%s] %s\n", tf.Name, comment)
+		fmt.Printf("    Call: %s\n", tc.Call)
+		withJSON, _ := json.Marshal(tc.With)
+		fmt.Printf("    With: %s\n", string(withJSON))
+		resultJSON, _ := json.Marshal(result)
+		fmt.Printf("    Result: %s\n", string(resultJSON))
+	}
+
+	return tr
+}
+
+func matchExpectError(err error, expectError any) bool {
+	errMsg := err.Error()
+	switch v := expectError.(type) {
+	case string:
+		return strings.Contains(errMsg, v)
+	case map[string]any:
+		if code, ok := v["code"].(string); ok {
+			return strings.Contains(errMsg, code)
+		}
+		if msg, ok := v["message"].(string); ok {
+			return strings.Contains(errMsg, msg)
+		}
+	case bool:
+		return v
+	}
+	return true
 }
 
 func executeTestCase(rt *runtime.Runtime, dir string, tf testFile, tc testCase) (any, error) {

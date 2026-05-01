@@ -116,6 +116,25 @@ func Compile(program *Program, engine ExprEngine, engineLimits ResolvedLimits) (
 		}
 	}
 
+	// Validate that constants and enums are not reassigned via set.
+	protectedNames := make(map[string]string)
+	for name := range program.Constants {
+		protectedNames[name] = "constant"
+	}
+	for name := range program.Enums {
+		protectedNames[name] = "enum"
+	}
+	if len(protectedNames) > 0 {
+		if err := validateNoProtectedReassign(program.Steps, protectedNames); err != nil {
+			return nil, err
+		}
+		for _, cf := range cp.Functions {
+			if err := validateNoProtectedReassign(cf.Steps, protectedNames); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	cp.Limits = resolveLimits(engineLimits, program.Limits)
 
 	return cp, nil
@@ -511,6 +530,11 @@ func validateStructureStep(node Node, inLoop bool) error {
 			}
 		}
 
+	case *RetryNode:
+		if err := validateStructure(n.Steps, inLoop); err != nil {
+			return err
+		}
+
 	case *BreakNode:
 		if !inLoop {
 			return CompileError("BREAK_OUTSIDE_LOOP", "break can only be used inside a loop", idx)
@@ -620,6 +644,72 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func validateNoProtectedReassign(steps []Node, protected map[string]string) error {
+	for _, step := range steps {
+		if err := validateNoProtectedReassignStep(step, protected); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateNoProtectedReassignStep(node Node, protected map[string]string) error {
+	switch n := node.(type) {
+	case *SetNode:
+		target := n.Target
+		if dotIdx := strings.IndexByte(target, '.'); dotIdx > 0 {
+			target = target[:dotIdx]
+		}
+		if kind, ok := protected[target]; ok {
+			return CompileError("CONST_REASSIGN",
+				fmt.Sprintf("cannot reassign %s '%s'", kind, target), n.StepIndex)
+		}
+	case *IfNode:
+		if err := validateNoProtectedReassign(n.Then, protected); err != nil {
+			return err
+		}
+		for _, elif := range n.Elif {
+			if err := validateNoProtectedReassign(elif.Then, protected); err != nil {
+				return err
+			}
+		}
+		if err := validateNoProtectedReassign(n.Else, protected); err != nil {
+			return err
+		}
+	case *ForNode:
+		if err := validateNoProtectedReassign(n.Steps, protected); err != nil {
+			return err
+		}
+	case *WhileNode:
+		if err := validateNoProtectedReassign(n.Steps, protected); err != nil {
+			return err
+		}
+	case *TryNode:
+		if err := validateNoProtectedReassign(n.Try, protected); err != nil {
+			return err
+		}
+		if n.Catch != nil {
+			if err := validateNoProtectedReassign(n.Catch.Steps, protected); err != nil {
+				return err
+			}
+		}
+		if err := validateNoProtectedReassign(n.Finally, protected); err != nil {
+			return err
+		}
+	case *SwitchNode:
+		for _, steps := range n.Cases {
+			if err := validateNoProtectedReassign(steps, protected); err != nil {
+				return err
+			}
+		}
+	case *RetryNode:
+		if err := validateNoProtectedReassign(n.Steps, protected); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Ensure GoJSONError is used (suppress unused import if needed).
