@@ -492,7 +492,7 @@ These are intentional design decisions with documented rationale and workarounds
 
 | Limitation | Reason | Workaround |
 |-----------|--------|------------|
-| Lambda cannot self-recurse | Snapshot capture — lambda not in own env at definition time | Use named `functions` for recursion |
+| Anonymous lambda cannot self-recurse | No name to reference — use named lambda `fn name(x) => ...` for recursion | `fn factorial(n) => n <= 1 ? 1 : n * factorial(n-1)` |
 | Lambda cannot mutate outer scope | Lambdas are pure (snapshot env is read-only) | Use `reduceFn` to accumulate, or step-level `set` |
 | Lambda type checking is runtime-only | Gradual typing — expressions validated at runtime | Use `assert` before lambda calls |
 | Test runner `before`/`after` not executed | Requires API change to inject steps into wrapper | Include setup in tested program |

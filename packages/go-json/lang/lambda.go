@@ -3,36 +3,75 @@ package lang
 import (
 	"fmt"
 	"strings"
+	"sync/atomic"
 )
 
-// Lambda represents a parsed lambda expression: fn(params) => body.
+// Lambda represents a parsed lambda expression.
+// Anonymous: fn(params) => body (Name is empty)
+// Named:    fn name(params) => body (Name is set, enables recursion)
 type Lambda struct {
+	Name   string
 	Params []string
 	Body   string
 }
 
-// ParseLambda parses "fn(x, y) => x + y" into a Lambda struct.
+// ParseLambda parses lambda expressions into a Lambda struct.
+// Supports two forms:
+//   - Anonymous: "fn(x, y) => x + y"
+//   - Named:    "fn factorial(n) => n <= 1 ? 1 : n * factorial(n - 1)"
+//
 // Returns nil if the expression is not a lambda.
 func ParseLambda(expr string) *Lambda {
 	expr = strings.TrimSpace(expr)
-	if !strings.HasPrefix(expr, "fn(") {
+	if !strings.HasPrefix(expr, "fn") {
 		return nil
 	}
 
-	// Find closing paren for the parameter list.
-	closeIdx := findMatchingParen(expr, 2)
+	rest := expr[2:]
+	if len(rest) == 0 {
+		return nil
+	}
+
+	var name string
+	var parenStart int
+
+	if rest[0] == '(' {
+		// Anonymous: fn(params) => body
+		parenStart = 2
+	} else if rest[0] == ' ' || isIdentStart(rest[0]) {
+		// Named: fn name(params) => body
+		// Find the opening paren
+		trimmedRest := strings.TrimLeft(rest, " ")
+		if len(trimmedRest) == 0 || !isIdentStart(trimmedRest[0]) {
+			return nil
+		}
+		nameEnd := 0
+		for nameEnd < len(trimmedRest) && isIdentChar(trimmedRest[nameEnd]) {
+			nameEnd++
+		}
+		name = trimmedRest[:nameEnd]
+		afterName := strings.TrimLeft(trimmedRest[nameEnd:], " ")
+		if len(afterName) == 0 || afterName[0] != '(' {
+			return nil
+		}
+		// Calculate parenStart relative to original expr
+		parenStart = len(expr) - len(afterName)
+	} else {
+		return nil
+	}
+
+	closeIdx := findMatchingParen(expr, parenStart)
 	if closeIdx == -1 {
 		return nil
 	}
 
-	// Extract params.
-	paramStr := strings.TrimSpace(expr[3:closeIdx])
+	paramStr := strings.TrimSpace(expr[parenStart+1 : closeIdx])
 	var params []string
 	if paramStr != "" {
 		for _, p := range strings.Split(paramStr, ",") {
 			trimmed := strings.TrimSpace(p)
 			if trimmed == "" {
-				return nil // invalid: empty param
+				return nil
 			}
 			if !isValidIdentifier(trimmed) {
 				return nil
@@ -41,19 +80,18 @@ func ParseLambda(expr string) *Lambda {
 		}
 	}
 
-	// Find "=>" after closing paren.
-	rest := expr[closeIdx+1:]
-	trimmedRest := strings.TrimSpace(rest)
-	if !strings.HasPrefix(trimmedRest, "=>") {
+	afterParen := expr[closeIdx+1:]
+	trimmedAfter := strings.TrimSpace(afterParen)
+	if !strings.HasPrefix(trimmedAfter, "=>") {
 		return nil
 	}
 
-	body := strings.TrimSpace(trimmedRest[2:])
+	body := strings.TrimSpace(trimmedAfter[2:])
 	if body == "" {
 		return nil
 	}
 
-	return &Lambda{Params: params, Body: body}
+	return &Lambda{Name: name, Params: params, Body: body}
 }
 
 // findMatchingParen finds the index of the closing ')' that matches the '(' at startIdx.
@@ -99,12 +137,11 @@ func findMatchingParen(s string, startIdx int) int {
 
 // FindInlineLambdas finds all inline lambda expressions in an expression string.
 // Returns a slice of [start, end) positions for each lambda found.
-// Handles nested function calls, string literals, and complex expressions.
+// Detects both anonymous (fn(...)) and named (fn name(...)) forms.
 func FindInlineLambdas(expr string) [][2]int {
 	var results [][2]int
 	i := 0
 	for i < len(expr) {
-		// Skip string literals.
 		if expr[i] == '\'' || expr[i] == '"' {
 			quote := expr[i]
 			i++
@@ -122,20 +159,21 @@ func FindInlineLambdas(expr string) [][2]int {
 			continue
 		}
 
-		// Look for "fn(" pattern.
-		if i+3 <= len(expr) && expr[i:i+3] == "fn(" {
-			// Make sure it's not part of a larger identifier (e.g., "xfn(").
+		// Detect "fn(" or "fn " followed by identifier then "("
+		if i+2 <= len(expr) && expr[i:i+2] == "fn" {
 			if i > 0 && isIdentChar(expr[i-1]) {
 				i++
 				continue
 			}
 
-			start := i
-			end := findLambdaEnd(expr, start)
-			if end > start {
-				results = append(results, [2]int{start, end})
-				i = end
-				continue
+			if i+2 < len(expr) && (expr[i+2] == '(' || expr[i+2] == ' ' || isIdentStart(expr[i+2])) {
+				start := i
+				end := findLambdaEnd(expr, start)
+				if end > start {
+					results = append(results, [2]int{start, end})
+					i = end
+					continue
+				}
 			}
 		}
 		i++
@@ -144,34 +182,42 @@ func FindInlineLambdas(expr string) [][2]int {
 }
 
 // findLambdaEnd finds the end position of a lambda expression starting at pos.
-// A lambda is: fn(params) => body
-// The body ends at: end of string, or an unbalanced comma/paren that belongs to the outer expression.
+// Handles both fn(params) => body and fn name(params) => body.
 func findLambdaEnd(expr string, pos int) int {
-	// First, find the closing paren of params.
-	closeIdx := findMatchingParen(expr, pos+2)
+	// Find the opening paren — skip "fn" + optional name
+	parenIdx := -1
+	i := pos + 2 // skip "fn"
+	for i < len(expr) {
+		if expr[i] == '(' {
+			parenIdx = i
+			break
+		}
+		if expr[i] != ' ' && !isIdentChar(expr[i]) {
+			return -1
+		}
+		i++
+	}
+	if parenIdx == -1 {
+		return -1
+	}
+
+	closeIdx := findMatchingParen(expr, parenIdx)
 	if closeIdx == -1 {
 		return -1
 	}
 
-	// Find "=>" after the closing paren.
 	rest := expr[closeIdx+1:]
 	trimmed := strings.TrimLeft(rest, " \t")
 	if !strings.HasPrefix(trimmed, "=>") {
 		return -1
 	}
 
-	// Calculate where the body starts.
 	arrowOffset := closeIdx + 1 + (len(rest) - len(trimmed)) + 2
-	bodyStart := arrowOffset
-
-	if bodyStart >= len(expr) {
+	if arrowOffset >= len(expr) {
 		return -1
 	}
 
-	// Find where the body ends.
-	// The body ends when we encounter an unbalanced ')' or ',' at depth 0
-	// that belongs to the outer expression context.
-	return findBodyEnd(expr, bodyStart)
+	return findBodyEnd(expr, arrowOffset)
 }
 
 // findBodyEnd finds where a lambda body ends.
@@ -246,25 +292,22 @@ func findBodyEnd(expr string, start int) int {
 //
 // For inline lambdas (e.g., mapFn(items, fn(x) => x * 2)):
 //   - Replaces each lambda with "__lambda_N" and returns compiled funcs.
-func PreprocessLambdas(expr string, engine ExprEngine, env map[string]any) (string, map[string]func(...any) (any, error)) {
+func PreprocessLambdas(expr string, engine ExprEngine, env map[string]any, maxDepth int) (string, map[string]func(...any) (any, error)) {
 	trimmed := strings.TrimSpace(expr)
 
-	// Case 1: The entire expression is a standalone lambda.
 	if lambda := ParseLambda(trimmed); lambda != nil {
 		funcs := map[string]func(...any) (any, error){
-			"__direct_lambda": CompileLambda(lambda, engine, env),
+			"__direct_lambda": CompileLambda(lambda, engine, env, maxDepth),
 		}
 		return "", funcs
 	}
 
-	// Case 2: Find inline lambdas within the expression.
 	positions := FindInlineLambdas(trimmed)
 	if len(positions) == 0 {
 		return expr, nil
 	}
 
 	funcs := make(map[string]func(...any) (any, error), len(positions))
-	// Process from end to start so positions remain valid.
 	processed := trimmed
 	for idx := len(positions) - 1; idx >= 0; idx-- {
 		pos := positions[idx]
@@ -274,7 +317,7 @@ func PreprocessLambdas(expr string, engine ExprEngine, env map[string]any) (stri
 			continue
 		}
 		name := fmt.Sprintf("__lambda_%d", idx)
-		funcs[name] = CompileLambda(lambda, engine, env)
+		funcs[name] = CompileLambda(lambda, engine, env, maxDepth)
 		processed = processed[:pos[0]] + name + processed[pos[1]:]
 	}
 
@@ -283,21 +326,49 @@ func PreprocessLambdas(expr string, engine ExprEngine, env map[string]any) (stri
 
 // CompileLambda creates a Go function from a Lambda definition.
 // capturedEnv is a snapshot of the current scope at definition time.
-func CompileLambda(lambda *Lambda, engine ExprEngine, capturedEnv map[string]any) func(...any) (any, error) {
-	// Snapshot the environment at definition time.
+// maxDepth limits recursion depth for named lambdas (0 = use default 1000).
+func CompileLambda(lambda *Lambda, engine ExprEngine, capturedEnv map[string]any, maxDepth int) func(...any) (any, error) {
+	if maxDepth <= 0 {
+		maxDepth = 1000
+	}
+
 	snapshot := make(map[string]any, len(capturedEnv))
 	for k, v := range capturedEnv {
 		snapshot[k] = v
 	}
 
-	return func(args ...any) (any, error) {
-		// Create evaluation environment: captured scope + param bindings.
-		evalEnv := make(map[string]any, len(snapshot)+len(lambda.Params))
+	if lambda.Name == "" {
+		return func(args ...any) (any, error) {
+			evalEnv := make(map[string]any, len(snapshot)+len(lambda.Params))
+			for k, v := range snapshot {
+				evalEnv[k] = v
+			}
+			for i, param := range lambda.Params {
+				if i < len(args) {
+					evalEnv[param] = args[i]
+				} else {
+					evalEnv[param] = nil
+				}
+			}
+			return engine.Eval(lambda.Body, evalEnv)
+		}
+	}
+
+	// Named lambda: supports self-recursion via forward-declared closure.
+	var self func(...any) (any, error)
+	var depth int64
+
+	self = func(args ...any) (any, error) {
+		current := atomic.AddInt64(&depth, 1)
+		defer atomic.AddInt64(&depth, -1)
+		if current > int64(maxDepth) {
+			return nil, fmt.Errorf("lambda '%s': recursion depth limit (%d) exceeded", lambda.Name, maxDepth)
+		}
+
+		evalEnv := make(map[string]any, len(snapshot)+len(lambda.Params)+1)
 		for k, v := range snapshot {
 			evalEnv[k] = v
 		}
-
-		// Bind positional args to param names.
 		for i, param := range lambda.Params {
 			if i < len(args) {
 				evalEnv[param] = args[i]
@@ -305,10 +376,12 @@ func CompileLambda(lambda *Lambda, engine ExprEngine, capturedEnv map[string]any
 				evalEnv[param] = nil
 			}
 		}
+		evalEnv[lambda.Name] = self
 
-		// Evaluate body as expr-lang expression.
 		return engine.Eval(lambda.Body, evalEnv)
 	}
+
+	return self
 }
 
 // isValidIdentifier checks if a string is a valid go-json identifier.

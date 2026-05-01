@@ -206,3 +206,67 @@ func TestFindBodyEnd_CommaDelimited(t *testing.T) {
 		t.Fatalf("expected end at 5 (comma), got %d (body: '%s')", end, expr[:end])
 	}
 }
+
+func TestParseLambda_Named(t *testing.T) {
+	lambda := ParseLambda("fn factorial(n) => n <= 1 ? 1 : n * factorial(n - 1)")
+	if lambda == nil {
+		t.Fatal("expected lambda, got nil")
+	}
+	if lambda.Name != "factorial" {
+		t.Fatalf("expected name 'factorial', got '%s'", lambda.Name)
+	}
+	if len(lambda.Params) != 1 || lambda.Params[0] != "n" {
+		t.Fatalf("expected params [n], got %v", lambda.Params)
+	}
+	if lambda.Body != "n <= 1 ? 1 : n * factorial(n - 1)" {
+		t.Fatalf("unexpected body: '%s'", lambda.Body)
+	}
+}
+
+func TestParseLambda_NamedMultiParam(t *testing.T) {
+	lambda := ParseLambda("fn add(a, b) => a + b")
+	if lambda == nil {
+		t.Fatal("expected lambda, got nil")
+	}
+	if lambda.Name != "add" {
+		t.Fatalf("expected name 'add', got '%s'", lambda.Name)
+	}
+	if len(lambda.Params) != 2 || lambda.Params[0] != "a" || lambda.Params[1] != "b" {
+		t.Fatalf("expected params [a, b], got %v", lambda.Params)
+	}
+}
+
+func TestParseLambda_NamedNoParams(t *testing.T) {
+	lambda := ParseLambda("fn greet() => 'hello'")
+	if lambda == nil {
+		t.Fatal("expected lambda, got nil")
+	}
+	if lambda.Name != "greet" {
+		t.Fatalf("expected name 'greet', got '%s'", lambda.Name)
+	}
+	if len(lambda.Params) != 0 {
+		t.Fatalf("expected no params, got %v", lambda.Params)
+	}
+}
+
+func TestParseLambda_AnonymousHasNoName(t *testing.T) {
+	lambda := ParseLambda("fn(x) => x * 2")
+	if lambda == nil {
+		t.Fatal("expected lambda, got nil")
+	}
+	if lambda.Name != "" {
+		t.Fatalf("expected empty name for anonymous lambda, got '%s'", lambda.Name)
+	}
+}
+
+func TestFindInlineLambdas_Named(t *testing.T) {
+	expr := "mapFn([1,2,3], fn double(x) => x * 2)"
+	positions := FindInlineLambdas(expr)
+	if len(positions) != 1 {
+		t.Fatalf("expected 1 lambda, got %d", len(positions))
+	}
+	lambdaStr := expr[positions[0][0]:positions[0][1]]
+	if lambdaStr != "fn double(x) => x * 2" {
+		t.Fatalf("expected 'fn double(x) => x * 2', got '%s'", lambdaStr)
+	}
+}

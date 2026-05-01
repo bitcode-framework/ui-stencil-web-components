@@ -1791,7 +1791,7 @@ func (vm *VM) evalExpr(expression string, stepIndex int) (any, error) {
 	}
 
 	// Lambda preprocessing: detect and compile lambda expressions.
-	processedExpr, lambdaFuncs := PreprocessLambdas(expression, vm.engine, env)
+	processedExpr, lambdaFuncs := PreprocessLambdas(expression, vm.engine, env, vm.limits.MaxDepth)
 	if lambdaFuncs != nil {
 		if directFn, isDirect := lambdaFuncs["__direct_lambda"]; isDirect {
 			return directFn, nil

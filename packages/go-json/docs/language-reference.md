@@ -896,11 +896,30 @@ Lambdas capture variables at **definition time**. Subsequent mutations to captur
 // result = 15 (captured factor=3, NOT current 10)
 ```
 
+### Named Lambda (Recursive)
+
+Named lambdas can call themselves. Syntax: `fn name(params) => body`
+
+```jsonc
+{"let": "factorial", "expr": "fn factorial(n) => n <= 1 ? 1 : n * factorial(n - 1)"}
+{"let": "fib", "expr": "fn fib(n) => n <= 1 ? n : fib(n-1) + fib(n-2)"}
+{"let": "result", "expr": "factorial(10)"}  // 3628800
+```
+
+Named lambdas can also access captured variables and other lambdas:
+
+```jsonc
+{"let": "scale", "expr": "fn(x) => x * 3"},
+{"let": "treeSum", "expr": "fn treeSum(node) => isNil(node) ? 0 : scale(node.value) + treeSum(node.left) + treeSum(node.right)"}
+```
+
+Recursion depth is limited by `limits.max_depth` (default 1000). Exceeding produces: `"lambda 'name': recursion depth limit (1000) exceeded"`.
+
 ### Known Limitations
 
 | Limitation | Reason | Workaround |
 |-----------|--------|------------|
-| No self-recursion | Snapshot capture — lambda not in own env at definition time | Use named `functions` block for recursion |
+| Anonymous lambda cannot self-recurse | Snapshot capture — no name to reference | Use named lambda `fn name(x) => ...` |
 | No outer scope mutation | Lambdas are pure — snapshot env is read-only | Use `reduceFn` to accumulate, or step-level `set` |
 | Runtime-only type checking | Gradual typing — expressions validated at runtime | Use `assert` before lambda calls for validation |
 

@@ -2,6 +2,7 @@ package lang
 
 import (
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/bitcode-framework/go-json/stdlib"
@@ -410,5 +411,109 @@ func TestLambda_HigherOrder_PartitionFn(t *testing.T) {
 	}
 	if len(odds) != 3 {
 		t.Fatalf("expected 3 odds, got %v", odds)
+	}
+}
+
+func TestLambda_NamedRecursive_Factorial(t *testing.T) {
+	result := compileAndRun(t, `{
+		"steps": [
+			{"let": "factorial", "expr": "fn factorial(n) => n <= 1 ? 1 : n * factorial(n - 1)"},
+			{"let": "result", "expr": "factorial(10)"},
+			{"return": "result"}
+		]
+	}`, nil)
+	if !numEq(result.Value, 3628800) {
+		t.Fatalf("expected 3628800, got %v", result.Value)
+	}
+}
+
+func TestLambda_NamedRecursive_Fibonacci(t *testing.T) {
+	result := compileAndRun(t, `{
+		"steps": [
+			{"let": "fib", "expr": "fn fib(n) => n <= 1 ? n : fib(n-1) + fib(n-2)"},
+			{"let": "result", "expr": "fib(10)"},
+			{"return": "result"}
+		]
+	}`, nil)
+	if !numEq(result.Value, 55) {
+		t.Fatalf("expected 55, got %v", result.Value)
+	}
+}
+
+func TestLambda_NamedRecursive_DepthLimit(t *testing.T) {
+	program, err := Parse([]byte(`{
+		"steps": [
+			{"let": "inf", "expr": "fn inf(n) => inf(n + 1)"},
+			{"let": "result", "expr": "inf(0)"}
+		]
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	engine := NewExprLangEngine()
+	compiled, err := Compile(program, engine, DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	vm := NewVM(compiled, engine)
+	_, err = vm.Execute(nil)
+	if err == nil {
+		t.Fatal("expected recursion depth error")
+	}
+	if !strings.Contains(err.Error(), "recursion depth limit") {
+		t.Fatalf("expected 'recursion depth limit' error, got: %v", err)
+	}
+}
+
+func TestLambda_NamedRecursive_AccessCapturedVars(t *testing.T) {
+	result := compileAndRun(t, `{
+		"steps": [
+			{"let": "multiplier", "value": 3},
+			{"let": "sumN", "expr": "fn sumN(n) => n <= 0 ? 0 : n * multiplier + sumN(n - 1)"},
+			{"let": "result", "expr": "sumN(3)"},
+			{"return": "result"}
+		]
+	}`, nil)
+	// sumN(3) = 3*3 + sumN(2) = 9 + (2*3 + sumN(1)) = 9 + 6 + (1*3 + sumN(0)) = 9 + 6 + 3 + 0 = 18
+	if !numEq(result.Value, 18) {
+		t.Fatalf("expected 18, got %v", result.Value)
+	}
+}
+
+func TestLambda_NamedRecursive_CallingOtherLambda(t *testing.T) {
+	result := compileAndRun(t, `{
+		"steps": [
+			{"let": "double", "expr": "fn(x) => x * 2"},
+			{"let": "sumDoubled", "expr": "fn sumDoubled(n) => n <= 0 ? 0 : double(n) + sumDoubled(n - 1)"},
+			{"let": "result", "expr": "sumDoubled(4)"},
+			{"return": "result"}
+		]
+	}`, nil)
+	// sumDoubled(4) = double(4) + sumDoubled(3) = 8 + double(3) + sumDoubled(2) = 8+6+double(2)+sumDoubled(1) = 8+6+4+double(1)+sumDoubled(0) = 8+6+4+2+0 = 20
+	if !numEq(result.Value, 20) {
+		t.Fatalf("expected 20, got %v", result.Value)
+	}
+}
+
+func TestLambda_NamedRecursive_WithHigherOrder(t *testing.T) {
+	result := compileAndRunWithStdlib(t, `{
+		"steps": [
+			{"let": "factorial", "expr": "fn factorial(n) => n <= 1 ? 1 : n * factorial(n - 1)"},
+			{"let": "result", "expr": "mapFn([1, 2, 3, 4, 5], factorial)"},
+			{"return": "result"}
+		]
+	}`, nil)
+	arr, ok := result.Value.([]any)
+	if !ok {
+		t.Fatalf("expected []any, got %T", result.Value)
+	}
+	expected := []float64{1, 2, 6, 24, 120}
+	if len(arr) != 5 {
+		t.Fatalf("expected 5 items, got %d", len(arr))
+	}
+	for i, exp := range expected {
+		if !numEq(arr[i], exp) {
+			t.Fatalf("index %d: expected %v, got %v", i, exp, arr[i])
+		}
 	}
 }

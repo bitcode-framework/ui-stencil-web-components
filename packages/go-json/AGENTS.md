@@ -188,7 +188,8 @@ go test ./generate/ -v                   # CRUD generator, auth scaffold, projec
 
 ## What's Done (Phase 4.5g)
 
-- **Lambda expressions**: `fn(params) => body` syntax with scope capture (snapshot at definition time)
+- **Lambda expressions**: `fn(params) => body` (anonymous) and `fn name(params) => body` (named, recursive)
+- **Named recursive lambda**: self-reference via forward-declared closure, depth-limited by `vm.limits.MaxDepth`
 - **Lambda preprocessing**: standalone lambda detection, inline lambda extraction, placeholder replacement
 - **Higher-order functions**: `mapFn`, `filterFn`, `reduceFn`, `applyEach`, `sortFn` — accept callable lambdas
 - **Dynamic call_ref**: `call` resolves variable containing function name (string) or callable (lambda)
