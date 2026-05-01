@@ -1,11 +1,11 @@
 # Built-in Functions Reference
 
-go-json provides **190+ built-in functions** across three layers:
+go-json provides **200+ built-in functions** across three layers:
 
 | Layer | Source | Count | Description |
 |-------|--------|-------|-------------|
 | **Layer 1** | [expr-lang/expr](https://github.com/expr-lang/expr) | ~68 | Core expression functions — available in all expressions |
-| **Layer 2** | go-json stdlib | 120+ | Additional functions registered by go-json |
+| **Layer 2** | go-json stdlib | 135+ | Additional functions registered by go-json (includes 13 higher-order functions) |
 | **Layer 3** | I/O modules + regex | varies | Side-effect functions (HTTP, FS, SQL, etc.) |
 
 This document covers **Layer 1** and **Layer 2**. For Layer 3 (I/O), see [I/O Modules](io-modules.md).
@@ -422,6 +422,36 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `takeRight(arr, n)` | `[]any, int → []any` | Last N elements | `takeRight([1,2,3,4], 2)` → `[3,4]` |
 | `flatMap(arr, field)` | `[]map, string → []any` | Extract array field from each item, flatten | `flatMap(users, "tags")` → all tags |
 | `partition(arr, field)` | `[]map, string → [[]any, []any]` | Split by truthy/falsy field value | `partition(users, "active")` → `[[active], [inactive]]` |
+
+### Higher-Order Functions (13 functions)
+
+These accept **callable lambdas** (`fn(x) => ...`) or named function references as the predicate/transform argument. They complement expr-lang's built-in `filter`/`map`/`all`/`any` which use predicate syntax (`.field` or `{# > 0}`).
+
+| Function | Signature | Description | Example |
+|----------|-----------|-------------|---------|
+| `mapFn(arr, fn)` | `[]any, callable → []any` | Transform each item | `mapFn([1,2,3], fn(x) => x * 2)` → `[2,4,6]` |
+| `filterFn(arr, fn)` | `[]any, callable → []any` | Keep items where fn returns true | `filterFn([1,2,3,4], fn(x) => x > 2)` → `[3,4]` |
+| `rejectFn(arr, fn)` | `[]any, callable → []any` | Keep items where fn returns false | `rejectFn([1,2,3,4], fn(x) => x > 2)` → `[1,2]` |
+| `reduceFn(arr, fn, init?)` | `[]any, callable, any? → any` | Accumulate with 2-arg function | `reduceFn([1,2,3], fn(a,b) => a+b, 0)` → `6` |
+| `findFn(arr, fn)` | `[]any, callable → any` | First item where fn returns true | `findFn([1,2,3,4], fn(x) => x > 2)` → `3` |
+| `everyFn(arr, fn)` | `[]any, callable → bool` | True if fn returns true for all | `everyFn([2,4,6], fn(x) => x%2==0)` → `true` |
+| `someFn(arr, fn)` | `[]any, callable → bool` | True if fn returns true for any | `someFn([1,2,3], fn(x) => x > 2)` → `true` |
+| `sortFn(arr, fn)` | `[]any, callable → []any` | Sort with 2-arg comparator | `sortFn([3,1,2], fn(a,b) => a < b)` → `[1,2,3]` |
+| `takeWhileFn(arr, fn)` | `[]any, callable → []any` | Take from start while fn is true | `takeWhileFn([1,2,5,1], fn(x) => x<4)` → `[1,2]` |
+| `dropWhileFn(arr, fn)` | `[]any, callable → []any` | Skip from start while fn is true | `dropWhileFn([1,2,5,1], fn(x) => x<4)` → `[5,1]` |
+| `partitionFn(arr, fn)` | `[]any, callable → [[]any, []any]` | Split into [matches, non-matches] | `partitionFn([1,2,3,4], fn(x) => x%2==0)` → `[[2,4],[1,3]]` |
+| `applyEach(arr, fn)` | `[]any, callable → nil` | Call fn per item (side-effect) | `applyEach(items, processItem)` |
+| `identity(x)` | `any → any` | Return argument unchanged | `identity(42)` → `42` |
+
+**When to use `*Fn` vs expr-lang built-in:**
+
+| Need | Use | Example |
+|------|-----|---------|
+| Simple field access | expr-lang | `filter(users, .active)` |
+| Single expression | expr-lang | `filter(items, {# > 0})` |
+| Complex multi-condition | `*Fn` + lambda | `filterFn(users, fn(u) => u.age > 18 && u.role == 'admin')` |
+| Reusable predicate | `*Fn` + named lambda | `filterFn(users, isEligible)` |
+| Composition | `*Fn` + lambda | `mapFn(filterFn(items, pred), transform)` |
 
 ### Map/Object (13 functions)
 

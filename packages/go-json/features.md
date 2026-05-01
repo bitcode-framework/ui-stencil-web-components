@@ -46,8 +46,8 @@ go-json is a general-purpose programming language where programs are valid JSON 
 | | 3 error modes (`cancel_all`, `continue`, `collect`) | Done |
 | | Compile-time parent write check | Done |
 | | Shared step counter across branches (prevents limit bypass) | Done |
-| **Standard Library** | 190+ built-in functions across 3 layers | Done |
-| | Math, string, array, map, datetime, encoding, crypto, validate, regex, path, JSON, format, env | Done |
+| **Standard Library** | 200+ built-in functions across 3 layers | Done |
+| | Math, string, array, map, datetime, encoding, crypto, validate, regex, path, JSON, format, env, higher-order | Done |
 | | See [Built-in Functions](docs/built-in-functions.md) for complete reference | |
 | **I/O Modules** | HTTP (GET/POST/PUT/PATCH/DELETE with auth) | Done |
 | | File System (read/write/stat/copy/move/glob) | Done |
