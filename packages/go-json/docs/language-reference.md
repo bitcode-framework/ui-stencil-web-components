@@ -28,7 +28,7 @@ All top-level keys are optional except `name`.
 
 ## Step Types
 
-go-json has 16 step types. Every element inside `steps` (or any step-list such as `then`, `else`, loop bodies, etc.) is one of these.
+go-json has 20 step types. Every element inside `steps` (or any step-list such as `then`, `else`, loop bodies, etc.) is one of these.
 
 ---
 
@@ -1035,3 +1035,73 @@ Validate a condition at runtime:
 ```
 
 If the condition is false, throws `ASSERTION_FAILED` error with the condition text or custom message.
+
+---
+
+## Match (Pattern Matching)
+
+Structural pattern matching with variable binding, wildcards, and guards:
+
+```jsonc
+{
+  "match": "resp",
+  "cases": [
+    {"pattern": {"status": 200, "body": "$user"}, "then": [
+      {"return": "user.name"}
+    ]},
+    {"pattern": {"status": "$code"}, "when": "code >= 500", "then": [
+      {"error": "'Server error: ' + string(code)"}
+    ]},
+    {"pattern": "_", "then": [
+      {"return": "'unhandled'"}
+    ]}
+  ]
+}
+```
+
+### Pattern Language
+
+| Pattern | Meaning | Example |
+|---------|---------|---------|
+| `"_"` | Wildcard — match anything | `"pattern": "_"` |
+| `"$varName"` | Bind value to variable | `"$user"` → `user` available in `then` |
+| `"$_"` | Match but don't create variable | Discard binding |
+| Literal string | Exact string match | `"active"` matches `"active"` |
+| Literal number | Exact number match | `200` matches `200` |
+| Literal bool | Exact bool match | `true` matches `true` |
+| `null` | Match nil | `null` matches `nil` |
+| `{...}` (map) | Structural subset match | `{"status": 200}` matches `{"status": 200, "body": "x"}` |
+| `[...]` (array) | Exact length + per-element | `[1, "$x", 3]` matches `[1, 42, 3]` with `x=42` |
+
+### Semantics
+
+- **First match wins** — cases are tried in order, first successful match executes
+- **Subset map matching** — pattern keys must exist in subject, but subject can have extra keys
+- **Guards** — `"when"` expression evaluated with bindings in scope; must be truthy to match
+- **No match** — if no case matches, execution continues to the next step (no error)
+- **Bindings scoped to `then`** — bound variables are only available inside the matched case's `then` steps
+- **Propagates control flow** — `return`, `break`, `continue` inside `then` work as expected
+
+### Examples
+
+```jsonc
+// Event routing
+{"match": "event", "cases": [
+  {"pattern": {"type": "order.created", "data": "$d"}, "then": [{"call": "handleOrder", "with": ["d"]}]},
+  {"pattern": {"type": "user.registered", "data": "$d"}, "then": [{"call": "sendWelcome", "with": ["d"]}]},
+  {"pattern": "_", "then": [{"log": "'Unknown event'"}]}
+]}
+
+// Destructuring API response
+{"match": "response", "cases": [
+  {"pattern": {"status": 200, "body": {"data": "$items"}}, "then": [{"return": "items"}]},
+  {"pattern": {"status": 401}, "then": [{"error": "'Unauthorized'"}]},
+  {"pattern": {"status": "$code"}, "when": "code >= 500", "then": [{"error": "'Server error'"}]}
+]}
+
+// Array destructuring
+{"match": "point", "cases": [
+  {"pattern": ["$x", "$y", "$z"], "then": [{"return": "x + y + z"}]},
+  {"pattern": ["$x", "$y"], "then": [{"return": "x + y"}]}
+]}
+```

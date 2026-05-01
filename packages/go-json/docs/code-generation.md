@@ -25,6 +25,10 @@ go-json codegen program.json --target python --output program.py
 | `while` | `for condition` | `while (condition)` | `while condition:` |
 | `try`/`catch` | `if err != nil` | `try`/`catch` | `try`/`except` |
 | `parallel` | goroutines + `sync.WaitGroup` | `Promise.all` | `asyncio.gather` |
+| `sleep` | `time.Sleep(N * time.Millisecond)` | `await new Promise(r => setTimeout(r, N))` | `await asyncio.sleep(N/1000)` |
+| `retry` | `for` loop + `time.Sleep` | `for` + `try/catch` + `setTimeout` | `for` + `try/except` + `asyncio.sleep` |
+| `assert` | `if !(cond) { panic(...) }` | `if (!(cond)) throw new Error(...)` | `assert cond` |
+| `match` | `switch` with type assertions | `switch`/`if` chain | `match` (3.10+) or `if`/`elif` |
 | `struct` | Go struct | `class` | `@dataclass` |
 | `function` | `func` | `function` / `const fn =` | `def` with type hints |
 | `_c` | `//` comment | `//` comment | `#` comment |

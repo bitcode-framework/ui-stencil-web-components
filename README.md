@@ -237,7 +237,7 @@ docker-compose up -d
 - **Workflow engine** — State machines with permission-gated transitions
 - **Process engine** — 14 step types (validate, query, create, update, delete, if, switch, loop, emit, call, script, http, assign, log)
 - **Plugin system** — TypeScript + Python via JSON-RPC, gRPC proto defined
-- **go-json engine** — Standalone JSON/JSONC programming language (`packages/go-json/`). 15 step types, gradual type system, functions with recursion, expr-lang/expr for expressions (~68 built-in + 19 stdlib functions), resource limits, debugger interface, compile-once-run-many
+- **go-json engine** — Standalone JSON/JSONC programming language (`packages/go-json/`). 20 step types, lambda expressions (anonymous + named recursive), pattern matching, gradual type system, functions with recursion, expr-lang/expr for expressions (~68 built-in + 135 stdlib functions), resource limits, debugger interface, compile-once-run-many
 - **Template engine** — Go html/template with helpers and partials
 - **File storage** — Local + S3 with attachments table, thumbnails, versioning, path formatting
 - **View system** — List, form, kanban, calendar, chart, custom views (SSR)
