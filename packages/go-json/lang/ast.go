@@ -452,6 +452,23 @@ type LogNode struct {
 func (n *LogNode) nodeType() string { return "log" }
 func (n *LogNode) Meta() *NodeMeta  { return &n.NodeMeta }
 
+// MatchNode performs structural pattern matching with variable binding and guards.
+type MatchNode struct {
+	NodeMeta
+	Subject string
+	Cases   []MatchCase
+}
+
+// MatchCase is a single case in a match step.
+type MatchCase struct {
+	Pattern any
+	Guard   string
+	Steps   []Node
+}
+
+func (n *MatchNode) nodeType() string { return "match" }
+func (n *MatchNode) Meta() *NodeMeta  { return &n.NodeMeta }
+
 // SleepNode pauses execution for a specified duration.
 type SleepNode struct {
 	NodeMeta

@@ -333,6 +333,8 @@ func (vm *VM) executeStep(node Node) (any, error) {
 		return nil, vm.executeLog(n)
 	case *ParallelNode:
 		return vm.executeParallel(n)
+	case *MatchNode:
+		return vm.executeMatch(n)
 	case *SleepNode:
 		return nil, vm.executeSleep(n)
 	case *RetryNode:
@@ -2158,6 +2160,133 @@ func estimateSize(v any) int {
 	default:
 		return 64
 	}
+}
+
+// --- Pattern Matching ---
+
+func (vm *VM) executeMatch(n *MatchNode) (any, error) {
+	subject, err := vm.evalExpr(n.Subject, n.StepIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, c := range n.Cases {
+		bindings := make(map[string]any)
+		if !vm.doMatch(subject, c.Pattern, bindings) {
+			continue
+		}
+
+		if c.Guard != "" {
+			guardScope := vm.scope.NewChild("match-guard")
+			for name, value := range bindings {
+				guardScope.Declare(name, value, "any")
+			}
+			guardResult, err := vm.withScope(guardScope, func() (any, error) {
+				return vm.evalExpr(c.Guard, n.StepIndex)
+			})
+			if err != nil {
+				return nil, err
+			}
+			if !toBool(guardResult) {
+				continue
+			}
+		}
+
+		matchScope := vm.scope.NewChild("match")
+		for name, value := range bindings {
+			matchScope.Declare(name, value, "any")
+		}
+
+		return vm.withScope(matchScope, func() (any, error) {
+			return vm.executeSteps(c.Steps)
+		})
+	}
+
+	return nil, nil
+}
+
+func (vm *VM) doMatch(subject any, pattern any, bindings map[string]any) bool {
+	switch p := pattern.(type) {
+	case string:
+		if p == "_" {
+			return true
+		}
+		if len(p) > 1 && p[0] == '$' {
+			varName := p[1:]
+			if varName != "_" {
+				bindings[varName] = subject
+			}
+			return true
+		}
+		subStr, ok := subject.(string)
+		return ok && subStr == p
+
+	case float64:
+		switch s := subject.(type) {
+		case float64:
+			return s == p
+		case int:
+			return float64(s) == p
+		case int64:
+			return float64(s) == p
+		}
+		return false
+
+	case bool:
+		subBool, ok := subject.(bool)
+		return ok && subBool == p
+
+	case nil:
+		return subject == nil
+
+	case map[string]any:
+		subMap, ok := subject.(map[string]any)
+		if !ok {
+			return false
+		}
+		for key, patternValue := range p {
+			subValue, exists := subMap[key]
+			if !exists {
+				if patternValue == nil {
+					continue
+				}
+				if ps, ok := patternValue.(string); ok {
+					if ps == "_" {
+						continue
+					}
+					if len(ps) > 1 && ps[0] == '$' {
+						varName := ps[1:]
+						if varName != "_" {
+							bindings[varName] = nil
+						}
+						continue
+					}
+				}
+				return false
+			}
+			if !vm.doMatch(subValue, patternValue, bindings) {
+				return false
+			}
+		}
+		return true
+
+	case []any:
+		subArr, ok := subject.([]any)
+		if !ok {
+			return false
+		}
+		if len(subArr) != len(p) {
+			return false
+		}
+		for i, patternElem := range p {
+			if !vm.doMatch(subArr[i], patternElem, bindings) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return false
 }
 
 func (vm *VM) callNativeFunc(fn func(...any) (any, error), positionalWith []string, literalArgs []any, stepIndex int) (any, error) {

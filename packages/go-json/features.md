@@ -21,6 +21,7 @@ go-json is a general-purpose programming language where programs are valid JSON 
 | | `sleep` step (literal/expression, context-aware) | Done |
 | | `retry` step (max/delay/backoff: fixed/linear/exponential) | Done |
 | | `assert` step (condition + optional message) | Done |
+| | `match` step (structural pattern matching, binding, guards) | Done |
 | | Constants block (immutable, compile-time protection) | Done |
 | | Enum system (array + map enums, dot access) | Done |
 | | JSONC support (comments, trailing commas) | Done |
@@ -508,9 +509,9 @@ See [Language Reference](docs/language-reference.md#known-limitations) for detai
 |--------|-------|
 | Total Go source files | ~150 |
 | Total lines of code | ~20,000 |
-| Test count | 925 |
+| Test count | 969 |
 | Test files | 55 |
-| Step types | 19 |
+| Step types | 20 |
 | Stdlib functions (Layer 2) | 120+ |
 | Higher-order functions | 5 (mapFn, filterFn, reduceFn, applyEach, sortFn) |
 | expr-lang built-ins (Layer 1) | ~68 |

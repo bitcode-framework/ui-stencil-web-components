@@ -602,6 +602,9 @@ func parseStep(m map[string]any, index int) (Node, error) {
 	if _, ok := m["parallel"]; ok {
 		return parseParallelNode(m, index)
 	}
+	if _, ok := m["match"]; ok {
+		return parseMatchNode(m, index)
+	}
 	if _, ok := m["sleep"]; ok {
 		return parseSleepNode(m, index)
 	}
@@ -1072,6 +1075,59 @@ func parseContinueNode(m map[string]any, index int) (*ContinueNode, error) {
 	node := &ContinueNode{}
 	node.StepIndex = index
 	parseComment(&node.NodeMeta, m)
+	return node, nil
+}
+
+func parseMatchNode(m map[string]any, index int) (*MatchNode, error) {
+	node := &MatchNode{}
+	node.StepIndex = index
+	parseComment(&node.NodeMeta, m)
+
+	subject, ok := m["match"].(string)
+	if !ok {
+		return nil, CompileError("INVALID_MATCH", "match subject must be a string expression", index)
+	}
+	node.Subject = subject
+
+	casesRaw, ok := m["cases"].([]any)
+	if !ok || len(casesRaw) == 0 {
+		return nil, CompileError("INVALID_MATCH", "match requires non-empty 'cases' array", index)
+	}
+
+	for i, caseRaw := range casesRaw {
+		caseMap, ok := caseRaw.(map[string]any)
+		if !ok {
+			return nil, CompileError("INVALID_MATCH",
+				fmt.Sprintf("match case %d must be an object", i), index)
+		}
+
+		mc := MatchCase{}
+
+		pattern, exists := caseMap["pattern"]
+		if !exists {
+			return nil, CompileError("INVALID_MATCH",
+				fmt.Sprintf("match case %d requires 'pattern'", i), index)
+		}
+		mc.Pattern = pattern
+
+		if when, ok := caseMap["when"].(string); ok {
+			mc.Guard = when
+		}
+
+		thenRaw, ok := caseMap["then"].([]any)
+		if !ok {
+			return nil, CompileError("INVALID_MATCH",
+				fmt.Sprintf("match case %d requires 'then' array", i), index)
+		}
+		steps, err := parseSteps(thenRaw)
+		if err != nil {
+			return nil, err
+		}
+		mc.Steps = steps
+
+		node.Cases = append(node.Cases, mc)
+	}
+
 	return node, nil
 }
 

@@ -535,6 +535,13 @@ func validateStructureStep(node Node, inLoop bool) error {
 			return err
 		}
 
+	case *MatchNode:
+		for _, c := range n.Cases {
+			if err := validateStructure(c.Steps, inLoop); err != nil {
+				return err
+			}
+		}
+
 	case *BreakNode:
 		if !inLoop {
 			return CompileError("BREAK_OUTSIDE_LOOP", "break can only be used inside a loop", idx)
@@ -707,6 +714,12 @@ func validateNoProtectedReassignStep(node Node, protected map[string]string) err
 	case *RetryNode:
 		if err := validateNoProtectedReassign(n.Steps, protected); err != nil {
 			return err
+		}
+	case *MatchNode:
+		for _, c := range n.Cases {
+			if err := validateNoProtectedReassign(c.Steps, protected); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

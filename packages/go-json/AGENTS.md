@@ -43,9 +43,9 @@ packages/go-json/
 9. **Implicit scope variables** — `session.*` (user_id, locale, tenant_id, groups) and `execution.*` (id, program, started_at, depth, step_count) injected automatically into every execution.
 10. **Trace enrichment** — `TraceEntry` captures Var/Value for let/set, Condition/Result for if/while/switch, per step type via `enrichTraceEntry()`.
 
-## Step Types (19)
+## Step Types (20)
 
-`let`, `set`, `if`/`elif`/`else`, `switch`, `for` (each + range), `while`, `break`, `continue`, `return`, `call`, `try`/`catch`/`finally`, `error`, `log`, `parallel`, `sleep`, `retry`, `assert`, `_c` (comment)
+`let`, `set`, `if`/`elif`/`else`, `switch`, `for` (each + range), `while`, `break`, `continue`, `return`, `call`, `try`/`catch`/`finally`, `error`, `log`, `parallel`, `match`, `sleep`, `retry`, `assert`, `_c` (comment)
 
 ## Struct System (Phase 4.5b)
 
@@ -190,6 +190,7 @@ go test ./generate/ -v                   # CRUD generator, auth scaffold, projec
 
 - **Lambda expressions**: `fn(params) => body` (anonymous) and `fn name(params) => body` (named, recursive)
 - **Named recursive lambda**: self-reference via forward-declared closure, depth-limited by `vm.limits.MaxDepth`
+- **Pattern matching**: `match` step with structural patterns, variable binding (`$var`), wildcards (`_`, `$_`), guards (`when`), subset map match
 - **Lambda preprocessing**: standalone lambda detection, inline lambda extraction, placeholder replacement
 - **Higher-order functions**: `mapFn`, `filterFn`, `reduceFn`, `applyEach`, `sortFn` — accept callable lambdas
 - **Dynamic call_ref**: `call` resolves variable containing function name (string) or callable (lambda)
@@ -200,7 +201,7 @@ go test ./generate/ -v                   # CRUD generator, auth scaffold, projec
 - **Enum system**: `"enums": {...}` — array enums (value=value) and map enums (key=value), dot access
 - **Enhanced test runner**: `expect_error`, `before`/`after`, `skip`/`only`, `table` (parameterized), per-case timeout
 - **Codegen updates**: sleep/retry/assert generation for Go, JavaScript, Python
-- 942 tests total across 9 packages (includes Phase 4.5a–g cumulative)
+- 969 tests total across 9 packages (includes Phase 4.5a–g cumulative)
 
 ## What's NOT Done
 
