@@ -1,11 +1,11 @@
 # Built-in Functions Reference
 
-go-json provides **110+ built-in functions** across three layers:
+go-json provides **190+ built-in functions** across three layers:
 
 | Layer | Source | Count | Description |
 |-------|--------|-------|-------------|
 | **Layer 1** | [expr-lang/expr](https://github.com/expr-lang/expr) | ~68 | Core expression functions — available in all expressions |
-| **Layer 2** | go-json stdlib | 42+ | Additional functions registered by go-json |
+| **Layer 2** | go-json stdlib | 120+ | Additional functions registered by go-json |
 | **Layer 3** | I/O modules + regex | varies | Side-effect functions (HTTP, FS, SQL, etc.) |
 
 This document covers **Layer 1** and **Layer 2**. For Layer 3 (I/O), see [I/O Modules](io-modules.md).
@@ -114,8 +114,9 @@ Note that `"hello" matches "^h"` (operator, expr-lang) and `regex.match("hello",
 
 | Namespace | Functions | Source |
 |-----------|-----------|--------|
-| *(flat)* | ~87 functions | expr-lang built-ins + go-json stdlib |
-| `crypto.*` | `sha256`, `sha512`, `md5`, `uuid`, `hmac` | go-json stdlib |
+| *(flat)* | ~160 functions | expr-lang built-ins + go-json stdlib |
+| `crypto.*` | `sha256`, `sha512`, `md5`, `uuid`, `hmac`, `encrypt`, `decrypt`, `hashPassword`, `verifyPassword`, `randomBytes` | go-json stdlib |
+| `validate.*` | `isEmail`, `isURL`, `isIP`, `isUUID`, `isJSON`, `isNumeric`, `isAlpha`, `isBase64`, `isHexColor`, `isCreditCard` | go-json stdlib |
 | `regex.*` | `match`, `findAll`, `replace` | go-json stdlib |
 | `http.*` | `get`, `post`, `put`, `patch`, `delete` | I/O module (import required) |
 | `fs.*` | `read`, `write`, `append`, `exists`, `list`, `mkdir`, `remove`, `stat`, `copy`, `move`, `glob` | I/O module (import required) |
@@ -330,7 +331,7 @@ sum(orders, .total)               // sum order totals
 
 These functions are added by go-json on top of expr-lang. They are registered via the `stdlib` package.
 
-### Math (7 functions)
+### Math (23 functions + 4 constants)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -341,8 +342,33 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `mod(a, b)` | `number, number → number` | Modulo (always positive) | `mod(17, 5)` → `2` |
 | `randomInt(min, max)` | `int, int → int` | Random integer in range [min, max) | `randomInt(1, 100)` |
 | `randomFloat(min, max)` | `float, float → float` | Random float in range [min, max) | `randomFloat(0.0, 1.0)` |
+| `sin(x)` | `float → float` | Sine (radians) | `sin(PI / 2)` → `1.0` |
+| `cos(x)` | `float → float` | Cosine (radians) | `cos(0)` → `1.0` |
+| `tan(x)` | `float → float` | Tangent (radians) | `tan(PI / 4)` → `1.0` |
+| `asin(x)` | `float → float` | Arc sine | `asin(1)` → `PI/2` |
+| `acos(x)` | `float → float` | Arc cosine | `acos(1)` → `0` |
+| `atan(x)` | `float → float` | Arc tangent | `atan(1)` → `PI/4` |
+| `atan2(y, x)` | `float, float → float` | Two-argument arc tangent | `atan2(1, 1)` → `PI/4` |
+| `log(x)` | `float → float` | Natural logarithm | `log(E)` → `1.0` |
+| `log2(x)` | `float → float` | Base-2 logarithm | `log2(8)` → `3.0` |
+| `log10(x)` | `float → float` | Base-10 logarithm | `log10(1000)` → `3.0` |
+| `exp(x)` | `float → float` | e^x | `exp(1)` → `E` |
+| `trunc(x)` | `float → float` | Truncate toward zero | `trunc(3.7)` → `3.0` |
+| `random()` | `→ float` | Random float [0, 1) | `random()` → `0.42...` |
+| `isNaN(x)` | `any → bool` | Check if NaN | `isNaN(0.0/0.0)` → `true` |
+| `isInfinite(x)` | `any → bool` | Check if infinite | `isInfinite(1.0/0.0)` → `true` |
+| `isFinite(x)` | `any → bool` | Not NaN and not Inf | `isFinite(42)` → `true` |
 
-### String (8 functions)
+**Constants** (available as variables in all expressions):
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `PI` | `3.141592653589793` | Pi |
+| `E` | `2.718281828459045` | Euler's number |
+| `Infinity` | `+Inf` | Positive infinity |
+| `NaN` | `NaN` | Not a Number |
+
+### String (28 functions)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -354,8 +380,28 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `strContains(s, substr)` | `string, string → bool` | Substring check (function alias for `contains` operator) | `strContains("hello world", "world")` → `true` |
 | `strStartsWith(s, prefix)` | `string, string → bool` | Prefix check (function alias for `startsWith` operator) | `strStartsWith("hello", "hel")` → `true` |
 | `strEndsWith(s, suffix)` | `string, string → bool` | Suffix check (function alias for `endsWith` operator) | `strEndsWith("hello", "llo")` → `true` |
+| `capitalize(s)` | `string → string` | First char uppercase | `capitalize("hello")` → `"Hello"` |
+| `title(s)` | `string → string` | Title case (each word) | `title("hello world")` → `"Hello World"` |
+| `camelCase(s)` | `string → string` | Convert to camelCase | `camelCase("hello_world")` → `"helloWorld"` |
+| `snakeCase(s)` | `string → string` | Convert to snake_case | `snakeCase("helloWorld")` → `"hello_world"` |
+| `kebabCase(s)` | `string → string` | Convert to kebab-case | `kebabCase("helloWorld")` → `"hello-world"` |
+| `pascalCase(s)` | `string → string` | Convert to PascalCase | `pascalCase("hello_world")` → `"HelloWorld"` |
+| `truncate(s, max, suffix?)` | `string, int, string? → string` | Truncate with suffix (default "...") | `truncate("hello world", 8)` → `"hello..."` |
+| `slugify(s)` | `string → string` | URL-friendly slug | `slugify("Hello World!")` → `"hello-world"` |
+| `strReverse(s)` | `string → string` | Reverse string (rune-aware) | `strReverse("hello")` → `"olleh"` |
+| `strCount(s, sub)` | `string, string → int` | Count substring occurrences | `strCount("hello", "l")` → `2` |
+| `replaceFirst(s, old, new)` | `string, string, string → string` | Replace first occurrence | `replaceFirst("aaa", "a", "b")` → `"baa"` |
+| `lines(s)` | `string → []string` | Split by newlines | `lines("a\nb\nc")` → `["a","b","c"]` |
+| `words(s)` | `string → []string` | Split by whitespace | `words("hello  world")` → `["hello","world"]` |
+| `isDigit(s)` | `string → bool` | All chars are digits | `isDigit("123")` → `true` |
+| `isAlpha(s)` | `string → bool` | All chars are letters | `isAlpha("hello")` → `true` |
+| `isAlphaNum(s)` | `string → bool` | All chars are letters or digits | `isAlphaNum("abc123")` → `true` |
+| `isEmpty(s)` | `string → bool` | String is "" | `isEmpty("")` → `true` |
+| `isBlank(s)` | `string → bool` | Empty or whitespace only | `isBlank("  ")` → `true` |
+| `escapeHTML(s)` | `string → string` | HTML entity encoding | `escapeHTML("<b>hi</b>")` → `"&lt;b&gt;hi&lt;/b&gt;"` |
+| `unescapeHTML(s)` | `string → string` | HTML entity decoding | `unescapeHTML("&lt;b&gt;")` → `"<b>"` |
 
-### Array (5 functions)
+### Array (17 functions)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -364,8 +410,18 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `slice(arr, start, end?)` | `[]any, int, int? → []any` | Slice array | `slice([1,2,3,4], 1, 3)` → `[2,3]` |
 | `chunk(arr, size)` | `[]any, int → [][]any` | Split into chunks | `chunk([1,2,3,4,5], 2)` → `[[1,2],[3,4],[5]]` |
 | `zip(a, b)` | `[]any, []any → [][]any` | Zip two arrays | `zip([1,2], ["a","b"])` → `[[1,"a"],[2,"b"]]` |
+| `compact(arr)` | `[]any → []any` | Remove nil values | `compact([1, nil, 2, nil])` → `[1, 2]` |
+| `includes(arr, item)` | `[]any, any → bool` | Check if array contains item | `includes([1,2,3], 2)` → `true` |
+| `arrayIndexOf(arr, item)` | `[]any, any → int` | Find index (-1 if not found) | `arrayIndexOf(["a","b","c"], "b")` → `1` |
+| `keyBy(arr, key)` | `[]map, string → map` | Array of maps → map keyed by field | `keyBy(users, "id")` |
+| `difference(a, b)` | `[]any, []any → []any` | Elements in a not in b | `difference([1,2,3], [2])` → `[1,3]` |
+| `intersection(a, b)` | `[]any, []any → []any` | Elements in both | `intersection([1,2,3], [2,3,4])` → `[2,3]` |
+| `union(a, b)` | `[]any, []any → []any` | Unique elements from both | `union([1,2], [2,3])` → `[1,2,3]` |
+| `fill(n, value)` | `int, any → []any` | Create array of N identical values | `fill(3, 0)` → `[0,0,0]` |
+| `drop(arr, n)` | `[]any, int → []any` | Remove first N elements | `drop([1,2,3,4], 2)` → `[3,4]` |
+| `takeRight(arr, n)` | `[]any, int → []any` | Last N elements | `takeRight([1,2,3,4], 2)` → `[3,4]` |
 
-### Map/Object (5 functions)
+### Map/Object (11 functions)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
@@ -374,14 +430,32 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `merge(a, b)` | `map, map → map` | Shallow merge (b overrides a) | `merge(defaults, overrides)` |
 | `pick(obj, keys)` | `map, []string → map` | Pick subset of keys | `pick(user, ["name", "email"])` |
 | `omit(obj, keys)` | `map, []string → map` | Remove specified keys | `omit(user, ["password", "secret"])` |
+| `deepMerge(a, b)` | `map, map → map` | Recursive merge (b overrides a) | `deepMerge(base, overrides)` |
+| `deepClone(obj)` | `any → any` | Deep copy via JSON round-trip | `deepClone(original)` |
+| `deepEqual(a, b)` | `any, any → bool` | Deep equality check | `deepEqual(obj1, obj2)` |
+| `setIn(obj, path, value)` | `map, string, any → map` | Set nested value by dot-path (immutable) | `setIn(config, "db.host", "localhost")` |
+| `deleteIn(obj, path)` | `map, string → map` | Delete nested key by dot-path (immutable) | `deleteIn(user, "password")` |
+| `defaults(obj, defaults)` | `map, map → map` | Fill missing keys from defaults | `defaults(config, {"port": 8080})` |
 
-### DateTime (3 functions)
+### DateTime (15 functions)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
 | `formatDate(dt, format)` | `datetime, string → string` | Format datetime | `formatDate(now(), "YYYY-MM-DD")` |
 | `addDuration(dt, dur)` | `datetime, string → datetime` | Add duration to datetime | `addDuration(now(), "7d")` |
 | `diffDates(a, b)` | `datetime, datetime → duration` | Difference between dates | `diffDates(end, start)` |
+| `toUnix(dt)` | `datetime → int` | Unix timestamp (seconds) | `toUnix(now())` → `1720000000` |
+| `fromUnix(ts)` | `int → datetime` | Unix timestamp to datetime | `fromUnix(1720000000)` |
+| `toISO(dt)` | `datetime → string` | ISO 8601 string | `toISO(now())` → `"2024-07-03T..."` |
+| `startOfDay(dt)` | `datetime → datetime` | 00:00:00 of the day | `startOfDay(now())` |
+| `endOfDay(dt)` | `datetime → datetime` | 23:59:59 of the day | `endOfDay(now())` |
+| `startOfMonth(dt)` | `datetime → datetime` | First day of month 00:00 | `startOfMonth(now())` |
+| `endOfMonth(dt)` | `datetime → datetime` | Last day of month 23:59:59 | `endOfMonth(now())` |
+| `isWeekend(dt)` | `datetime → bool` | Saturday or Sunday | `isWeekend(now())` |
+| `isBefore(a, b)` | `datetime, datetime → bool` | a < b | `isBefore(start, end)` |
+| `isAfter(a, b)` | `datetime, datetime → bool` | a > b | `isAfter(end, start)` |
+| `daysInMonth(dt)` | `datetime → int` | Days in the month (28-31) | `daysInMonth(date("2024-02-01"))` → `29` |
+| `isLeapYear(dt)` | `datetime → bool` | Leap year check | `isLeapYear(date("2024-01-01"))` → `true` |
 
 `formatDate` supports **universal format tokens** that are auto-translated to Go layout:
 
@@ -401,11 +475,15 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `urlEncode(s)` | `string → string` | URL-encode string | `urlEncode("hello world")` → `"hello+world"` |
 | `urlDecode(s)` | `string → string` | URL-decode string | `urlDecode("hello+world")` → `"hello world"` |
 
-### Format (1 function)
+### Format (5 functions)
 
 | Function | Signature | Description | Example |
 |----------|-----------|-------------|---------|
 | `sprintf(fmt, args...)` | `string, ...any → string` | Printf-style formatting | `sprintf("%.2f", 3.14159)` → `"3.14"` |
+| `toFixed(x, decimals?)` | `float, int? → string` | Format to N decimal places (default 2) | `toFixed(3.14159, 2)` → `"3.14"` |
+| `formatNumber(n, decimals?, sep?, decSep?)` | `float, ... → string` | Number with thousand separators | `formatNumber(1234567.89, 2)` → `"1,234,567.89"` |
+| `formatBytes(n)` | `int → string` | Human-readable bytes | `formatBytes(1048576)` → `"1.00 MB"` |
+| `formatPercent(n, decimals?)` | `float, int? → string` | Format as percentage | `formatPercent(0.156, 1)` → `"15.6%"` |
 
 ### Type (2 functions)
 
@@ -414,7 +492,15 @@ These functions are added by go-json on top of expr-lang. They are registered vi
 | `bool(x)` | `any → bool` | Truthiness coercion | `bool(0)` → `false`, `bool("hi")` → `true` |
 | `isNil(x)` | `any → bool` | Check if nil | `isNil(null)` → `true` |
 
-### Crypto (5 functions — namespaced)
+### Environment (1 function)
+
+| Function | Signature | Description | Example |
+|----------|-----------|-------------|---------|
+| `env(key, default?)` | `string, string? → string` | Read environment variable with optional default | `env("PORT", "8080")` |
+
+The `env()` function supports access control via `EnvAccessConfig` (allow/deny glob patterns). When embedding go-json, use `WithEnvResolver` to customize the resolver and `WithEnvAccess` to restrict which variables are accessible.
+
+### Crypto (11 functions — namespaced)
 
 Crypto functions are accessed via the `crypto.` namespace:
 
@@ -425,8 +511,31 @@ Crypto functions are accessed via the `crypto.` namespace:
 | `crypto.md5(s)` | `string → string` | MD5 hash (hex) | `crypto.md5("hello")` |
 | `crypto.uuid()` | `→ string` | Generate UUID v4 | `crypto.uuid()` → `"550e8400-..."` |
 | `crypto.hmac(s, key, algo?)` | `string, string, string? → string` | HMAC signature | `crypto.hmac("data", "secret")` |
+| `crypto.encrypt(plaintext, key)` | `string, string → string` | AES-256-GCM encrypt → base64 | `crypto.encrypt("secret", "mykey")` |
+| `crypto.decrypt(ciphertext, key)` | `string, string → string` | AES-256-GCM decrypt from base64 | `crypto.decrypt(encrypted, "mykey")` |
+| `crypto.hashPassword(password)` | `string → string` | bcrypt hash (cost 10) | `crypto.hashPassword("pass123")` |
+| `crypto.verifyPassword(password, hash)` | `string, string → bool` | bcrypt verify | `crypto.verifyPassword("pass123", hash)` |
+| `crypto.randomBytes(n)` | `int → string` | Crypto-secure random bytes (hex) | `crypto.randomBytes(16)` → 32-char hex |
 
 `crypto.hmac` defaults to SHA-256. Pass `"sha512"` as the third argument for SHA-512.
+`crypto.encrypt`/`decrypt` use AES-256-GCM. Key is normalized to 32 bytes via SHA-256 hash.
+
+### Validate (10 functions — namespaced)
+
+Validation functions are accessed via the `validate.` namespace:
+
+| Function | Signature | Description | Example |
+|----------|-----------|-------------|---------|
+| `validate.isEmail(s)` | `string → bool` | RFC 5322 basic email check | `validate.isEmail("user@example.com")` → `true` |
+| `validate.isURL(s)` | `string → bool` | Valid URL with scheme | `validate.isURL("https://example.com")` → `true` |
+| `validate.isIP(s)` | `string → bool` | IPv4 or IPv6 address | `validate.isIP("192.168.1.1")` → `true` |
+| `validate.isUUID(s)` | `string → bool` | UUID v4 format | `validate.isUUID("550e8400-e29b-41d4-a716-446655440000")` → `true` |
+| `validate.isJSON(s)` | `string → bool` | Valid JSON string | `validate.isJSON('{"a":1}')` → `true` |
+| `validate.isNumeric(s)` | `string → bool` | Numeric string | `validate.isNumeric("3.14")` → `true` |
+| `validate.isAlpha(s)` | `string → bool` | Letters only | `validate.isAlpha("hello")` → `true` |
+| `validate.isBase64(s)` | `string → bool` | Valid base64 | `validate.isBase64("aGVsbG8=")` → `true` |
+| `validate.isHexColor(s)` | `string → bool` | #RGB or #RRGGBB | `validate.isHexColor("#FF0000")` → `true` |
+| `validate.isCreditCard(s)` | `string → bool` | Luhn algorithm check | `validate.isCreditCard("4111111111111111")` → `true` |
 
 ### Regex (3 functions — namespaced)
 

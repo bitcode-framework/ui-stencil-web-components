@@ -70,7 +70,7 @@ bitcode/
 ## File Structure Rules (go-json)
 
 - `packages/go-json/lang/` — Core language engine: AST, parser, compiler, VM, scope, types, errors, expr engine, debugger.
-- `packages/go-json/stdlib/` — Layer 2 stdlib functions (math, strings, arrays, types). Layer 1 is expr-lang built-ins (~68 functions, zero work).
+- `packages/go-json/stdlib/` — Layer 2 stdlib functions (120+ functions: math, strings, arrays, maps, datetime, encoding, crypto, validate, format, env, types, path, JSON). Layer 1 is expr-lang built-ins (~68 functions, zero work).
 - `packages/go-json/runtime/` — Runtime API: `NewRuntime()`, `Execute()`, program cache, limits, logger, session context.
 - `packages/go-json/cmd/go-json/` — CLI entry point (placeholder for Phase 4.5b+).
 - `packages/go-json/codegen/` — Code generation (reserved for Phase 4.5b+).

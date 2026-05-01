@@ -212,6 +212,8 @@ rt := gojson.NewRuntime(
 | `WithIO` | `(modules ...IOModule)` | Enable I/O modules (HTTP, filesystem, etc.) |
 | `WithoutIO` | `()` | Explicitly disable all I/O (this is the default) |
 | `WithIOSecurity` | `(cfg *SecurityConfig)` | Configure I/O security policies |
+| `WithEnvResolver` | `(resolver EnvResolver)` | Custom resolver for `env()` function (default: `os.Getenv`) |
+| `WithEnvAccess` | `(config *EnvAccessConfig)` | Access control for `env()` (allow/deny glob patterns) |
 | `WithExtension` | `(name string, ext Extension)` | Register a host extension |
 
 ---
