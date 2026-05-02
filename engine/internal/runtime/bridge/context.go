@@ -6,6 +6,7 @@ import "gorm.io/gorm"
 // It holds all 20 bridge namespaces and provides the unified bitcode.* API.
 type Context struct {
 	txManager TxManager
+	txBridge  *txBridge
 	model     ModelFactory
 	db        DB
 	http      HTTPClient
@@ -69,6 +70,12 @@ func (c *Context) Crypto() Crypto             { return c.crypto }
 func (c *Context) Execution() ExecutionLog    { return c.execution }
 func (c *Context) Meta() MetaProvider         { return c.meta }
 func (c *Context) Refresher() ModelRefresher  { return c.refresher }
+
+func (c *Context) Cleanup() {
+	if c.txBridge != nil {
+		c.txBridge.Cleanup()
+	}
+}
 
 type ContextDeps struct {
 	TxManager TxManager

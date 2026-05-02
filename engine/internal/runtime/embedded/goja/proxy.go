@@ -2,10 +2,10 @@ package goja_runtime
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bitcode-framework/bitcode/internal/runtime/bridge"
 	"github.com/bitcode-framework/bitcode/internal/runtime/embedded"
-	"github.com/dop251/goja"
 )
 
 func (v *GojaVM) buildBitcodeObject(bc *bridge.Context) map[string]any {
@@ -80,13 +80,72 @@ func (v *GojaVM) buildBitcodeObject(bc *bridge.Context) map[string]any {
 			"current": func() any { return bc.Execution().Current() },
 			"cancel":  func(id string) error { return bc.Execution().Cancel(id) },
 		},
-		"tx": func(fn goja.Callable) error {
-			return bc.Tx(func(txCtx *bridge.Context) error {
+		"tx": map[string]any{
+			"begin": func(opts ...map[string]any) error {
+				db := bc.GormDB()
+				if db == nil {
+					return fmt.Errorf("database not available for transactions")
+				}
+				v.txMu.Lock()
+				defer v.txMu.Unlock()
+				if v.txGormTx != nil {
+					return fmt.Errorf("transaction already active — commit or rollback first")
+				}
+				gormTx := db.Begin()
+				if gormTx.Error != nil {
+					return gormTx.Error
+				}
+				txCtx := bc.CloneWithGormTx(gormTx)
+				v.txOriginalBC = bc
+				v.txGormTx = gormTx
+				timeout := parseTxBeginTimeout(firstMap(opts))
+				if timeout > 0 {
+					v.txTimeout = time.AfterFunc(timeout, func() {
+						v.txMu.Lock()
+						defer v.txMu.Unlock()
+						if v.txGormTx != nil {
+							v.txGormTx.Rollback()
+							v.txGormTx = nil
+							v.txOriginalBC = nil
+							v.txTimeout = nil
+						}
+					})
+				}
 				v.rt.Set("bitcode", v.buildBitcodeObject(txCtx))
-				defer v.rt.Set("bitcode", v.buildBitcodeObject(bc))
-				_, err := fn(goja.Undefined())
+				return nil
+			},
+			"commit": func() error {
+				v.txMu.Lock()
+				defer v.txMu.Unlock()
+				if v.txGormTx == nil {
+					return fmt.Errorf("no active transaction to commit")
+				}
+				if v.txTimeout != nil {
+					v.txTimeout.Stop()
+					v.txTimeout = nil
+				}
+				err := v.txGormTx.Commit().Error
+				v.rt.Set("bitcode", v.buildBitcodeObject(v.txOriginalBC))
+				v.txGormTx = nil
+				v.txOriginalBC = nil
 				return err
-			})
+			},
+			"rollback": func() error {
+				v.txMu.Lock()
+				defer v.txMu.Unlock()
+				if v.txGormTx == nil {
+					return fmt.Errorf("no active transaction to rollback")
+				}
+				if v.txTimeout != nil {
+					v.txTimeout.Stop()
+					v.txTimeout = nil
+				}
+				err := v.txGormTx.Rollback().Error
+				v.rt.Set("bitcode", v.buildBitcodeObject(v.txOriginalBC))
+				v.txGormTx = nil
+				v.txOriginalBC = nil
+				return err
+			},
 		},
 	}
 }
@@ -199,4 +258,40 @@ func firstMap(opts []map[string]any) map[string]any {
 	return nil
 }
 
-var _ = fmt.Sprintf
+const defaultGojaTxTimeout = 30 * time.Second
+
+func parseTxBeginTimeout(opts map[string]any) time.Duration {
+	if opts == nil {
+		return defaultGojaTxTimeout
+	}
+	raw, ok := opts["timeout"]
+	if !ok {
+		return defaultGojaTxTimeout
+	}
+	switch v := raw.(type) {
+	case float64:
+		if v <= 0 {
+			return 0
+		}
+		return time.Duration(v) * time.Second
+	case int:
+		if v <= 0 {
+			return 0
+		}
+		return time.Duration(v) * time.Second
+	case int64:
+		if v <= 0 {
+			return 0
+		}
+		return time.Duration(v) * time.Second
+	case string:
+		d, err := time.ParseDuration(v)
+		if err != nil || d < 0 {
+			return defaultGojaTxTimeout
+		}
+		return d
+	default:
+		return defaultGojaTxTimeout
+	}
+}
+

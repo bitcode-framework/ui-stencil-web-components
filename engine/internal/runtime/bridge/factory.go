@@ -36,10 +36,12 @@ type Factory struct {
 }
 
 func (f *Factory) NewContext(moduleName string, session Session, rules SecurityRules) *Context {
+	txb := newTxBridge(f.DB)
 	return &Context{
 		txManager: newTxManager(f.DB),
-		model:     newModelFactory(f.DB, f.ModelRegistry, f.PermService),
-		db:        newDBBridge(f.DB),
+		txBridge:  txb,
+		model:     newModelFactoryWithTx(f.DB, f.ModelRegistry, f.PermService, txb),
+		db:        newDBBridgeWithTx(f.DB, txb),
 		http:      newHTTPBridge(),
 		cache:     newCacheBridge(f.Cache),
 		fs:        newFSBridge(moduleName, rules),

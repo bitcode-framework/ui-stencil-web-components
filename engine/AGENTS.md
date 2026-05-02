@@ -147,6 +147,42 @@ DataSourceDefinition supports `process` field (mutually exclusive with `model`) 
 - `WithClause.Nested` triggers recursive loading (max depth 3, configurable)
 - `?with=` query param on Read endpoint (`GET /:id`) — comma-separated or JSON array
 
+## Bridge API Ergonomics (Phase 4.5h)
+
+Three additive enhancements to the `ext:bitcode` bridge:
+
+### Fluent Model API
+Chainable query builder alongside existing `search({...})` API:
+- `bc.model('user').where('active', true).limit(10).get()`
+- `bc.model('user').find(id).update(data)` / `.delete()`
+- `bc.model('user').where(...).orderBy('name').first()`
+- `bc.model('user').where(...).count()` / `.sum('field')`
+
+Key files: `bridge/query_builder.go`
+
+### Unified Imperative Transaction API
+All runtimes now use imperative `begin/commit/rollback` (callback style removed from goja/yaegi):
+
+| Runtime | API |
+|---------|-----|
+| go-json | `bc.tx.begin()` / `bc.tx.begin({timeout: "5m"})` / `bc.tx.begin({timeout: 0})` |
+| goja | `bitcode.tx.begin()` / `bitcode.tx.begin({timeout: 60})` |
+| yaegi | `bitcode.Tx().Begin()` / `bitcode.Tx().BeginWithTimeout(5*time.Minute)` |
+| Node.js | `await bitcode.tx.begin()` / `await bitcode.tx.begin({timeout: 300})` |
+| Python | `bitcode.tx.begin()` / `bitcode.tx.begin({timeout: 300})` |
+
+Timeout behavior (consistent across all runtimes):
+- Default: 30s — tx auto-rolled-back if not committed/rolled-back within 30 seconds
+- Custom: pass `timeout` in seconds (int/float), or duration string ("5m", "1h")
+- Infinite: `timeout: 0` — no auto-rollback, relies on program timeout + VM Close/Cleanup
+
+Safety: configurable auto-rollback timeout, auto-rollback on VM close, mutex-protected state.
+
+Key files: `bridge/tx_bridge.go`, `embedded/goja/proxy.go`, `embedded/yaegi/symbols.go`, `plugin/tx_store.go`
+
+### Email Template Shorthand
+`bc.email.template('welcome', email, data)` — shorthand for `bc.email.send({template: 'welcome', to: email, data: data})`
+
 ## Primary Keys
 
 6 strategies: `uuid` (v4/v7), `auto_increment`, `composite`, `natural_key`, `naming_series`, `manual`.

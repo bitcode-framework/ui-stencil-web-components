@@ -29,7 +29,9 @@ func newTxStore() *txStore {
 	}
 }
 
-func (s *txStore) Begin(parentCtx *bridge.Context) (string, *bridge.Context, error) {
+const defaultPluginTxTimeout = 30 * time.Second
+
+func (s *txStore) Begin(parentCtx *bridge.Context, timeout ...time.Duration) (string, *bridge.Context, error) {
 	db := parentCtx.GormDB()
 	if db == nil {
 		return "", nil, fmt.Errorf("database not available for transactions")
@@ -57,7 +59,13 @@ func (s *txStore) Begin(parentCtx *bridge.Context) (string, *bridge.Context, err
 	s.entries[txID] = entry
 	s.mu.Unlock()
 
-	go s.watchTimeout(txID, 30*time.Second)
+	txDuration := defaultPluginTxTimeout
+	if len(timeout) > 0 {
+		txDuration = timeout[0]
+	}
+	if txDuration > 0 {
+		go s.watchTimeout(txID, txDuration)
+	}
 
 	return txID, txCtx, nil
 }

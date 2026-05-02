@@ -1,18 +1,26 @@
 package yaegi_runtime
 
 import (
+	"fmt"
 	"reflect"
+	"sync"
+	"time"
 
 	"github.com/bitcode-framework/bitcode/internal/runtime/bridge"
 	"github.com/bitcode-framework/bitcode/internal/runtime/embedded"
 	"github.com/traefik/yaegi/interp"
+	"gorm.io/gorm"
 )
 
 // bridgeHolder holds a swappable pointer to bridge.Context.
 // All proxy structs reference this holder so that Tx can swap the context
 // and all subsequent bridge calls within the transaction use the tx connection.
 type bridgeHolder struct {
-	ctx *bridge.Context
+	ctx           *bridge.Context
+	txMu          sync.Mutex
+	txOriginalCtx *bridge.Context
+	txGormTx      *gorm.DB
+	txTimeout     *time.Timer
 }
 
 func (h *bridgeHolder) get() *bridge.Context { return h.ctx }
@@ -51,14 +59,7 @@ func buildBitcodePackage(h *bridgeHolder) map[string]reflect.Value {
 		"Audit":     reflect.ValueOf(func() *goAuditProxy { return newAuditProxy(h) }),
 		"Crypto":    reflect.ValueOf(func() *goCryptoProxy { return newCryptoProxy(h) }),
 		"Execution": reflect.ValueOf(func() *goExecutionProxy { return newExecutionProxy(h) }),
-		"Tx": reflect.ValueOf(func(fn func() error) error {
-			return h.get().Tx(func(txCtx *bridge.Context) error {
-				original := h.ctx
-				h.ctx = txCtx
-				defer func() { h.ctx = original }()
-				return fn()
-			})
-		}),
+		"Tx": reflect.ValueOf(func() *goTxProxy { return newTxProxy(h) }),
 	}
 }
 
@@ -351,6 +352,91 @@ func (e *goExecutionProxy) Get(id string) (map[string]any, error) {
 }
 func (e *goExecutionProxy) Current() *bridge.ExecutionInfo { return e.h.get().Execution().Current() }
 func (e *goExecutionProxy) Cancel(id string) error         { return e.h.get().Execution().Cancel(id) }
+
+// --- Tx proxy ---
+
+type goTxProxy struct {
+	h *bridgeHolder
+}
+
+func newTxProxy(h *bridgeHolder) *goTxProxy { return &goTxProxy{h: h} }
+
+const defaultYaegiTxTimeout = 30 * time.Second
+
+// Begin starts a tx with default 30s timeout.
+// Use BeginWithTimeout for custom timeout.
+func (t *goTxProxy) Begin() error {
+	return t.BeginWithTimeout(defaultYaegiTxTimeout)
+}
+
+// BeginWithTimeout starts a tx with explicit timeout. 0 = no timeout.
+func (t *goTxProxy) BeginWithTimeout(timeout time.Duration) error {
+	db := t.h.get().GormDB()
+	if db == nil {
+		return fmt.Errorf("database not available for transactions")
+	}
+	t.h.txMu.Lock()
+	defer t.h.txMu.Unlock()
+	if t.h.txGormTx != nil {
+		return fmt.Errorf("transaction already active — commit or rollback first")
+	}
+	gormTx := db.Begin()
+	if gormTx.Error != nil {
+		return gormTx.Error
+	}
+	txCtx := t.h.get().CloneWithGormTx(gormTx)
+	t.h.txOriginalCtx = t.h.ctx
+	t.h.txGormTx = gormTx
+	if timeout > 0 {
+		t.h.txTimeout = time.AfterFunc(timeout, func() {
+			t.h.txMu.Lock()
+			defer t.h.txMu.Unlock()
+			if t.h.txGormTx != nil {
+				t.h.txGormTx.Rollback()
+				t.h.ctx = t.h.txOriginalCtx
+				t.h.txGormTx = nil
+				t.h.txOriginalCtx = nil
+				t.h.txTimeout = nil
+			}
+		})
+	}
+	t.h.ctx = txCtx
+	return nil
+}
+
+func (t *goTxProxy) Commit() error {
+	t.h.txMu.Lock()
+	defer t.h.txMu.Unlock()
+	if t.h.txGormTx == nil {
+		return fmt.Errorf("no active transaction to commit")
+	}
+	if t.h.txTimeout != nil {
+		t.h.txTimeout.Stop()
+		t.h.txTimeout = nil
+	}
+	err := t.h.txGormTx.Commit().Error
+	t.h.ctx = t.h.txOriginalCtx
+	t.h.txGormTx = nil
+	t.h.txOriginalCtx = nil
+	return err
+}
+
+func (t *goTxProxy) Rollback() error {
+	t.h.txMu.Lock()
+	defer t.h.txMu.Unlock()
+	if t.h.txGormTx == nil {
+		return fmt.Errorf("no active transaction to rollback")
+	}
+	if t.h.txTimeout != nil {
+		t.h.txTimeout.Stop()
+		t.h.txTimeout = nil
+	}
+	err := t.h.txGormTx.Rollback().Error
+	t.h.ctx = t.h.txOriginalCtx
+	t.h.txGormTx = nil
+	t.h.txOriginalCtx = nil
+	return err
+}
 
 // --- helpers ---
 

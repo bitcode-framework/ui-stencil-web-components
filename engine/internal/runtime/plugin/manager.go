@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/bitcode-framework/bitcode/internal/runtime/bridge"
 )
@@ -358,7 +359,8 @@ func (m *Manager) handleBridgeRequest(ctx context.Context, proc *PluginProcess, 
 func (m *Manager) handleTxMethod(ctx context.Context, bc *bridge.Context, method string, params map[string]any) (any, *bridge.BridgeError) {
 	switch method {
 	case "tx.begin":
-		txID, _, err := m.txStore.Begin(bc)
+		txTimeout := parsePluginTxTimeout(params)
+		txID, _, err := m.txStore.Begin(bc, txTimeout)
 		if err != nil {
 			return nil, bridge.NewError(bridge.ErrInternalError, "failed to begin transaction: "+err.Error())
 		}
@@ -386,6 +388,31 @@ func (m *Manager) handleTxMethod(ctx context.Context, bc *bridge.Context, method
 
 	default:
 		return nil, bridge.NewErrorf("UNKNOWN_METHOD", "unknown tx method: %s", method)
+	}
+}
+
+func parsePluginTxTimeout(params map[string]any) time.Duration {
+	if params == nil {
+		return defaultPluginTxTimeout
+	}
+	raw, ok := params["timeout"]
+	if !ok {
+		return defaultPluginTxTimeout
+	}
+	switch v := raw.(type) {
+	case float64:
+		if v <= 0 {
+			return 0
+		}
+		return time.Duration(v) * time.Second
+	case string:
+		d, err := time.ParseDuration(v)
+		if err != nil || d < 0 {
+			return defaultPluginTxTimeout
+		}
+		return d
+	default:
+		return defaultPluginTxTimeout
 	}
 }
 

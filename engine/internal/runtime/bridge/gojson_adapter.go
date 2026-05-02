@@ -26,7 +26,56 @@ func BuildGoJSONExtension(bc *Context) gojsonrt.Extension {
 			"emit":    buildEmitFunc(bc),
 			"call":    buildCallFunc(bc),
 			"exec":    buildExecFunc(bc),
-			"email":   map[string]any{"send": func(opts map[string]any) (any, error) { return nil, bc.Email().Send(mapToEmailOptions(opts)) }},
+			"email": map[string]any{
+				"send": func(opts map[string]any) (any, error) { return nil, bc.Email().Send(mapToEmailOptions(opts)) },
+				"template": func(params ...any) (any, error) {
+					if len(params) < 2 {
+						return nil, fmt.Errorf("email.template: requires at least (templateName, to)")
+					}
+					templateName, ok := params[0].(string)
+					if !ok {
+						return nil, fmt.Errorf("email.template: first argument must be template name string")
+					}
+					to, ok := params[1].(string)
+					if !ok {
+						return nil, fmt.Errorf("email.template: second argument must be recipient email string")
+					}
+					var data map[string]any
+					if len(params) > 2 {
+						data, _ = params[2].(map[string]any)
+					}
+					return nil, bc.Email().Send(EmailOptions{
+						To:       to,
+						Template: templateName,
+						Data:     data,
+					})
+				},
+			},
+			"tx": map[string]any{
+				"begin": func(opts ...any) (any, error) {
+					if bc.txBridge == nil {
+						return nil, fmt.Errorf("transaction support not configured")
+					}
+					var optsMap map[string]any
+					if len(opts) > 0 {
+						optsMap, _ = opts[0].(map[string]any)
+					}
+					timeout := parseTxTimeout(optsMap)
+					return nil, bc.txBridge.BeginWithTimeout(timeout)
+				},
+				"commit": func() (any, error) {
+					if bc.txBridge == nil {
+						return nil, fmt.Errorf("transaction support not configured")
+					}
+					return nil, bc.txBridge.Commit()
+				},
+				"rollback": func() (any, error) {
+					if bc.txBridge == nil {
+						return nil, fmt.Errorf("transaction support not configured")
+					}
+					return nil, bc.txBridge.Rollback()
+				},
+			},
 			"notify":  buildNotifyNamespace(bc),
 			"storage": buildStorageNamespace(bc),
 			"t":       func(key string) any { return bc.T(key) },
@@ -363,7 +412,8 @@ func buildSecurityGroups(bc *Context) func() (any, error) {
 
 func buildModelProxy(bc *Context, name string, sudo bool) map[string]any {
 	handle := bc.model.Model(name, bc.session, sudo)
-	return map[string]any{
+
+	proxy := map[string]any{
 		"search": func(opts ...any) (any, error) {
 			so := SearchOptions{}
 			if len(opts) > 0 {
@@ -406,6 +456,12 @@ func buildModelProxy(bc *Context, name string, sudo bool) map[string]any {
 		"morphSync":      func(params ...any) (any, error) { if len(params) < 3 { return nil, fmt.Errorf("model.morphSync: id, relation, ids required") }; return nil, handle.MorphSync(fmt.Sprintf("%v", params[0]), fmt.Sprintf("%v", params[1]), toStringSlice(params[2])) },
 		"sudo":           func() any { return buildModelProxy(bc, name, true) },
 	}
+
+	for k, v := range buildFluentModelProxy(handle) {
+		proxy[k] = v
+	}
+
+	return proxy
 }
 
 func convertToAny(v any) any {

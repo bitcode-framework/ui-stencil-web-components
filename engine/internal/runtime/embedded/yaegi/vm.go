@@ -51,7 +51,21 @@ func (v *YaegiVM) Interrupt(reason string) {
 	v.cancelled.Store(true)
 }
 
-func (v *YaegiVM) Close() {}
+func (v *YaegiVM) Close() {
+	if v.holder != nil {
+		v.holder.txMu.Lock()
+		if v.holder.txGormTx != nil {
+			if v.holder.txTimeout != nil {
+				v.holder.txTimeout.Stop()
+				v.holder.txTimeout = nil
+			}
+			v.holder.txGormTx.Rollback()
+			v.holder.txGormTx = nil
+			v.holder.txOriginalCtx = nil
+		}
+		v.holder.txMu.Unlock()
+	}
+}
 
 // findExecuteFunc looks up main.Execute in the interpreted code.
 // Supports two signatures:

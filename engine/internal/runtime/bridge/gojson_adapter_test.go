@@ -28,14 +28,14 @@ func (m *mockHTTPClient) Put(url string, opts *HTTPOptions) (*HTTPResponse, erro
 func (m *mockHTTPClient) Patch(url string, opts *HTTPOptions) (*HTTPResponse, error)  { return m.response, nil }
 func (m *mockHTTPClient) Delete(url string, opts *HTTPOptions) (*HTTPResponse, error) { return m.response, nil }
 
-// mockCache implements Cache for testing.
-type mockCache struct {
+// mockCacheAdapter implements Cache for testing.
+type mockCacheAdapter struct {
 	store map[string]any
 }
 
-func (m *mockCache) Get(key string) (any, error)                    { return m.store[key], nil }
-func (m *mockCache) Set(key string, value any, opts *CacheSetOptions) error { m.store[key] = value; return nil }
-func (m *mockCache) Del(key string) error                           { delete(m.store, key); return nil }
+func (m *mockCacheAdapter) Get(key string) (any, error)                    { return m.store[key], nil }
+func (m *mockCacheAdapter) Set(key string, value any, opts *CacheSetOptions) error { m.store[key] = value; return nil }
+func (m *mockCacheAdapter) Del(key string) error                           { delete(m.store, key); return nil }
 
 // mockFS implements FS for testing.
 type mockFS struct{}
@@ -121,7 +121,7 @@ func (m *mockI18N) Translate(locale, key string) string { return "translated:" +
 type mockSecurity struct{}
 
 func (m *mockSecurity) Permissions(modelName string) (*ModelPermissions, error) {
-	return &ModelPermissions{Read: true, Write: true, Create: true, Delete: true}, nil
+	return &ModelPermissions{CanRead: true, CanWrite: true, CanCreate: true, CanDelete: true}, nil
 }
 func (m *mockSecurity) HasGroup(groupName string) (bool, error) { return true, nil }
 func (m *mockSecurity) Groups() ([]string, error)               { return []string{"admin"}, nil }
@@ -207,7 +207,10 @@ func (m *mockModelHandle) SetRelation(id, field string, relatedIDs []string) err
 func (m *mockModelHandle) LoadRelation(id, field string) ([]map[string]any, error) {
 	return []map[string]any{{"id": "rel-1"}}, nil
 }
-func (m *mockModelHandle) Sudo() SudoModelHandle { return nil }
+func (m *mockModelHandle) MorphAttach(id, relation string, relatedIDs []string) error  { return nil }
+func (m *mockModelHandle) MorphDetach(id, relation string, relatedIDs []string) error { return nil }
+func (m *mockModelHandle) MorphSync(id, relation string, relatedIDs []string) error   { return nil }
+func (m *mockModelHandle) Sudo() SudoModelHandle                                     { return nil }
 
 // mockTxManager implements TxManager for testing.
 type mockTxManager struct{}
@@ -222,7 +225,7 @@ func newTestContext() *Context {
 		Model:     &mockModelFactory{},
 		DB:        &mockDB{queryResult: []map[string]any{{"id": 1, "name": "Alice"}}, execResult: &ExecDBResult{RowsAffected: 1}},
 		HTTP:      &mockHTTPClient{response: &HTTPResponse{Status: 200, Headers: map[string]string{"Content-Type": "application/json"}, Body: map[string]any{"ok": true}}},
-		Cache:     &mockCache{store: map[string]any{"key1": "value1"}},
+		Cache:     &mockCacheAdapter{store: map[string]any{"key1": "value1"}},
 		FS:        &mockFS{},
 		Session:   Session{UserID: "user-1", Username: "admin", Email: "admin@test.com", TenantID: "t1", Groups: []string{"admin"}, Locale: "en"},
 		Config:    &mockConfig{data: map[string]any{"app.name": "TestApp"}},
@@ -254,6 +257,7 @@ func TestBuildGoJSONExtension_Structure(t *testing.T) {
 		"model", "db", "http", "cache", "fs", "env", "config", "session",
 		"log", "emit", "call", "exec", "email", "notify", "storage",
 		"t", "security", "audit", "crypto", "execution",
+		"meta", "refresh", "tx",
 	}
 
 	for _, key := range expectedKeys {
@@ -450,7 +454,7 @@ func TestBuildGoJSONExtension_CacheGetSet(t *testing.T) {
 	ext := BuildGoJSONExtension(bc)
 
 	cacheNS := ext.Functions["cache"].(map[string]any)
-	getFn := cacheNS["get"].(func(params ...any) (any, error))
+	getFn := cacheNS["get"].(func(key string) (any, error))
 
 	val, err := getFn("key1")
 	if err != nil {
@@ -556,7 +560,7 @@ func TestBuildGoJSONExtension_Crypto(t *testing.T) {
 
 	cryptoNS := ext.Functions["crypto"].(map[string]any)
 
-	encryptFn := cryptoNS["encrypt"].(func(params ...any) (any, error))
+	encryptFn := cryptoNS["encrypt"].(func(string) (any, error))
 	encrypted, err := encryptFn("secret")
 	if err != nil {
 		t.Fatalf("crypto.encrypt error: %v", err)
@@ -565,7 +569,7 @@ func TestBuildGoJSONExtension_Crypto(t *testing.T) {
 		t.Errorf("expected 'enc:secret', got %v", encrypted)
 	}
 
-	hashFn := cryptoNS["hash"].(func(params ...any) (any, error))
+	hashFn := cryptoNS["hash"].(func(string) (any, error))
 	hashed, err := hashFn("password")
 	if err != nil {
 		t.Fatalf("crypto.hash error: %v", err)
@@ -574,7 +578,7 @@ func TestBuildGoJSONExtension_Crypto(t *testing.T) {
 		t.Errorf("expected 'hash:password', got %v", hashed)
 	}
 
-	verifyFn := cryptoNS["verify"].(func(params ...any) (any, error))
+	verifyFn := cryptoNS["verify"].(func(string, string) (any, error))
 	valid, err := verifyFn("password", "hash:password")
 	if err != nil {
 		t.Fatalf("crypto.verify error: %v", err)
@@ -590,21 +594,32 @@ func TestBuildGoJSONExtension_Execution(t *testing.T) {
 
 	execNS := ext.Functions["execution"].(map[string]any)
 
-	currentFn := execNS["current"].(func(params ...any) (any, error))
-	current, err := currentFn()
-	if err != nil {
-		t.Fatalf("execution.current error: %v", err)
-	}
+	currentFn := execNS["current"].(func() any)
+	current := currentFn()
 	if current == nil {
 		t.Error("expected non-nil execution info")
 	}
 }
 
-func TestBuildGoJSONExtension_NoTxFunction(t *testing.T) {
+func TestBuildGoJSONExtension_TxNamespace(t *testing.T) {
 	bc := newTestContext()
 	ext := BuildGoJSONExtension(bc)
 
-	if _, ok := ext.Functions["tx"]; ok {
-		t.Error("tx function should NOT be in extension (removed per 4.5c-fix Task 11)")
+	txNs, ok := ext.Functions["tx"]
+	if !ok {
+		t.Fatal("tx namespace should exist in extension")
+	}
+	txMap, ok := txNs.(map[string]any)
+	if !ok {
+		t.Fatal("tx should be map[string]any (namespace), not a function")
+	}
+	if _, ok := txMap["begin"]; !ok {
+		t.Error("tx.begin should exist")
+	}
+	if _, ok := txMap["commit"]; !ok {
+		t.Error("tx.commit should exist")
+	}
+	if _, ok := txMap["rollback"]; !ok {
+		t.Error("tx.rollback should exist")
 	}
 }

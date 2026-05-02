@@ -642,7 +642,7 @@ func Execute(params map[string]any) (any, error) {
 	}
 }
 
-func TestYaegiBridgeTxSwapsContext(t *testing.T) {
+func TestYaegiTxImperative(t *testing.T) {
 	rt := New(nil)
 	vm, err := rt.NewVM(embedded.VMOptions{Timeout: 5 * time.Second})
 	if err != nil {
@@ -663,12 +663,9 @@ func TestYaegiBridgeTxSwapsContext(t *testing.T) {
 import "bitcode"
 
 func Execute(params map[string]any) (any, error) {
-	err := bitcode.Tx(func() error {
-		_, err := bitcode.Model("contact").Create(map[string]any{"name": "InTx"})
-		return err
-	})
+	err := bitcode.Tx().Begin()
 	if err != nil {
-		return nil, err
+		return map[string]any{"tx_error": err.Error()}, nil
 	}
 	return map[string]any{"tx": "ok"}, nil
 }
@@ -682,8 +679,92 @@ func Execute(params map[string]any) (any, error) {
 	if !ok {
 		t.Fatalf("expected map result, got %T", result)
 	}
-	if m["tx"] != "ok" {
-		t.Errorf("expected tx 'ok', got %v", m["tx"])
+	if m["tx_error"] != "database not available for transactions" {
+		t.Errorf("expected db not available error, got %v", m["tx_error"])
+	}
+}
+
+func TestYaegiTxCommitWithoutBegin(t *testing.T) {
+	rt := New(nil)
+	vm, err := rt.NewVM(embedded.VMOptions{Timeout: 5 * time.Second})
+	if err != nil {
+		t.Fatalf("NewVM failed: %v", err)
+	}
+	defer vm.Close()
+
+	bc := newMockBridgeContext()
+	if err := vm.InjectBridge(bc); err != nil {
+		t.Fatalf("InjectBridge failed: %v", err)
+	}
+	if err := vm.InjectParams(map[string]any{}); err != nil {
+		t.Fatalf("InjectParams failed: %v", err)
+	}
+
+	code := `package main
+
+import "bitcode"
+
+func Execute(params map[string]any) (any, error) {
+	err := bitcode.Tx().Commit()
+	if err != nil {
+		return map[string]any{"error": err.Error()}, nil
+	}
+	return map[string]any{"unexpected": "no error"}, nil
+}
+`
+	result, err := vm.Execute(code, "test_tx_commit_no_begin.go")
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	m, ok := result.(map[string]any)
+	if !ok {
+		t.Fatalf("expected map result, got %T", result)
+	}
+	if m["error"] != "no active transaction to commit" {
+		t.Errorf("expected 'no active transaction to commit', got %v", m["error"])
+	}
+}
+
+func TestYaegiTxRollbackWithoutBegin(t *testing.T) {
+	rt := New(nil)
+	vm, err := rt.NewVM(embedded.VMOptions{Timeout: 5 * time.Second})
+	if err != nil {
+		t.Fatalf("NewVM failed: %v", err)
+	}
+	defer vm.Close()
+
+	bc := newMockBridgeContext()
+	if err := vm.InjectBridge(bc); err != nil {
+		t.Fatalf("InjectBridge failed: %v", err)
+	}
+	if err := vm.InjectParams(map[string]any{}); err != nil {
+		t.Fatalf("InjectParams failed: %v", err)
+	}
+
+	code := `package main
+
+import "bitcode"
+
+func Execute(params map[string]any) (any, error) {
+	err := bitcode.Tx().Rollback()
+	if err != nil {
+		return map[string]any{"error": err.Error()}, nil
+	}
+	return map[string]any{"unexpected": "no error"}, nil
+}
+`
+	result, err := vm.Execute(code, "test_tx_rollback_no_begin.go")
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	m, ok := result.(map[string]any)
+	if !ok {
+		t.Fatalf("expected map result, got %T", result)
+	}
+	if m["error"] != "no active transaction to rollback" {
+		t.Errorf("expected 'no active transaction to rollback', got %v", m["error"])
 	}
 }
 
@@ -852,6 +933,9 @@ func (m *mockModelHandle) AddRelation(id, field string, relatedIDs []string) err
 func (m *mockModelHandle) RemoveRelation(id, field string, relatedIDs []string) error { return nil }
 func (m *mockModelHandle) SetRelation(id, field string, relatedIDs []string) error    { return nil }
 func (m *mockModelHandle) LoadRelation(id, field string) ([]map[string]any, error)    { return nil, nil }
+func (m *mockModelHandle) MorphAttach(id, relation string, relatedIDs []string) error { return nil }
+func (m *mockModelHandle) MorphDetach(id, relation string, relatedIDs []string) error { return nil }
+func (m *mockModelHandle) MorphSync(id, relation string, relatedIDs []string) error   { return nil }
 func (m *mockModelHandle) Sudo() bridge.SudoModelHandle                               { return &mockSudoModelHandle{} }
 
 type mockSudoModelHandle struct{ mockModelHandle }

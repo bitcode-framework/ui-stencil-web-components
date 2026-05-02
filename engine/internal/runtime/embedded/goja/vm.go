@@ -4,17 +4,23 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/bitcode-framework/bitcode/internal/runtime/bridge"
 	"github.com/bitcode-framework/bitcode/internal/runtime/embedded"
 	"github.com/dop251/goja"
+	"gorm.io/gorm"
 )
 
 var compiledScripts sync.Map
 
 type GojaVM struct {
-	rt   *goja.Runtime
-	opts embedded.VMOptions
+	rt           *goja.Runtime
+	opts         embedded.VMOptions
+	txMu         sync.Mutex
+	txOriginalBC *bridge.Context
+	txGormTx     *gorm.DB
+	txTimeout    *time.Timer
 }
 
 func (v *GojaVM) InjectBridge(bc *bridge.Context) error {
@@ -52,6 +58,17 @@ func (v *GojaVM) Interrupt(reason string) {
 }
 
 func (v *GojaVM) Close() {
+	v.txMu.Lock()
+	if v.txGormTx != nil {
+		if v.txTimeout != nil {
+			v.txTimeout.Stop()
+			v.txTimeout = nil
+		}
+		v.txGormTx.Rollback()
+		v.txGormTx = nil
+		v.txOriginalBC = nil
+	}
+	v.txMu.Unlock()
 	v.rt.ClearInterrupt()
 }
 

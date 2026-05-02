@@ -3,16 +3,28 @@ package bridge
 import "gorm.io/gorm"
 
 type dbBridge struct {
-	db *gorm.DB
+	db  *gorm.DB
+	txb *txBridge
 }
 
 func newDBBridge(db *gorm.DB) *dbBridge {
 	return &dbBridge{db: db}
 }
 
+func newDBBridgeWithTx(db *gorm.DB, txb *txBridge) *dbBridge {
+	return &dbBridge{db: db, txb: txb}
+}
+
+func (d *dbBridge) effectiveDB() *gorm.DB {
+	if d.txb != nil {
+		return d.txb.EffectiveDB()
+	}
+	return d.db
+}
+
 func (d *dbBridge) Query(sql string, args ...any) ([]map[string]any, error) {
 	var results []map[string]any
-	tx := d.db.Raw(sql, args...).Scan(&results)
+	tx := d.effectiveDB().Raw(sql, args...).Scan(&results)
 	if tx.Error != nil {
 		return nil, NewError(ErrInternalError, tx.Error.Error())
 	}
@@ -20,7 +32,7 @@ func (d *dbBridge) Query(sql string, args ...any) ([]map[string]any, error) {
 }
 
 func (d *dbBridge) Execute(sql string, args ...any) (*ExecDBResult, error) {
-	tx := d.db.Exec(sql, args...)
+	tx := d.effectiveDB().Exec(sql, args...)
 	if tx.Error != nil {
 		return nil, NewError(ErrInternalError, tx.Error.Error())
 	}

@@ -49,6 +49,35 @@ func newModelFactory(db *gorm.DB, registry *model.Registry, permService *persist
 	}
 }
 
+func newModelFactoryWithTx(db *gorm.DB, registry *model.Registry, permService *persistence.PermissionService, txb *txBridge) *modelFactory {
+	return &modelFactory{
+		db:          db,
+		registry:    registry,
+		permService: permService,
+		repoFactory: func(modelName string, session Session, _ *gorm.DB) (*persistence.GenericRepository, *parser.ModelDefinition, error) {
+			effectiveDB := txb.EffectiveDB()
+			modelDef, err := registry.Get(modelName)
+			if err != nil || modelDef == nil {
+				return nil, nil, ErrModelNotFoundFor(modelName)
+			}
+			tableName := registry.TableName(modelName)
+			if tableName == "" {
+				tableName = modelName
+			}
+
+			var repo *persistence.GenericRepository
+			if session.TenantID != "" {
+				repo = persistence.NewGenericRepositoryWithModelAndTenant(effectiveDB, tableName, modelDef, session.TenantID)
+			} else {
+				repo = persistence.NewGenericRepositoryWithModel(effectiveDB, tableName, modelDef)
+			}
+			repo.SetCurrentUser(session.UserID)
+			repo.SetLocale(session.Locale)
+			return repo, modelDef, nil
+		},
+	}
+}
+
 func (f *modelFactory) withTx(tx *gorm.DB) *modelFactory {
 	clone := *f
 	clone.db = tx
