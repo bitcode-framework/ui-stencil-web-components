@@ -50,7 +50,7 @@ func (ir *ImportResolver) ResolveImports(program *Program, basePath string, impo
 				return err
 			}
 
-		case "io", "ext", "script":
+		case "io", "ext", "script", "wasm", "plugin":
 			if program.RequestedModules == nil {
 				program.RequestedModules = make(map[string]ImportDef)
 			}

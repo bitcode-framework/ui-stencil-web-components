@@ -9,6 +9,7 @@ import (
 	nodeRT "github.com/bitcode-framework/go-json-runtimes/node"
 	pythonRT "github.com/bitcode-framework/go-json-runtimes/python"
 	quickjsRT "github.com/bitcode-framework/go-json-runtimes/quickjs"
+	wasmRT "github.com/bitcode-framework/go-json-runtimes/wasm"
 	yaegiRT "github.com/bitcode-framework/go-json-runtimes/yaegi"
 )
 
@@ -17,8 +18,10 @@ func main() {
 		gojson.WithScriptRuntime(newEmbeddedAdapter("goja", []string{".js"}, gojaRT.New())),
 		gojson.WithScriptRuntime(newEmbeddedAdapter("quickjs", []string{".js"}, quickjsRT.New())),
 		gojson.WithScriptRuntime(newEmbeddedAdapter("yaegi", []string{".go"}, yaegiRT.New())),
+		gojson.WithScriptRuntime(wasmRT.New(wasmRT.DefaultConfig())),
 		gojson.WithScriptRuntime(&externalAdapter{rt: nodeRT.NewAuto(), exts: []string{".ts", ".mjs"}}),
 		gojson.WithScriptRuntime(&externalAdapter{rt: pythonRT.NewAuto(), exts: []string{".py", ".pyw"}}),
+		// Native plugins NOT registered — security risk, must be explicitly enabled
 	)
 }
 

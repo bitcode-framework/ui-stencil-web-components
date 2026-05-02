@@ -25,6 +25,12 @@ type RuntimeConfig struct {
 	PythonMinVersion string
 	WorkerPool       PoolConfig
 	BackgroundPool   PoolConfig
+	WasmEnabled      bool
+	WasmMaxMemoryMB  int
+	WasmMaxExecTime  string
+	WasmCompileCache bool
+	NativeEnabled    bool
+	NativeAllowDirs  []string
 }
 
 func DefaultRuntimeConfig() RuntimeConfig {
@@ -37,6 +43,11 @@ func DefaultRuntimeConfig() RuntimeConfig {
 		PythonMinVersion: "3.10.0",
 		WorkerPool:       DefaultWorkerPoolConfig(),
 		BackgroundPool:   DefaultBackgroundPoolConfig(),
+		WasmEnabled:      true,
+		WasmMaxMemoryMB:  64,
+		WasmMaxExecTime:  "30s",
+		WasmCompileCache: true,
+		NativeEnabled:    false,
 	}
 }
 

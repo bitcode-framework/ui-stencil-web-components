@@ -99,7 +99,7 @@ type NewConstruction struct {
 type ImportDef struct {
 	Alias    string // namespace alias
 	Path     string // raw path string
-	PathType string // "relative", "stdlib", "ext", "io"
+	PathType string // "relative", "stdlib", "ext", "io", "script", "wasm", "plugin"
 }
 
 // ParallelNode represents a parallel execution step.

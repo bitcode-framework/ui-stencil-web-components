@@ -72,6 +72,12 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 	v.SetDefault("runtime.worker.max_executions", 1000)
 	v.SetDefault("runtime.background.pool_size", 2)
 	v.SetDefault("runtime.background.max_executions", 100)
+	v.SetDefault("runtime.wasm.enabled", true)
+	v.SetDefault("runtime.wasm.max_memory_mb", 64)
+	v.SetDefault("runtime.wasm.max_exec_time", "30s")
+	v.SetDefault("runtime.wasm.compile_cache", true)
+	v.SetDefault("runtime.native.enabled", false)
+	v.SetDefault("runtime.native.allowed_dirs", []string{})
 
 	v.SetDefault("execution_log.enabled", true)
 	v.SetDefault("execution_log.save_input", true)
@@ -320,6 +326,12 @@ func LoadConfig(explicitPath string) (AppConfig, error) {
 				Size:          v.GetInt("runtime.background.pool_size"),
 				MaxExecutions: v.GetInt("runtime.background.max_executions"),
 			},
+			WasmEnabled:      v.GetBool("runtime.wasm.enabled"),
+			WasmMaxMemoryMB:  v.GetInt("runtime.wasm.max_memory_mb"),
+			WasmMaxExecTime:  v.GetString("runtime.wasm.max_exec_time"),
+			WasmCompileCache: v.GetBool("runtime.wasm.compile_cache"),
+			NativeEnabled:    v.GetBool("runtime.native.enabled"),
+			NativeAllowDirs:  v.GetStringSlice("runtime.native.allowed_dirs"),
 		},
 		AppMode:       v.GetString("app.mode"),
 		EagerMaxDepth: v.GetInt("eager_loading.max_depth"),

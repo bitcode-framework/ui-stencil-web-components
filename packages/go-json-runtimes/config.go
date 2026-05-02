@@ -60,6 +60,21 @@ type TimeoutConfig struct {
 	MaxProcessTimeout  time.Duration
 }
 
+// WasmRuntimeConfig configures the WASM runtime (wazero).
+type WasmRuntimeConfig struct {
+	Enabled      bool
+	MaxMemoryMB  int
+	MaxExecTime  time.Duration
+	CompileCache bool
+	WASIEnabled  bool
+}
+
+// NativeRuntimeConfig configures the native plugin runtime.
+type NativeRuntimeConfig struct {
+	Enabled     bool
+	AllowedDirs []string
+}
+
 type ExecOptions struct {
 	MaxMemoryMB int
 	Pool        string

@@ -62,7 +62,7 @@ packages/go-json/
 ## Import System (Phase 4.5b)
 
 - Import key: `"import"` (preferred) or `"imports"` (compat)
-- Path types: relative (`./`), stdlib (`stdlib:`), extension (`ext:`), I/O (`io:`), script (`script:`)
+- Path types: relative (`./`), stdlib (`stdlib:`), extension (`ext:`), I/O (`io:`), script (`script:`), WASM (`wasm:`), native plugin (`plugin:`)
 - Imported items namespaced via alias: `alias.StructName`, `alias.functionName`
 - Circular import detection via import stack
 - Import alias collision detection (compile error on duplicate namespaced names)
@@ -70,6 +70,8 @@ packages/go-json/
 - Diamond imports handled correctly (loaded once, cached)
 - Wired via `Runtime.CompileFile(path)` — import resolution between parse and compile
 - Script imports (`script:./path.py`) — resolved at runtime via `ScriptRuntime` interface (Phase 4.5j)
+- WASM imports (`wasm:./plugin.wasm`) — resolved via `.wasm` extension to WASM runtime (Phase 4.5k)
+- Native plugin imports (`plugin:./plugin.so`) — resolved via `.so`/`.dylib` extension to native runtime (Phase 4.5k)
 
 ## Script Plugin System (Phase 4.5j)
 

@@ -89,6 +89,17 @@ func BuildGoJSONExtension(bc *Context) gojsonrt.Extension {
 	}
 }
 
+// BuildScriptBridge creates the bridge map passed to script runtimes (WASM, native plugins).
+// This is the same function map as the go-json extension, enabling WASM/native plugins
+// to call bridge functions via bridge_call("model", ...) or bridge_call("db.query", ...).
+func BuildScriptBridge(bc *Context) map[string]any {
+	if bc == nil {
+		return nil
+	}
+	ext := BuildGoJSONExtension(bc)
+	return ext.Functions
+}
+
 func buildDBNamespace(bc *Context) map[string]any {
 	return map[string]any{
 		"query":   buildDBQuery(bc),

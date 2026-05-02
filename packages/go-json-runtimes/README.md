@@ -1,6 +1,6 @@
 # go-json-runtimes
 
-Script runtime engines for [go-json](../go-json/). Provides goja (JavaScript), yaegi (Go), quickjs (JavaScript ES2023), Node.js, and Python runtimes that implement go-json's `ScriptRuntime` interface.
+Script runtime engines for [go-json](../go-json/). Provides goja (JavaScript), yaegi (Go), quickjs (JavaScript ES2023), WASM (wazero), Node.js, and Python runtimes that implement go-json's `ScriptRuntime` interface.
 
 ## Installation
 
@@ -33,8 +33,10 @@ defer rt.Close()
 | goja | `goja/` | `.js` | Embedded (pure Go) |
 | quickjs | `quickjs/` | `.js` | Embedded (via wazero) |
 | yaegi | `yaegi/` | `.go` | Embedded (Go interpreter) |
+| wazero (WASM) | `wasm/` | `.wasm` | Embedded (pure Go, zero CGO) |
 | Node.js | `node/` | `.ts`, `.mjs` | External (child process) |
 | Python | `python/` | `.py`, `.pyw` | External (child process) |
+| Native | `native/` | `.so`, `.dylib` | Native (Go plugin, Linux/macOS only) |
 
 ## Configuration
 
@@ -44,6 +46,14 @@ runtimes.WithGoja()
 runtimes.WithQuickJS()
 runtimes.WithYaegi(runtimes.YaegiConfig{
     BridgesDir: "bridges/",
+})
+
+// WASM runtime — embedded, always available
+runtimes.WithWasm(runtimes.WasmRuntimeConfig{
+    Enabled:      true,
+    MaxMemoryMB:  64,
+    MaxExecTime:  30 * time.Second,
+    CompileCache: true,
 })
 
 // External runtimes — require system installation
@@ -56,6 +66,12 @@ runtimes.WithPython(runtimes.PythonConfig{
     Enabled:    "auto",
     Command:    "python3",
     MinVersion: "3.10.0",
+})
+
+// Native plugins — Linux/macOS only, NOT enabled by default (security)
+runtimes.WithNative(runtimes.NativeRuntimeConfig{
+    Enabled:     true,
+    AllowedDirs: []string{"plugins/"},
 })
 ```
 

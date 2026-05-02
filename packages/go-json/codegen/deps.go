@@ -18,6 +18,8 @@ type DetectedFeatures struct {
 	HasMongoDB   bool
 	HasTemplates bool
 	HasCORS      bool
+	HasWasm      bool
+	HasNative    bool
 	Framework    string
 }
 
@@ -52,6 +54,13 @@ func DetectFeatures(program *lang.CompiledProgram) DetectedFeatures {
 				f.HasRedis = true
 			case "io:mongo":
 				f.HasMongoDB = true
+			default:
+				switch imp.PathType {
+				case "wasm":
+					f.HasWasm = true
+				case "plugin":
+					f.HasNative = true
+				}
 			}
 		}
 	}
@@ -83,6 +92,9 @@ func GenerateGoMod(moduleName string, features DetectedFeatures) string {
 	}
 	if features.HasRedis {
 		b.WriteString("\tgithub.com/redis/go-redis/v9 v9.5.0\n")
+	}
+	if features.HasWasm {
+		b.WriteString("\tgithub.com/tetratelabs/wazero v1.9.0\n")
 	}
 
 	b.WriteString(")\n")

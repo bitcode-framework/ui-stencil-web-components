@@ -6,6 +6,7 @@ require (
 	github.com/bitcode-framework/go-json v0.0.0
 	github.com/dop251/goja v0.0.0-20260311135729-065cd970411c
 	github.com/fastschema/qjs v0.0.6
+	github.com/tetratelabs/wazero v1.9.0
 	github.com/traefik/yaegi v0.16.1
 )
 
@@ -49,7 +50,6 @@ require (
 	github.com/quic-go/quic-go v0.54.0 // indirect
 	github.com/redis/go-redis/v9 v9.7.3 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/tetratelabs/wazero v1.9.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

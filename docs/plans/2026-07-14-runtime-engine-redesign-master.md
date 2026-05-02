@@ -482,7 +482,7 @@ Step 1 → Python **background** pool (step-level override).
 | **4.5h** | Bridge API Ergonomics | Phase 4.5f | 🔲 Pending | Fluent model API (`bc.model(x).where().limit().get()`), `bc.tx.begin/commit/rollback`, `bc.email.template()` shorthand, extends/overrides pattern documentation. **BitCode engine change**, not go-json. |
 | **4.5i** | go-json Advanced Features | Phase 4.5g | 🔲 Pending | `io:cache` (in-memory with TTL), `io:email` (SMTP client). DAG step type documented but **on hold**. I/O module count: 6→8. |
 | **4.5j** | Script Plugins + Runtime Extraction | Phase 4.5i, Phase 2, 3, 4, 5 | 🔲 Pending | `ScriptRuntime` interface in go-json core, `script:` import type, `packages/go-json-runtimes/` (separate go.mod), extract goja/quickjs/yaegi/Node.js/Python from BitCode, decouple VM from `*bridge.Context` → `map[string]any`, configurable pool manager, BitCode thin wrapper. |
-| **4.5k** | WASM + Native Plugins | Phase 4.5j | 🔲 Pending | `wasm:` import type (wazero, pure Go, zero CGO), `plugin:` import type (Go plugin package, Linux/macOS), WASM JSON-over-memory protocol, native plugin manifest convention, codegen for WASM/native calls. |
+| **4.5k** | WASM + Native Plugins | Phase 4.5j | ✅ Done | `wasm:` import type (wazero, pure Go, zero CGO), `plugin:` import type (Go plugin package, Linux/macOS), WASM JSON-over-memory protocol, native plugin manifest convention, codegen for WASM/native calls, instance pooling, BitCode engine integration. |
 | **7** | Module "setting" | Phase 4.5d + all others | 🔲 Pending | Admin panel as JSON module, go-json web server as process engine, 5+ runtimes stress test |
 
 ### Dependency Graph

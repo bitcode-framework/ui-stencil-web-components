@@ -356,6 +356,26 @@ func (r *Runtime) Execute(program *lang.CompiledProgram, input map[string]any) (
 					input = make(map[string]any)
 				}
 				input[alias] = proxy
+
+			case "wasm":
+				proxy, err := r.resolveWasmImport(alias, imp.Path, program)
+				if err != nil {
+					return nil, err
+				}
+				if input == nil {
+					input = make(map[string]any)
+				}
+				input[alias] = proxy
+
+			case "plugin":
+				proxy, err := r.resolvePluginImport(alias, imp.Path, program)
+				if err != nil {
+					return nil, err
+				}
+				if input == nil {
+					input = make(map[string]any)
+				}
+				input[alias] = proxy
 			}
 		}
 	}
@@ -422,6 +442,20 @@ func (r *Runtime) ExecuteFunction(program *lang.CompiledProgram, funcName string
 
 			case "script":
 				proxy, err := r.resolveScriptImport(alias, imp.Path, program)
+				if err != nil {
+					return nil, err
+				}
+				input[alias] = proxy
+
+			case "wasm":
+				proxy, err := r.resolveWasmImport(alias, imp.Path, program)
+				if err != nil {
+					return nil, err
+				}
+				input[alias] = proxy
+
+			case "plugin":
+				proxy, err := r.resolvePluginImport(alias, imp.Path, program)
 				if err != nil {
 					return nil, err
 				}
@@ -503,6 +537,72 @@ func (r *Runtime) buildScriptProxy(rt ScriptRuntime, scriptPath string) map[stri
 			return rt.Execute(ctx, scriptPath, "", params, bridge)
 		},
 	}
+}
+
+// resolveWasmImport resolves a wasm: import path and returns a script proxy.
+// WASM modules are resolved by the ".wasm" extension via the ScriptRuntime registry.
+func (r *Runtime) resolveWasmImport(alias, path string, program *lang.CompiledProgram) (map[string]any, error) {
+	wasmPath := strings.TrimPrefix(path, "wasm:")
+	if filepath.IsAbs(wasmPath) {
+		return nil, fmt.Errorf("wasm: import path must be relative, got: %s (import '%s')", wasmPath, alias)
+	}
+
+	programDir := ""
+	if program.AST != nil && program.AST.SourcePath != "" {
+		programDir = filepath.Dir(program.AST.SourcePath)
+	}
+
+	if programDir != "" {
+		absPath := filepath.Join(programDir, wasmPath)
+		absPath = filepath.Clean(absPath)
+		cleanBase := filepath.Clean(programDir) + string(filepath.Separator)
+		if absPath != filepath.Clean(programDir) && !strings.HasPrefix(absPath, cleanBase) {
+			return nil, fmt.Errorf("wasm: import path escapes base directory: %s (import '%s')", wasmPath, alias)
+		}
+		wasmPath = absPath
+	}
+
+	rt := r.scriptRuntimes.Resolve(".wasm")
+	if rt == nil {
+		return nil, fmt.Errorf("no WASM runtime registered (import '%s')", alias)
+	}
+
+	return r.buildScriptProxy(rt, wasmPath), nil
+}
+
+// resolvePluginImport resolves a plugin: import path and returns a script proxy.
+// Native plugins are resolved by their file extension (.so, .dylib) via the ScriptRuntime registry.
+func (r *Runtime) resolvePluginImport(alias, path string, program *lang.CompiledProgram) (map[string]any, error) {
+	pluginPath := strings.TrimPrefix(path, "plugin:")
+	if filepath.IsAbs(pluginPath) {
+		return nil, fmt.Errorf("plugin: import path must be relative, got: %s (import '%s')", pluginPath, alias)
+	}
+
+	programDir := ""
+	if program.AST != nil && program.AST.SourcePath != "" {
+		programDir = filepath.Dir(program.AST.SourcePath)
+	}
+
+	if programDir != "" {
+		absPath := filepath.Join(programDir, pluginPath)
+		absPath = filepath.Clean(absPath)
+		cleanBase := filepath.Clean(programDir) + string(filepath.Separator)
+		if absPath != filepath.Clean(programDir) && !strings.HasPrefix(absPath, cleanBase) {
+			return nil, fmt.Errorf("plugin: import path escapes base directory: %s (import '%s')", pluginPath, alias)
+		}
+		pluginPath = absPath
+	}
+
+	ext := filepath.Ext(pluginPath)
+	rt := r.scriptRuntimes.Resolve(ext)
+	if rt == nil {
+		return nil, fmt.Errorf("no native plugin runtime registered for '%s' (import '%s')", ext, alias)
+	}
+	if err := rt.Validate(); err != nil {
+		return nil, fmt.Errorf("native plugin runtime not available: %w", err)
+	}
+
+	return r.buildScriptProxy(rt, pluginPath), nil
 }
 
 func contentHash(data []byte) string {
