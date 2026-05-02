@@ -1,7 +1,7 @@
 package main
 
-import "github.com/bitcode-framework/go-json/cmd/gojson"
+import "github.com/bitcode-framework/go-json/cmd/cli"
 
 func main() {
-	gojson.Run()
+	cli.Run()
 }

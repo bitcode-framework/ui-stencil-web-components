@@ -1,4 +1,4 @@
-package gojson
+package cli
 
 import (
 	"github.com/bitcode-framework/go-json/runtime"

@@ -1,4 +1,4 @@
-package gojson
+package cli
 
 import (
 	"encoding/json"

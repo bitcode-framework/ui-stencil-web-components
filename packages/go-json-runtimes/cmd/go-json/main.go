@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/bitcode-framework/go-json/cmd/gojson"
+	"github.com/bitcode-framework/go-json/cmd/cli"
 	runtimes "github.com/bitcode-framework/go-json-runtimes"
 	gojaRT "github.com/bitcode-framework/go-json-runtimes/goja"
 	nodeRT "github.com/bitcode-framework/go-json-runtimes/node"
@@ -14,14 +14,13 @@ import (
 )
 
 func main() {
-	gojson.Run(
-		gojson.WithScriptRuntime(newEmbeddedAdapter("goja", []string{".js"}, gojaRT.New())),
-		gojson.WithScriptRuntime(newEmbeddedAdapter("quickjs", []string{".js"}, quickjsRT.New())),
-		gojson.WithScriptRuntime(newEmbeddedAdapter("yaegi", []string{".go"}, yaegiRT.New())),
-		gojson.WithScriptRuntime(wasmRT.New(wasmRT.DefaultConfig())),
-		gojson.WithScriptRuntime(&externalAdapter{rt: nodeRT.NewAuto(), exts: []string{".ts", ".mjs"}}),
-		gojson.WithScriptRuntime(&externalAdapter{rt: pythonRT.NewAuto(), exts: []string{".py", ".pyw"}}),
-		// Native plugins NOT registered — security risk, must be explicitly enabled
+	cli.Run(
+		cli.WithScriptRuntime(newEmbeddedAdapter("goja", []string{".js"}, gojaRT.New())),
+		cli.WithScriptRuntime(newEmbeddedAdapter("quickjs", []string{".js"}, quickjsRT.New())),
+		cli.WithScriptRuntime(newEmbeddedAdapter("yaegi", []string{".go"}, yaegiRT.New())),
+		cli.WithScriptRuntime(wasmRT.New(wasmRT.DefaultConfig())),
+		cli.WithScriptRuntime(&externalAdapter{rt: nodeRT.NewAuto(), exts: []string{".ts", ".mjs"}}),
+		cli.WithScriptRuntime(&externalAdapter{rt: pythonRT.NewAuto(), exts: []string{".py", ".pyw"}}),
 	)
 }
 
