@@ -297,7 +297,7 @@ docker-compose up -d
 
 | Layer | Technology |
 |-------|------------|
-| Runtime | Go 1.23+, Fiber v2, GORM |
+| Runtime | Go 1.24+, Fiber v2, GORM |
 | go-json Engine | Go 1.24+, expr-lang/expr (JSON/JSONC programming language) |
 | Database | SQLite / PostgreSQL / MySQL |
 | Cache | In-memory / Redis |

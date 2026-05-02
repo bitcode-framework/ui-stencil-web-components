@@ -328,7 +328,7 @@ engine/
 ├── Dockerfile                                  # Multi-stage build (Go build → minimal runtime)
 ├── docker-compose.yml                          # Engine + PostgreSQL + Redis
 ├── Makefile                                    # build, cli, dev, test, lint, clean, tidy
-├── go.mod                                      # Go 1.23+, Fiber v2, GORM, Viper, Cobra, JWT, Redis
+├── go.mod                                      # Go 1.24+, Fiber v2, GORM, Viper, Cobra, JWT, Redis
 └── go.sum
 ```
 

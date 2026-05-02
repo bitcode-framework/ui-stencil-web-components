@@ -486,7 +486,7 @@ See the root [`README.md`](../README.md) for the full configuration reference.
 
 | Layer | Technology |
 |-------|------------|
-| **Runtime** | Go 1.23+, Fiber v2 (HTTP), GORM (ORM) |
+| **Runtime** | Go 1.24+, Fiber v2 (HTTP), GORM (ORM) |
 | **go-json Engine** | Go 1.24+, expr-lang/expr v1.17+ (expression evaluation) |
 | **Database** | SQLite / PostgreSQL / MySQL |
 | **Cache** | In-memory / Redis |

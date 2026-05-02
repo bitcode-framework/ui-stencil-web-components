@@ -38,7 +38,7 @@ bitcode/
 
 ## Conventions
 
-- **Go 1.23+** (engine), **Go 1.24+** (go-json), standard project layout (`cmd/`, `internal/`, `pkg/`)
+- **Go 1.24+** (engine + go-json), standard project layout (`cmd/`, `internal/`, `pkg/`)
 - **DDD internally**, flat JSON externally — users never see DDD terms
 - **Convention over configuration** — sensible defaults everywhere
 - **All PK and FK are UUID** (TEXT in SQLite, UUID in Postgres, CHAR(36) in MySQL)
