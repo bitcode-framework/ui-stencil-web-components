@@ -477,6 +477,12 @@ Step 1 → Python **background** pool (step-level override).
 | **3** | Fix Python Child Process | Phase 1, 1.5 | ✅ Done | Bidirectional JSON-RPC (reuse Phase 2 protocol), threading model (router + worker), synchronous bridge calls, venv per-module + pip CLI commands, version validation (Python 3.10+), hot reload fix, 11 integration tests, 6 sample scripts migrated |
 | **6B** | Polymorphic Relations | Phase 6A | ✅ Done | morph_to, morph_one, morph_many, morph_to_many, morph_by_many |
 | **6C** | Engine Enhancements | Phase 6A, Phase 1 | ✅ Done | Array-backed models (Sushi-style), view modifiers, metadata API, eager loading fixes |
+| **4.5f** | go-json Stdlib Expansion | Phase 4.5e | 🔲 Pending | ~80 new stdlib functions (string, math, date, array, map, validate.*, crypto expansion, env(), number formatting). Layer 2 count: 42→120+. New deps: x/crypto/bcrypt, x/text. |
+| **4.5g** | go-json Lambda + Language Core | Phase 4.5f | 🔲 Pending | Lambda expressions (`fn(x) => expr`), dynamic call_ref, higher-order helpers (mapFn/filterFn/reduceFn), sleep/retry/assert steps, constants block, enum system, enhanced testing (expect_error, before/after, skip, table-driven). Step count: 16→20. |
+| **4.5h** | Bridge API Ergonomics | Phase 4.5f | 🔲 Pending | Fluent model API (`bc.model(x).where().limit().get()`), `bc.tx.begin/commit/rollback`, `bc.email.template()` shorthand, extends/overrides pattern documentation. **BitCode engine change**, not go-json. |
+| **4.5i** | go-json Advanced Features | Phase 4.5g | 🔲 Pending | `io:cache` (in-memory with TTL), `io:email` (SMTP client). DAG step type documented but **on hold**. I/O module count: 6→8. |
+| **4.5j** | Script Plugins + Runtime Extraction | Phase 4.5i, Phase 2, 3, 4, 5 | 🔲 Pending | `ScriptRuntime` interface in go-json core, `script:` import type, `packages/go-json-runtimes/` (separate go.mod), extract goja/quickjs/yaegi/Node.js/Python from BitCode, decouple VM from `*bridge.Context` → `map[string]any`, configurable pool manager, BitCode thin wrapper. |
+| **4.5k** | WASM + Native Plugins | Phase 4.5j | 🔲 Pending | `wasm:` import type (wazero, pure Go, zero CGO), `plugin:` import type (Go plugin package, Linux/macOS), WASM JSON-over-memory protocol, native plugin manifest convention, codegen for WASM/native calls. |
 | **7** | Module "setting" | Phase 4.5d + all others | 🔲 Pending | Admin panel as JSON module, go-json web server as process engine, 5+ runtimes stress test |
 
 ### Dependency Graph
@@ -509,12 +515,25 @@ Phase 1 (Bridge API Design)
         │         │         Includes: replace 3 evaluators, EvalExpr API
         │         │         Includes: record rules with ctx.* + AST-to-WHERE
         │         │         │
+        │         │         └──► Phase 4.5f (Stdlib Expansion)
+        │         │              │
+        │         │              ├──► Phase 4.5g (Lambda + Language Core)
+        │         │              │    │
+        │         │              │    └──► Phase 4.5i (Advanced: io:cache, io:email, DAG on hold)
+        │         │              │         │
+        │         │              │         └──► Phase 4.5j (Script Plugins + Runtime Extraction)
+        │         │              │              ◄── also depends on Phase 2, 3, 4, 5
+        │         │              │              │
+        │         │              │              └──► Phase 4.5k (WASM + Native Plugins)
+        │         │              │
+        │         │              └──► Phase 4.5h (Bridge Ergonomics — BitCode side, parallel with 4.5g)
+        │         │
 Phase 6A (Schema Compat) ──────────┤ (independent, can start anytime)
                                     │
                                     ├──► Phase 6B (Polymorphic Relations)
                                     ├──► Phase 6C (Engine Enhancements)
                                     └──► Phase 7 (Module "setting")
-                                         requires Phase 4.5d + 4.5e
+                                         requires Phase 4.5k + 4.5h
 ```
 
 Phase 1.5 must complete before Phase 2-3 (runtime implementations need correct tenant behavior).
@@ -525,7 +544,13 @@ Phase 6C depends on Phase 6A (display_field, title_field format, etc.).
 Phase 4.5c-fix depends on Phase 4.5c (fixes bugs and adds MongoDB/Redis/multi-driver SQL).
 Phase 4.5d depends on Phase 4.5c-fix (web server needs working I/O modules).
 Phase 4.5e depends on Phase 4.5c (unified expression engine needs go-json ExprEngine). Can run in parallel with Phase 4.5d.
-Phase 7 needs Phase 4.5d + 4.5e complete — it uses go-json web server as the process engine and unified expression engine for module "setting".
+Phase 4.5f depends on Phase 4.5e (stdlib expansion builds on unified expression engine).
+Phase 4.5g depends on Phase 4.5f (lambda needs stdlib functions available for composition).
+Phase 4.5h depends on Phase 4.5f (bridge ergonomics needs crypto base from stdlib). Can run in parallel with Phase 4.5g.
+Phase 4.5i depends on Phase 4.5g (advanced features need lambda for higher-order patterns in io modules).
+Phase 4.5j depends on Phase 4.5i + Phase 2 + 3 + 4 + 5 (extracts all runtime engines into go-json-runtimes package, adds script: import to go-json core).
+Phase 4.5k depends on Phase 4.5j (WASM + native plugins build on the ScriptRuntime interface and go-json-runtimes package from 4.5j).
+Phase 7 needs Phase 4.5k + 4.5h complete — it uses go-json with full stdlib + lambda + bridge ergonomics + all runtimes for module "setting".
 
 ---
 
@@ -560,6 +585,15 @@ Phase 7 needs Phase 4.5d + 4.5e complete — it uses go-json web server as the p
 | Phase 4.5d (Plan) | `2026-04-29-runtime-engine-phase-4.5d-go-json-web-server-plan.md` |
 | Phase 4.5e (Design) | `2026-07-14-runtime-engine-phase-4.5e-unified-expression-engine.md` |
 | Phase 4.5e (Plan) | `2026-07-14-runtime-engine-phase-4.5e-unified-expression-engine-plan.md` |
+| Phase 4.5f (Design) | `2026-07-15-phase-4.5f-stdlib-expansion.md` |
+| Phase 4.5g (Design) | `2026-07-15-phase-4.5g-lambda-language-core.md` |
+| Phase 4.5h (Design) | `2026-07-15-phase-4.5h-bridge-ergonomics.md` |
+| Phase 4.5i (Design) | `2026-07-15-phase-4.5i-advanced-features.md` |
+| Phase 4.5j (Design) | `2026-07-15-phase-4.5j-script-plugins-runtime-extraction.md` |
+| Phase 4.5j (Instruction) | `instructions-implement-script-plugins.md` |
+| Phase 4.5k (Design) | `2026-07-15-phase-4.5k-wasm-native-plugins.md` |
+| Phase 4.5k (Instruction) | `instructions-implement-wasm-native-plugins.md` |
+| Phase 4.5 (Roadmap) | `packages/go-json/docs/plans/2026-07-15-go-json-enhancement-roadmap.md` |
 | Phase 4.5 (Decisions) | `2026-04-28-go-json-brainstorming-design.md` |
 | Phase 5 | `2026-07-14-runtime-engine-phase-5-yaegi.md` |
 | Phase 6A | `2026-07-14-runtime-engine-phase-6a-schema-compatibility.md` |
