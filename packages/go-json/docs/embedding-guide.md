@@ -417,6 +417,38 @@ rt := gojson.NewRuntime(
 defer rt.Close()
 ```
 
+### Cache & Email
+
+Cache provides in-memory key-value storage with TTL (no external dependencies). Email provides SMTP sending with STARTTLS (configured via environment variables or `SetConfig()`):
+
+```go
+rt := gojson.NewRuntime(
+	gojson.WithIO(goio.Cache(nil), goio.Email(nil)),
+)
+defer rt.Close()
+```
+
+With security limits:
+
+```go
+sec := goio.DefaultSecurityConfig()
+sec.Cache = goio.CacheSecurityConfig{
+	MaxEntries:   5000,
+	MaxValueSize: 512 * 1024, // 512 KB
+	MaxTTL:       3600,       // 1 hour max
+}
+sec.Email = goio.EmailSecurityConfig{
+	AllowedRecipients: []string{"*@company.com"},
+	BlockedDomains:    []string{"competitor.com"},
+	MaxRecipients:     10,
+}
+
+rt := gojson.NewRuntime(
+	gojson.WithIO(goio.Cache(sec), goio.Email(sec)),
+)
+defer rt.Close()
+```
+
 ---
 
 ## Expression Evaluation

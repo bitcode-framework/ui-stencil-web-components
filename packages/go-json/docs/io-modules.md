@@ -712,6 +712,154 @@ Returns:
 
 ---
 
+## Cache Module (`io:cache`)
+
+> **Status: Production-ready** — In-memory key-value cache with TTL. Standalone (no Redis needed). Background goroutine evicts expired entries every 60 seconds.
+
+**Import:** `"cache": "io:cache"`
+**Enable:** `goio.Cache()`
+
+### Functions
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `get` | `cache.get(key)` | Get value. Returns nil if expired or missing. |
+| `set` | `cache.set(key, value, ttl?)` | Set value. TTL in seconds. 0 or omitted = no expiry. |
+| `del` | `cache.del(key)` | Delete key. |
+| `has` | `cache.has(key)` | Check if key exists and not expired → `bool` |
+| `clear` | `cache.clear()` | Clear all entries. |
+
+### Examples
+
+**Basic cache-aside pattern:**
+
+```json
+{
+  "import": {"cache": "io:cache"},
+  "steps": [
+    {"let": "cached", "expr": "cache.get('user:123')"},
+    {"if": "isNil(cached)", "then": [
+      {"let": "cached", "call": "fetchFromDB"},
+      {"let": "_", "expr": "cache.set('user:123', cached, 3600)"}
+    ]},
+    {"return": "cached"}
+  ]
+}
+```
+
+**Check existence:**
+
+```json
+[
+  {"let": "exists", "expr": "cache.has('session:abc')"},
+  {"if": "!exists", "then": [
+    {"error": "'Session expired'"}
+  ]}
+]
+```
+
+### Behavior Notes
+
+- Nil is a valid cached value — use `cache.has(key)` to distinguish "cached nil" from "not found".
+- TTL=0 or negative TTL means no expiry.
+- Expired entries return nil on read (lazy eviction) and are cleaned up by background goroutine every 60 seconds.
+- Overwriting an existing key does not count against `MaxEntries`.
+- Thread-safe — all operations use `sync.RWMutex`.
+
+### Security (`CacheSecurityConfig`)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `MaxEntries` | `int` | 10000 | Max number of entries. 0 = unlimited. |
+| `MaxValueSize` | `int64` | 1048576 (1MB) | Max size per value (JSON-serialized). 0 = unlimited. |
+| `MaxTTL` | `int` | 86400 (24h) | Max TTL in seconds. Values exceeding this are capped. 0 = unlimited. |
+
+---
+
+## Email Module (`io:email`)
+
+> **Status: Production-ready** — SMTP email client with STARTTLS support. Configure via environment variables or `SetConfig()`.
+
+**Import:** `"email": "io:email"`
+**Enable:** `goio.Email()`
+
+### Functions
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `send` | `email.send(opts)` | Send email via SMTP |
+
+**Options map fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `to` | `string` or `[]any` | Yes | Recipient(s) |
+| `subject` | `string` | Yes | Subject line |
+| `body` | `string` | Yes (or `html`) | Plain text body |
+| `html` | `string` | No | HTML body (overrides `body` for Content-Type) |
+| `from` | `string` | No | Sender (uses config default if omitted) |
+| `cc` | `string` or `[]any` | No | CC recipients |
+| `bcc` | `string` or `[]any` | No | BCC recipients |
+| `replyTo` | `string` | No | Reply-to address |
+
+### Examples
+
+**Send plain text email:**
+
+```json
+{
+  "import": {"email": "io:email"},
+  "steps": [
+    {"let": "_", "expr": "email.send({'to': 'user@example.com', 'subject': 'Welcome', 'body': 'Hello!'})"}
+  ]
+}
+```
+
+**Send HTML email to multiple recipients:**
+
+```json
+[
+  {"let": "_", "expr": "email.send({'to': ['admin@co.com', 'mgr@co.com'], 'subject': 'Report', 'html': '<h1>Monthly Report</h1>'})"}
+]
+```
+
+### Configuration
+
+SMTP settings are read from environment variables:
+
+| Env Variable | Default | Description |
+|-------------|---------|-------------|
+| `SMTP_HOST` | (required) | SMTP server hostname |
+| `SMTP_PORT` | `587` | SMTP server port |
+| `SMTP_USER` | — | SMTP username |
+| `SMTP_PASSWORD` | — | SMTP password |
+| `SMTP_FROM` | — | Default sender address |
+| `SMTP_TLS` | `true` | Use STARTTLS (`"false"` to disable) |
+
+Settings can also be overridden at runtime via `SetConfig()`:
+
+```go
+emailModule.SetConfig(map[string]any{
+    "host": "smtp.example.com",
+    "port": 465,
+    "username": "user",
+    "password": "pass",
+    "from": "noreply@example.com",
+    "tls": true,
+})
+```
+
+### Security (`EmailSecurityConfig`)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `AllowedRecipients` | `[]string` | (empty = all) | Glob patterns for allowed recipients (e.g., `*@company.com`) |
+| `BlockedDomains` | `[]string` | (empty) | Blocked recipient domains |
+| `MaxBodySize` | `int64` | 1048576 (1MB) | Max body size in bytes. 0 = unlimited. |
+| `MaxRecipients` | `int` | 50 | Max total recipients (to + cc + bcc). 0 = unlimited. |
+
+---
+
 ## Security Configuration
 
 All I/O modules share a unified security configuration that the host provides at
@@ -729,6 +877,8 @@ type SecurityConfig struct {
     Exec   ExecSecurityConfig
     Mongo  MongoSecurityConfig
     Redis  RedisSecurityConfig
+    Cache  CacheSecurityConfig
+    Email  EmailSecurityConfig
 }
 ```
 

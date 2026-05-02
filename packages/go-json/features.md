@@ -56,6 +56,8 @@ go-json is a general-purpose programming language where programs are valid JSON 
 | | Exec (command execution with whitelisting) | Done |
 | | MongoDB (CRUD + aggregation) | Stubbed |
 | | Redis (key-value, hash, list, set, pub/sub) | Stubbed |
+| | Cache (in-memory key-value with TTL) | Done |
+| | Email (SMTP with STARTTLS) | Done |
 | | Two-layer security gating (import + runtime) | Done |
 | **Web Server** | Declarative HTTP routing with groups | Done |
 | | 5 framework adapters (Fiber, net/http, Echo, Gin, Chi) | Done |
@@ -245,7 +247,7 @@ Define data structures with typed fields, defaults, and methods:
 | `./file.json` | Relative to current file |
 | `../dir/file.json` | Relative parent directory |
 | `stdlib:name` | Built-in stdlib module |
-| `io:name` | I/O module (HTTP, FS, SQL, Exec) |
+| `io:name` | I/O module (HTTP, FS, SQL, Exec, MongoDB, Redis, Cache, Email) |
 | `ext:name` | Host-injected extension |
 
 **What gets exported:** Structs and functions. Steps, input, and limits are NOT exported.
@@ -332,6 +334,8 @@ Three calling styles work for all I/O functions:
 | `io:exec` | `run` — command whitelisting, env isolation, output truncation |
 | `io:mongo` | `find`, `findOne`, `insert`, `insertMany`, `update`, `delete`, `count`, `aggregate` |
 | `io:redis` | `get`, `set`, `del`, `exists`, `expire`, `ttl`, `incr`, `decr`, `hget`, `hset`, `hgetall`, `lpush`, `rpush`, `lrange`, `sadd`, `smembers`, `publish` |
+| `io:cache` | `get`, `set`, `del`, `has`, `clear` — in-memory key-value with TTL, background cleanup |
+| `io:email` | `send` — SMTP with STARTTLS, env var config, security (allowed recipients, blocked domains) |
 
 See [I/O Modules](docs/io-modules.md) for complete documentation.
 
@@ -515,7 +519,7 @@ See [Language Reference](docs/language-reference.md#known-limitations) for detai
 | Stdlib functions (Layer 2) | 120+ |
 | Higher-order functions | 5 (mapFn, filterFn, reduceFn, applyEach, sortFn) |
 | expr-lang built-ins (Layer 1) | ~68 |
-| I/O modules | 6 |
+| I/O modules | 8 |
 | Server framework adapters | 5 |
 | Codegen targets | 3 languages × multiple frameworks |
 | Architecture patterns | 4 (with template files) |

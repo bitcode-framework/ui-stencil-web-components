@@ -87,7 +87,7 @@ packages/go-json/
 |-------|----------|-----------|
 | Layer 1 | expr-lang built-ins (~68 functions: abs, ceil, floor, round, min, max, len, upper, lower, trim, split, filter, map, reduce, find, sort, int, float, string, type, etc.) | expr-lang — DO NOT reimplement |
 | Layer 2 | go-json additions (135+ functions + crypto/validate namespaces). Phase 4.5a: clamp, sign, randomInt, randomFloat, pow, sqrt, mod, padLeft, padRight, substring, format, matches, append, prepend, slice, chunk, zip, bool, isNil. Phase 4.5b: has, get, merge, pick, omit, formatDate (universal format), addDuration, diffDates, urlEncode, urlDecode, sprintf, crypto.sha256, crypto.md5, crypto.uuid, crypto.hmac. Phase 4.5d: toJSON, fromJSON, basename, dirname, extname, joinpath, cleanpath, isabs, stemname, pathsep. Phase 4.5f: capitalize, title, camelCase, snakeCase, kebabCase, pascalCase, truncate, slugify, strReverse, strCount, replaceFirst, lines, words, isDigit, isAlpha, isAlphaNum, isEmpty, isBlank, escapeHTML, unescapeHTML, sin, cos, tan, asin, acos, atan, atan2, log, log2, log10, exp, trunc, random, isNaN, isInfinite, isFinite, PI, E, Infinity, NaN, toUnix, fromUnix, toISO, startOfDay, endOfDay, startOfMonth, endOfMonth, isWeekend, isBefore, isAfter, daysInMonth, isLeapYear, compact, includes, arrayIndexOf, keyBy, difference, intersection, union, fill, drop, takeRight, flatMap, partition, deepMerge, deepClone, deepEqual, setIn, deleteIn, defaults, mapKeys, mapValues, toFixed, formatNumber, formatBytes, formatPercent, env(), validate.isEmail, validate.isURL, validate.isIP, validate.isUUID, validate.isJSON, validate.isNumeric, validate.isAlpha, validate.isBase64, validate.isHexColor, validate.isCreditCard, crypto.sha512, crypto.encrypt, crypto.decrypt, crypto.hashPassword, crypto.verifyPassword, crypto.randomBytes. Phase 4.5g: mapFn, filterFn, rejectFn, reduceFn, findFn, everyFn, someFn, sortFn, takeWhileFn, dropWhileFn, partitionFn, applyEach, identity | `stdlib/` package |
-| Layer 3 | I/O modules (HTTP, FS, SQL, Exec, MongoDB, Redis) with two-layer security gating. Regex stdlib (match, findAll, replace with LRU caching). FS enhancements: stat, copy, move, glob. SQL unified query parameter translation (?/:name across drivers). | `io/` and `stdlib/regex.go` |
+| Layer 3 | I/O modules (HTTP, FS, SQL, Exec, MongoDB, Redis, Cache, Email) with two-layer security gating. Regex stdlib (match, findAll, replace with LRU caching). FS enhancements: stat, copy, move, glob. SQL unified query parameter translation (?/:name across drivers). Cache: in-memory key-value with TTL + cleanup goroutine. Email: SMTP with STARTTLS + env var config. | `io/` and `stdlib/regex.go` |
 
 ## Conventions
 
@@ -100,7 +100,7 @@ packages/go-json/
 
 ```bash
 cd packages/go-json
-go test ./... -v          # All tests (925)
+go test ./... -v          # All tests (1018)
 go test ./lang/ -v        # Language engine tests
 go test ./lang/ -run TestStruct -v       # Struct tests
 go test ./lang/ -run TestMethod -v       # Method tests
@@ -202,6 +202,13 @@ go test ./generate/ -v                   # CRUD generator, auth scaffold, projec
 - **Enhanced test runner**: `expect_error`, `before`/`after`, `skip`/`only`, `table` (parameterized), per-case timeout
 - **Codegen updates**: sleep/retry/assert generation for Go, JavaScript, Python
 - 969 tests total across 9 packages (includes Phase 4.5a–g cumulative)
+
+## What's Done (Phase 4.5i)
+
+- **Cache module** (`io:cache`): in-memory key-value cache with TTL, background cleanup goroutine (60s interval), security limits (MaxEntries, MaxValueSize, MaxTTL), goroutine-safe (RWMutex), lazy eviction on read, double-close safe
+- **Email module** (`io:email`): SMTP client with STARTTLS, env var fallback (SMTP_HOST/PORT/USER/PASSWORD/FROM/TLS), runtime SetConfig(), security (AllowedRecipients glob, BlockedDomains, MaxBodySize, MaxRecipients), IPv6-safe (net.JoinHostPort)
+- Both modules follow `IOModule` interface, registered in `All()`, security configs in unified `SecurityConfig`
+- 1018 tests total across 9 packages (includes Phase 4.5a–i cumulative)
 
 ## What's NOT Done
 

@@ -12,6 +12,8 @@ func All(security *SecurityConfig) []IOModule {
 		NewExecModule(security),
 		NewMongoModule(security),
 		NewRedisModule(security),
+		NewCacheModule(security),
+		NewEmailModule(security),
 	}
 }
 
@@ -43,4 +45,14 @@ func Mongo(security *SecurityConfig) IOModule {
 // Redis returns just the Redis module.
 func Redis(security *SecurityConfig) IOModule {
 	return NewRedisModule(security)
+}
+
+// Cache returns just the Cache module.
+func Cache(security *SecurityConfig) IOModule {
+	return NewCacheModule(security)
+}
+
+// Email returns just the Email module.
+func Email(security *SecurityConfig) IOModule {
+	return NewEmailModule(security)
 }

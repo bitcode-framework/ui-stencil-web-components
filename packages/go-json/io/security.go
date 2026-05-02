@@ -19,6 +19,8 @@ type SecurityConfig struct {
 	Exec           ExecSecurityConfig   `json:"exec"`
 	Mongo          MongoSecurityConfig  `json:"mongo"`
 	Redis          RedisSecurityConfig  `json:"redis"`
+	Cache          CacheSecurityConfig  `json:"cache"`
+	Email          EmailSecurityConfig  `json:"email"`
 }
 
 // MongoSecurityConfig controls MongoDB module security.
