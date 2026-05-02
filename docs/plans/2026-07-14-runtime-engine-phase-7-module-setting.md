@@ -1,8 +1,8 @@
 # Phase 7: Module "setting" — Admin Panel as JSON Module
 
-**Date**: 14 July 2026
+**Date**: 14 July 2026 (updated 16 July 2026)
 **Status**: Draft
-**Depends on**: All previous phases (1-6C) — this is the ultimate stress test
+**Depends on**: Phase 4.5k (WASM + Native Plugins) + Phase 4.5h (Bridge Ergonomics) + all earlier phases (1-6C)
 **Unlocks**: Production readiness, admin.go deprecation
 **Master doc**: `2026-07-14-runtime-engine-redesign-master.md`
 
@@ -32,10 +32,19 @@ This is the **ultimate stress test**: if the engine can build its own admin pane
 ### 1.1 Success Criteria
 
 - Module "setting" provides all functionality currently in `admin.go`
-- Uses at least 4 runtimes (goja, quickjs, Node.js/Bun, Python) in its scripts
-- Uses array-backed models for fixture/config data
-- Uses metadata API for model/view introspection
-- Uses morph relations where appropriate (e.g., activity log)
+- **go-json is the primary runtime** — majority of processes written as go-json programs
+- Uses **all 7 runtimes** in its scripts as proof of multi-runtime capability:
+  - go-json (primary — business logic, CRUD, dashboard)
+  - goja (embedded JS — lightweight validation)
+  - yaegi (embedded Go — data export with goroutines)
+  - Node.js/TS (external — complex validation with npm packages)
+  - Python (external — system info, analytics)
+  - WASM (embedded — compute-intensive task via wazero)
+- Uses array-backed models for fixture/config data (Phase 6C)
+- Uses metadata API for model/view introspection (Phase 6C)
+- Uses fluent model API: `bc.model('user').where(...).count()` (Phase 4.5h)
+- Uses imperative transactions: `bc.tx.begin/commit/rollback` (Phase 4.5h)
+- Uses `script:` imports from go-json programs to call external scripts (Phase 4.5j)
 - `admin.go` can be disabled via config (`admin.legacy = false`)
 - Zero hardcoded HTML — all UI via views + templates
 
@@ -43,11 +52,11 @@ This is the **ultimate stress test**: if the engine can build its own admin pane
 
 - Does not delete `admin.go` — it becomes a fallback that can be disabled
 - Does not change the engine core — only builds on top of it
-- Does not add new engine features — all features should be in Phase 1-6C
+- Does not add new engine features — all features should already exist from Phase 1-4.5k
 
 ### 1.3 Key Principle
 
-> If module "setting" needs a feature that doesn't exist, that feature should be added to the appropriate earlier phase (1-6C), NOT hacked into module "setting".
+> If module "setting" needs a feature that doesn't exist, that feature should be added to the appropriate earlier phase (1-4.5k), NOT hacked into module "setting".
 
 This ensures the engine is genuinely capable, not just patched for one use case.
 
@@ -75,23 +84,23 @@ admin.go (hardcoded):                    module "setting" (JSON-driven):
 ├── HTML string concatenation            ├── views/*.json (declarative)
 ├── Direct SQL queries                   ├── models/*.json (with array source)
 ├── Inline permission checks             ├── security/*.json (declarative)
-├── Custom route handlers                ├── processes/*.json (declarative)
-└── Hardcoded business logic             └── scripts/*.js/*.py/*.go (multi-runtime)
+├── Custom route handlers                ├── processes/*.json + *.go-json (go-json primary)
+└── Hardcoded business logic             └── scripts/*.js/*.py/*.go/*.wasm (multi-runtime)
 ```
 
 ### 2.3 What admin.go Currently Does
 
 | Feature | admin.go File | Module "setting" Equivalent |
 |---------|--------------|---------------------------|
-| Dashboard (stats) | admin.go | Custom view + process data source |
-| Model list | admin_models.go | List view on metadata (array model or meta API) |
-| Model detail (fields, indexes) | admin_models.go | Form view on metadata |
+| Dashboard (stats) | admin.go | go-json process + custom view template |
+| Model list | admin_models.go | go-json process via meta API + list view |
+| Model detail (fields, indexes) | admin_models.go | go-json process + form view |
 | Model data browser | admin_list_api.go | List view with dynamic model |
 | Group management | admin_groups.go | CRUD views on `group` model |
 | Group permissions | admin_groups.go | Form view with child tables |
 | User management | admin.go | CRUD views on `user` model |
-| Module list | admin_modules.go | List view on metadata |
-| View inspector | admin_views.go | List/form views on metadata |
+| Module list | admin_modules.go | go-json process via meta API + list view |
+| View inspector | admin_views.go | go-json process + list/form views |
 | Audit log | admin_audit.go | List view on `audit_log` model |
 | Security history | admin_security.go | List view on `security_history` model |
 | API explorer | admin_api.go | Custom view + meta API |
@@ -123,15 +132,20 @@ modules/setting/
 │   ├── security_history_list.json    ← list view
 │   └── api_explorer.json             ← custom view
 ├── processes/
-│   ├── compute_dashboard_stats.json  ← process: count models, records, etc.
-│   ├── compute_system_info.json      ← process: Go version, uptime, etc.
-│   ├── impersonate_user.json         ← process: admin impersonation
-│   └── export_model_data.json        ← process: export to CSV/JSON
+│   ├── compute_dashboard_stats.json  ← go-json program (primary runtime)
+│   ├── compute_system_info.json      ← go-json program with script: import (calls Python)
+│   ├── list_models.json              ← go-json program (meta API)
+│   ├── inspect_model.json            ← go-json program (meta API)
+│   ├── impersonate_user.json         ← go-json program with bc.tx
+│   ├── export_model_data.json        ← go-json program with script: import (calls yaegi)
+│   ├── validate_model_schema.json    ← go-json program with script: import (calls Node.js)
+│   └── compute_hash.json            ← go-json program with wasm: import (calls WASM)
 ├── scripts/
-│   ├── dashboard_stats.js            ← JavaScript (goja/quickjs)
-│   ├── system_info.py                ← Python
-│   ├── model_validator.js            ← JavaScript (Node.js/Bun for complex validation)
-│   └── data_export.go                ← Go (yaegi)
+│   ├── system_info.py                ← Python (system introspection)
+│   ├── data_export.go                ← Go/yaegi (CSV/XLSX with goroutines)
+│   ├── model_validator.ts            ← TypeScript/Node.js (npm: ajv)
+│   ├── quick_validate.js             ← JavaScript/goja (lightweight validation)
+│   └── hash_compute.wasm             ← WASM (compute-intensive hashing)
 ├── security/
 │   └── groups.json                   ← admin group permissions
 └── templates/
@@ -345,55 +359,207 @@ Module "setting" only adds **views and processes** for these models — no schem
 
 ## 6. Processes
 
-### 6.1 Dashboard Stats
+### 6.1 Dashboard Stats — go-json (Primary Runtime)
 
-```json
+```jsonc
 {
   "name": "compute_dashboard_stats",
+  "go_json": "1",
+  "import": { "bc": "ext:bitcode" },
   "steps": [
-    {
-      "name": "compute",
-      "type": "script",
-      "script": { "lang": "javascript", "file": "scripts/dashboard_stats.js" }
-    }
+    // Count models via meta API
+    {"let": "models", "expr": "bc.call('_meta.list_models', {})"},
+    {"let": "model_count", "expr": "len(models)"},
+
+    // Count users and groups using fluent API (Phase 4.5h)
+    {"let": "user_count", "expr": "bc.model('user').where('active', true).count()"},
+    {"let": "group_count", "expr": "bc.model('group').count()"},
+
+    // Count today's audit entries
+    {"let": "today", "expr": "startOfDay(now())"},
+    {"let": "audit_count", "expr": "bc.model('audit_log').where('created_at', '>=', today).count()"},
+
+    // Return stats array for _dashboard_stat process source
+    {"return": {"value": [
+      {"key": "models", "label": "Models", "value": "string(model_count)", "icon": "database", "color": "#3b82f6"},
+      {"key": "users", "label": "Active Users", "value": "string(user_count)", "icon": "users", "color": "#10b981"},
+      {"key": "groups", "label": "Groups", "value": "string(group_count)", "icon": "shield", "color": "#f59e0b"},
+      {"key": "audit_today", "label": "Actions Today", "value": "string(audit_count)", "icon": "activity", "color": "#8b5cf6"}
+    ]}}
   ]
 }
 ```
 
-### 6.2 Model Introspection
+### 6.2 System Info — go-json with `script:` Import (Calls Python)
 
-```json
+```jsonc
+{
+  "name": "compute_system_info",
+  "go_json": "1",
+  "import": {
+    "bc": "ext:bitcode",
+    "sysinfo": "script:./scripts/system_info.py"
+  },
+  "steps": [
+    // Call Python script for OS-level info (Phase 4.5j script: import)
+    {"let": "os_info", "call": "sysinfo.get_info"},
+
+    // Get engine-level info via bridge
+    {"let": "db_driver", "expr": "bc.config('db.driver') ?? 'sqlite'"},
+    {"let": "module_list", "expr": "bc.call('_meta.list_modules', {})"},
+    {"let": "module_count", "expr": "len(module_list)"},
+
+    {"return": {"value": [
+      {"key": "os", "label": "OS", "value": "os_info.os"},
+      {"key": "db_driver", "label": "Database", "value": "db_driver"},
+      {"key": "modules", "label": "Loaded Modules", "value": "string(module_count)"},
+      {"key": "python", "label": "Python Version", "value": "os_info.python_version"}
+    ]}}
+  ]
+}
+```
+
+### 6.3 Model Introspection — go-json (Primary Runtime)
+
+```jsonc
 {
   "name": "list_models",
+  "go_json": "1",
+  "import": { "bc": "ext:bitcode" },
   "steps": [
-    {
-      "name": "get_models",
-      "type": "script",
-      "script": { "lang": "javascript", "file": "scripts/list_models.js" }
-    }
+    {"let": "models", "expr": "bc.call('_meta.list_models', {})"},
+    {"return": "models"}
   ]
 }
 ```
 
-### 6.3 Data Export
+```jsonc
+{
+  "name": "inspect_model",
+  "go_json": "1",
+  "import": { "bc": "ext:bitcode" },
+  "input": { "model_name": "string" },
+  "steps": [
+    {"let": "detail", "expr": "bc.call('_meta.get_model', {'name': input.model_name})"},
+    {"return": "detail"}
+  ]
+}
+```
 
-```json
+### 6.4 Impersonate User — go-json with Transaction (Phase 4.5h)
+
+```jsonc
+{
+  "name": "impersonate_user",
+  "go_json": "1",
+  "import": { "bc": "ext:bitcode" },
+  "input": { "target_user_id": "string" },
+  "steps": [
+    // Verify target user exists
+    {"let": "target", "expr": "bc.model('user').find(input.target_user_id).get()"},
+    {"if": "target == nil", "then": [
+      {"error": "'User not found'"}
+    ]},
+
+    // Use transaction for audit + session swap (Phase 4.5h imperative tx)
+    {"let": "_", "expr": "bc.tx.begin()"},
+    {"try": [
+      // Log impersonation in audit
+      {"let": "_", "expr": "bc.audit.log({'action': 'impersonate', 'model': 'user', 'recordId': input.target_user_id, 'detail': 'Admin impersonated user ' + target.name})"},
+
+      // Log in security history
+      {"let": "_", "expr": "bc.model('security_history').create({'user_id': session.user_id, 'action': 'impersonate', 'target_user_id': input.target_user_id, 'ip': session.context.ip})"},
+
+      {"let": "_", "expr": "bc.tx.commit()"}
+    ], "catch": {
+      "as": "err",
+      "steps": [
+        {"let": "_", "expr": "bc.tx.rollback()"},
+        {"error": "err.message"}
+      ]
+    }},
+
+    // Return impersonation token
+    {"return": {"value": {"impersonated": true, "user_id": "input.target_user_id", "name": "target.name"}}}
+  ]
+}
+```
+
+### 6.5 Data Export — go-json with `script:` Import (Calls yaegi)
+
+```jsonc
 {
   "name": "export_model_data",
+  "go_json": "1",
+  "import": {
+    "bc": "ext:bitcode",
+    "exporter": "script:./scripts/data_export.go"
+  },
+  "input": {
+    "model": "string",
+    "format": "string"
+  },
   "steps": [
-    {
-      "name": "validate",
-      "type": "validate",
-      "rules": {
-        "model": { "required": true },
-        "format": { "required": true, "in": ["json", "csv", "xlsx"] }
-      }
-    },
-    {
-      "name": "export",
-      "type": "script",
-      "script": { "lang": "go", "file": "scripts/data_export.go" }
-    }
+    // Validate input
+    {"if": "input.format not in ['json', 'csv', 'xlsx']", "then": [
+      {"error": "'Invalid format. Must be json, csv, or xlsx'"}
+    ]},
+
+    // Fetch all records using fluent API
+    {"let": "records", "expr": "bc.model(input.model).get()"},
+
+    // Delegate to yaegi for file generation (goroutines for large datasets)
+    {"let": "result", "call": "exporter.Export", "with": {
+      "records": "records",
+      "model": "input.model",
+      "format": "input.format"
+    }},
+
+    {"return": "result"}
+  ]
+}
+```
+
+### 6.6 Model Schema Validation — go-json with `script:` Import (Calls Node.js)
+
+```jsonc
+{
+  "name": "validate_model_schema",
+  "go_json": "1",
+  "import": {
+    "bc": "ext:bitcode",
+    "validator": "script:./scripts/model_validator.ts"
+  },
+  "input": { "model_json": "string" },
+  "steps": [
+    {"let": "result", "call": "validator.validate", "with": {
+      "model_json": "input.model_json"
+    }},
+    {"if": "result.valid == false", "then": [
+      {"return": {"value": {"valid": false, "errors": "result.errors"}}}
+    ]},
+    {"return": {"value": {"valid": true, "model": "result.model"}}}
+  ]
+}
+```
+
+### 6.7 Hash Compute — go-json with `wasm:` Import (Phase 4.5k)
+
+```jsonc
+{
+  "name": "compute_hash",
+  "go_json": "1",
+  "import": {
+    "hasher": "wasm:./scripts/hash_compute.wasm"
+  },
+  "input": { "data": "string", "algorithm": "string" },
+  "steps": [
+    // Call WASM module for compute-intensive hashing
+    {"let": "result", "call": "hasher.hash", "with": {
+      "data": "input.data",
+      "algorithm": "input.algorithm"
+    }},
+    {"return": "result"}
   ]
 }
 ```
@@ -402,120 +568,251 @@ Module "setting" only adds **views and processes** for these models — no schem
 
 ## 7. Scripts — Multi-Runtime Stress Test
 
-This is where module "setting" proves the engine's multi-runtime capability. Each script uses the runtime best suited for its task.
+This is where module "setting" proves the engine's multi-runtime capability. **go-json is the primary runtime** for all processes. External scripts are called via `script:` and `wasm:` imports when a specific runtime's strength is needed.
 
-### 7.1 Dashboard Stats — JavaScript (goja/quickjs)
-
-```javascript
-// scripts/dashboard_stats.js
-// Runtime: javascript (embedded — fast, no overhead)
-
-const models = await bitcode.meta.models();
-const users = await bitcode.db.count("user");
-const groups = await bitcode.db.count("group");
-const auditToday = await bitcode.db.count("audit_log", {
-  domain: [["created_at", ">=", bitcode.time.today()]]
-});
-
-return [
-  { key: "models", label: "Models", value: String(models.length), icon: "database", color: "#3b82f6" },
-  { key: "users", label: "Users", value: String(users), icon: "users", color: "#10b981" },
-  { key: "groups", label: "Groups", value: String(groups), icon: "shield", color: "#f59e0b" },
-  { key: "audit_today", label: "Actions Today", value: String(auditToday), icon: "activity", color: "#8b5cf6" }
-];
-```
-
-### 7.2 System Info — Python
+### 7.1 Python — System Info (`scripts/system_info.py`)
 
 ```python
-# scripts/system_info.py
-# Runtime: python (good for system introspection)
+# Runtime: python (system introspection — platform module, os module)
+# Called from: compute_system_info.json via script: import
 
 import platform
-import os
+import sys
 
-info = bitcode.env.get_all()
-db_driver = info.get("DB_DRIVER", "sqlite")
-
-return [
-    {"key": "go_version", "label": "Go Version", "value": bitcode.system.go_version()},
-    {"key": "os", "label": "OS", "value": platform.system() + " " + platform.release()},
-    {"key": "db_driver", "label": "Database", "value": db_driver},
-    {"key": "uptime", "label": "Uptime", "value": bitcode.system.uptime()},
-    {"key": "modules", "label": "Loaded Modules", "value": str(len(bitcode.meta.modules()))},
-]
+def get_info():
+    return {
+        "os": platform.system() + " " + platform.release(),
+        "python_version": sys.version.split()[0],
+        "arch": platform.machine(),
+        "hostname": platform.node(),
+    }
 ```
 
-### 7.3 Data Export — Go (yaegi)
+### 7.2 Go/yaegi — Data Export (`scripts/data_export.go`)
 
 ```go
-// scripts/data_export.go
-// Runtime: go (best for file I/O, CSV/XLSX generation)
+// Runtime: go (yaegi — goroutines for concurrent file generation)
+// Called from: export_model_data.json via script: import
 
 package main
 
 import (
-    "bitcode"
+    "context"
     "encoding/csv"
-    "os"
+    "encoding/json"
+    "fmt"
+    "strings"
 )
 
-func Run(ctx bitcode.Context) (any, error) {
-    modelName := ctx.Input("model")
-    format := ctx.Input("format")
-
-    records, err := bitcode.DB.FindAll(modelName, nil)
-    if err != nil {
-        return nil, err
-    }
+func Execute(ctx context.Context, params map[string]any) (any, error) {
+    records, _ := params["records"].([]any)
+    modelName, _ := params["model"].(string)
+    format, _ := params["format"].(string)
 
     switch format {
     case "csv":
         return exportCSV(records, modelName)
     case "json":
-        return exportJSON(records, modelName)
+        data, err := json.MarshalIndent(records, "", "  ")
+        if err != nil {
+            return nil, err
+        }
+        return map[string]any{
+            "filename": modelName + ".json",
+            "content":  string(data),
+            "mime":     "application/json",
+        }, nil
     case "xlsx":
         return exportXLSX(records, modelName)
+    default:
+        return nil, fmt.Errorf("unsupported format: %s", format)
+    }
+}
+
+func exportCSV(records []any, modelName string) (any, error) {
+    if len(records) == 0 {
+        return map[string]any{"filename": modelName + ".csv", "content": "", "mime": "text/csv"}, nil
     }
 
-    return nil, nil
+    var buf strings.Builder
+    w := csv.NewWriter(&buf)
+
+    // Header from first record keys
+    first, _ := records[0].(map[string]any)
+    var headers []string
+    for k := range first {
+        headers = append(headers, k)
+    }
+    w.Write(headers)
+
+    // Rows
+    for _, rec := range records {
+        row, _ := rec.(map[string]any)
+        var vals []string
+        for _, h := range headers {
+            vals = append(vals, fmt.Sprintf("%v", row[h]))
+        }
+        w.Write(vals)
+    }
+    w.Flush()
+
+    return map[string]any{
+        "filename": modelName + ".csv",
+        "content":  buf.String(),
+        "mime":     "text/csv",
+    }, nil
+}
+
+func exportXLSX(records []any, modelName string) (any, error) {
+    // yaegi can use excelize if available in go.mod
+    // For now, fallback to CSV format with .xlsx extension note
+    return nil, fmt.Errorf("XLSX export requires excelize package — use CSV for now")
 }
 ```
 
-### 7.4 Model Validator — Node.js/Bun
+### 7.3 TypeScript/Node.js — Model Validator (`scripts/model_validator.ts`)
 
-```javascript
-// scripts/model_validator.js
-// Runtime: node (for complex JSON schema validation with npm packages)
+```typescript
+// Runtime: node (npm package: ajv for JSON Schema validation)
+// Called from: validate_model_schema.json via script: import
 
-const Ajv = require("ajv");
+import Ajv from "ajv";
+
 const ajv = new Ajv();
 
-const modelJSON = bitcode.input("model_json");
-const parsed = JSON.parse(modelJSON);
+export default {
+  async execute(bitcode: any, params: any) {
+    const modelJSON = params.model_json;
+    const parsed = JSON.parse(modelJSON);
 
-// Validate against BitCode model schema
-const schema = await bitcode.fs.readJSON("schemas/model.schema.json");
-const validate = ajv.compile(schema);
-const valid = validate(parsed);
+    // Load BitCode model schema from filesystem
+    const schemaContent = await bitcode.fs.read("schemas/model.schema.json");
+    const schema = JSON.parse(schemaContent);
 
-if (!valid) {
-  return { valid: false, errors: validate.errors };
-}
+    const validate = ajv.compile(schema);
+    const valid = validate(parsed);
 
-return { valid: true, model: parsed };
+    if (!valid) {
+      return { valid: false, errors: validate.errors };
+    }
+
+    return { valid: true, model: parsed };
+  },
+};
 ```
 
-### 7.5 Runtime Distribution
+### 7.4 JavaScript/goja — Quick Validate (`scripts/quick_validate.js`)
 
-| Script | Runtime | Why |
-|--------|---------|-----|
-| dashboard_stats.js | javascript (goja) | Fast, simple bridge calls, no npm needed |
-| system_info.py | python | System introspection, platform module |
-| data_export.go | go (yaegi) | File I/O, CSV/XLSX generation, goroutines |
-| model_validator.js | node (Bun) | npm packages (ajv), complex validation |
+```javascript
+// Runtime: javascript (goja — embedded, fast, no npm needed)
+// Called from go-json processes for lightweight validation
 
-This proves all 4+ runtimes work in a real module.
+export default {
+  execute(bitcode, params) {
+    const data = params.data;
+    const errors = [];
+
+    if (!data.name || data.name.trim() === "") {
+      errors.push("Name is required");
+    }
+    if (data.email && !data.email.includes("@")) {
+      errors.push("Invalid email format");
+    }
+
+    return { valid: errors.length === 0, errors: errors };
+  },
+};
+```
+
+### 7.5 WASM — Hash Compute (`scripts/hash_compute.wasm`)
+
+Pre-compiled WASM module for compute-intensive hashing. Source in Rust:
+
+```rust
+// scripts/build/hash_compute/src/lib.rs
+// Compile: cargo build --target wasm32-wasi --release
+// Output: scripts/hash_compute.wasm
+
+use sha2::{Sha256, Sha512, Digest};
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize)]
+struct HashInput {
+    data: String,
+    algorithm: String,
+}
+
+#[derive(Serialize)]
+struct HashOutput {
+    hash: String,
+    algorithm: String,
+    length: usize,
+}
+
+#[no_mangle]
+pub extern "C" fn hash(ptr: *const u8, len: usize) -> u64 {
+    let input_bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
+    let input: HashInput = serde_json::from_slice(input_bytes).unwrap();
+
+    let hash_hex = match input.algorithm.as_str() {
+        "sha256" => {
+            let mut hasher = Sha256::new();
+            hasher.update(input.data.as_bytes());
+            format!("{:x}", hasher.finalize())
+        }
+        "sha512" => {
+            let mut hasher = Sha512::new();
+            hasher.update(input.data.as_bytes());
+            format!("{:x}", hasher.finalize())
+        }
+        _ => return 0,
+    };
+
+    let output = HashOutput {
+        length: hash_hex.len(),
+        algorithm: input.algorithm,
+        hash: hash_hex,
+    };
+
+    let json = serde_json::to_vec(&output).unwrap();
+    let result_ptr = json.as_ptr() as u32;
+    let result_len = json.len() as u32;
+    std::mem::forget(json);
+    ((result_ptr as u64) << 32) | (result_len as u64)
+}
+
+#[no_mangle]
+pub extern "C" fn malloc(size: usize) -> *mut u8 {
+    let mut buf = Vec::with_capacity(size);
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
+    ptr
+}
+
+#[no_mangle]
+pub extern "C" fn free(ptr: *mut u8, size: usize) {
+    unsafe { Vec::from_raw_parts(ptr, 0, size); }
+}
+```
+
+### 7.6 Runtime Distribution
+
+| Script | Runtime | Called From | Why This Runtime |
+|--------|---------|-----------|-----------------|
+| (inline in .json) | **go-json** | All processes | Primary runtime — business logic, CRUD, bridge calls |
+| system_info.py | Python | compute_system_info.json via `script:` | `platform` + `sys` modules for OS introspection |
+| data_export.go | yaegi (Go) | export_model_data.json via `script:` | Goroutines for concurrent CSV/XLSX generation |
+| model_validator.ts | Node.js | validate_model_schema.json via `script:` | npm package `ajv` for JSON Schema validation |
+| quick_validate.js | goja (JS) | Direct from process step | Embedded, fast, no npm overhead |
+| hash_compute.wasm | wazero (WASM) | compute_hash.json via `wasm:` | Compute-intensive, sandboxed, portable |
+
+This proves **all 7 runtimes** work in a real module:
+- **go-json**: Primary runtime for all process orchestration
+- **goja**: Embedded JS for lightweight tasks
+- **yaegi**: Embedded Go for concurrent/system tasks
+- **Node.js/TS**: External JS for npm ecosystem
+- **Python**: External for system introspection
+- **WASM**: Embedded for compute-intensive sandboxed tasks
 
 ---
 
@@ -537,7 +834,8 @@ This proves all 4+ runtimes work in a real module.
         "setting.group.read",
         "setting.group.write",
         "setting.audit.read",
-        "setting.impersonate"
+        "setting.impersonate",
+        "setting.export"
       ]
     },
     "setting.viewer": {
@@ -642,21 +940,25 @@ legacy = true       # true = admin.go active (default during transition)
 - [ ] Security history list
 - [ ] API explorer (custom view + template)
 
-### 10.4 Processes
+### 10.4 Processes (go-json Primary)
 
-- [ ] compute_dashboard_stats
-- [ ] compute_system_info
-- [ ] list_models (via meta API)
-- [ ] inspect_model (via meta API)
-- [ ] impersonate_user
-- [ ] export_model_data
+- [ ] compute_dashboard_stats.json — go-json with fluent model API
+- [ ] compute_system_info.json — go-json with `script:` import (Python)
+- [ ] list_models.json — go-json with meta API
+- [ ] inspect_model.json — go-json with meta API
+- [ ] impersonate_user.json — go-json with `bc.tx.begin/commit/rollback`
+- [ ] export_model_data.json — go-json with `script:` import (yaegi)
+- [ ] validate_model_schema.json — go-json with `script:` import (Node.js)
+- [ ] compute_hash.json — go-json with `wasm:` import (WASM)
 
 ### 10.5 Scripts (Multi-Runtime)
 
-- [ ] dashboard_stats.js (goja/quickjs)
-- [ ] system_info.py (Python)
-- [ ] data_export.go (yaegi)
-- [ ] model_validator.js (Node.js/Bun)
+- [ ] system_info.py — Python (system introspection)
+- [ ] data_export.go — yaegi (CSV/XLSX with goroutines)
+- [ ] model_validator.ts — Node.js/TS (npm: ajv)
+- [ ] quick_validate.js — goja (lightweight validation)
+- [ ] hash_compute.wasm — WASM (pre-compiled Rust, commit .wasm to repo)
+- [ ] hash_compute Rust source + Makefile in `scripts/build/`
 
 ### 10.6 Security
 
@@ -679,8 +981,14 @@ legacy = true       # true = admin.go active (default during transition)
 
 - [ ] Test all views render correctly
 - [ ] Test all processes execute successfully
-- [ ] Test all 4 runtimes work (goja, quickjs/Node.js, Python, Go)
+- [ ] Test go-json as primary runtime (dashboard stats, model introspection, impersonation)
+- [ ] Test `script:` import works (Python, yaegi, Node.js)
+- [ ] Test `wasm:` import works (hash compute)
+- [ ] Test goja script works (quick validate)
+- [ ] Test all 7 runtimes work in one module
 - [ ] Test permissions (admin vs viewer vs unauthorized)
 - [ ] Test array models load correctly
 - [ ] Test process source models refresh correctly
 - [ ] Test embedded view filter_by works in tabs
+- [ ] Test transaction in impersonate_user (commit + rollback paths)
+- [ ] Test fluent model API in dashboard stats
