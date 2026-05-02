@@ -46,6 +46,26 @@ bitcode/
 - **No comments** unless absolutely necessary (complex algorithms, public API docs)
 - **No type suppression** — no `as any`, `@ts-ignore`, or equivalents
 
+## Tooling: `rtk` Wrapper
+
+This project uses `rtk` (Rust toolkit) as a wrapper for `go build`, `go test`, `go vet`, etc. It parses output to reduce token usage.
+
+**Default:** Use `rtk go test ./... -count=1` normally — it summarizes pass/fail counts.
+
+**When you need full output** (compilation errors, verbose test output, debugging failures): pipe through `| Out-String` to bypass rtk's output parsing:
+
+```powershell
+rtk go test ./io/ -run TestCache -v -count=1 2>&1 | Out-String
+rtk go build ./... 2>&1 | Out-String
+rtk go vet ./... 2>&1 | Out-String
+```
+
+Use full output when:
+- Tests fail and you need to see which test/assertion failed
+- Build errors need full compiler output
+- You need verbose (`-v`) test names and timing
+- Any situation where rtk's summary says "No tests found" but tests should exist (rtk may not parse certain flag combinations like `-race`)
+
 ## File Structure Rules (Engine)
 
 - `engine/internal/compiler/parser/` — JSON parsers. One file per definition type.
