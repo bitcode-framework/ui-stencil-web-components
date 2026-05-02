@@ -37,7 +37,7 @@ go-json is a general-purpose programming language where programs are valid JSON 
 | | Frozen (immutable) structs | Done |
 | | Nested struct construction | Done |
 | | Nested property access and mutation (`a.b.c`, `a[0].b`) | Done |
-| **Modularity** | Import system (relative, stdlib, I/O, extension) | Done |
+| **Modularity** | Import system (relative, stdlib, I/O, extension, script) | Done |
 | | Circular import detection (direct and indirect) | Done |
 | | Import alias collision detection | Done |
 | | Re-export / barrel files | Done |
@@ -88,6 +88,14 @@ go-json is a general-purpose programming language where programs are valid JSON 
 | | Compile-once, run-many (concurrent-safe) | Done |
 | | Extension API for host applications | Done |
 | | Program cache | Done |
+| | `ScriptRuntime` interface for script plugin engines | Done |
+| | `WithScriptRuntime()` / `WithScriptBridge()` options | Done |
+| **Script Plugins** | `script:` import — call external scripts from go-json programs | Done |
+| | Step-level calls: `{"call": "ml.call", "with": ["'predict'", "data"]}` | Done |
+| | Expression-level calls: `ml.call("predict", data)` | Done |
+| | Path validation (traversal prevention, absolute path rejection) | Done |
+| | Default CLI runtimes: goja (.js), yaegi (.go), quickjs (.js) — embedded | Done |
+| | Optional CLI runtimes: Node.js (.ts/.mjs), Python (.py) — auto-detected | Done |
 | **Not Yet Done** | REPL mode | Planned |
 | | Dev mode file watching | Planned |
 | | MongoDB/Redis drivers (modules are stubbed) | Planned |

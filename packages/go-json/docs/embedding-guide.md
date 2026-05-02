@@ -216,6 +216,29 @@ rt := gojson.NewRuntime(
 | `WithEnvResolver` | `(resolver stdlib.EnvResolver)` | Override env() resolver (requires WithEnvHandle) |
 | `WithEnvAccess` | `(config *stdlib.EnvAccessConfig)` | Override env() access control (requires WithEnvHandle) |
 | `WithExtension` | `(name string, ext Extension)` | Register a host extension |
+| `WithScriptRuntime` | `(rt ScriptRuntime)` | Register a script runtime for `script:` imports |
+| `WithScriptBridge` | `(bridge map[string]any)` | Set bridge map passed to all script runtimes |
+
+**Script Runtimes:**
+
+```go
+import (
+    gojson "github.com/bitcode-framework/go-json/runtime"
+    "github.com/bitcode-framework/go-json-runtimes/goja"
+)
+
+rt := gojson.NewRuntime(
+    gojson.WithStdlib(reg.All()),
+    gojson.WithStdlibEnv(reg.EnvVars()),
+    gojson.WithScriptRuntime(gojaAdapter(goja.New())),  // enables script:./file.js
+    gojson.WithScriptBridge(map[string]any{
+        "model": myModelFunc,
+        "db":    myDBNamespace,
+    }),
+)
+```
+
+Programs can then use `script:` imports to call external scripts. The `ScriptRuntime` interface is defined in `runtime/script_runtime.go` — implement it to add custom script engines.
 
 **Customizing `env()` function:**
 

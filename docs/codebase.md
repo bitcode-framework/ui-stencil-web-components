@@ -21,6 +21,7 @@ bitcode/
 ├── packages/                                   # Shared libraries
 │   ├── components/                             # Stencil Web Components
 │   ├── go-json/                                # go-json — JSON/JSONC programming language engine (Go)
+│   ├── go-json-runtimes/                       # Script runtime engines for go-json (separate go.mod)
 │   └── tauri/                                  # Tauri native shell (desktop + mobile)
 ├── samples/                                    # Example applications
 │   └── erp/                                    # Full ERP sample

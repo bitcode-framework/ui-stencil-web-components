@@ -20,7 +20,7 @@ engine/
 │   │   └── setting/       Setting store
 │   ├── runtime/           Execution engines
 │   │   ├── bridge/        go-json ↔ engine bridge adapter
-│   │   ├── embedded/      Embedded JS runtimes (goja, quickjs, yaegi)
+│   │   ├── embedded/      Embedded JS runtimes (goja, quickjs, yaegi) + VMAdapter for go-json-runtimes
 │   │   ├── executor/      Process executor (sequential + DAG), step handlers, condition evaluator
 │   │   ├── expression/    Computed field hydrator + aggregate functions (uses go-json EvalExpr)
 │   │   ├── format/        Auto-format engine (naming series, sequences)

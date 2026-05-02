@@ -1,19 +1,29 @@
 # Plugins
 
-Plugins let you write custom logic in TypeScript, JavaScript, or Python when JSON processes aren't enough. Scripts call `bitcode.*` bridge methods to interact with the engine (database, email, cache, etc.) via bidirectional JSON-RPC.
+Plugins let you write custom logic in TypeScript, JavaScript, Python, or Go when JSON processes aren't enough. Scripts call `bitcode.*` bridge methods to interact with the engine (database, email, cache, etc.).
+
+## Architecture
+
+Runtime engines are extracted to `packages/go-json-runtimes/` (separate go.mod). BitCode imports this package and provides a `VMAdapter` that converts `*bridge.Context` → `map[string]any` for the decoupled runtimes.
+
+```
+Engine (Go)
+├── Embedded runtimes (in-process): goja, quickjs, yaegi
+│   └── VMAdapter → go-json-runtimes VM (InjectBridge(map[string]any))
+└── External runtimes (child process): Node.js, Python
+    └── JSON-RPC over stdin/stdout → Process Pool
+```
 
 ## How It Works
 
-```
-Engine (Go) ◄──Bidirectional JSON-RPC over stdin/stdout──► Node.js / Python Process Pool
-```
-
-1. Engine spawns pools of Node.js and Python processes at startup
+1. Engine spawns pools of Node.js and Python processes at startup (or uses embedded goja/quickjs/yaegi in-process)
 2. Script execution request sent to an available process (routed by file extension)
-3. Script calls `bitcode.*` methods → JSON-RPC request sent to Go
+3. Script calls `bitcode.*` methods → JSON-RPC request sent to Go (external) or direct Go function call (embedded)
 4. Go executes the bridge method (DB query, HTTP call, etc.) and returns result
 5. Script continues with real data, may call more bridge methods
 6. Script finishes, final result returned to engine
+
+go-json programs can also call external scripts via `script:` imports — see `packages/go-json/docs/language-reference.md`.
 
 ## Script Example
 

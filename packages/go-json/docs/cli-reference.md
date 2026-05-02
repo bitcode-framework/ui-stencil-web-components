@@ -6,6 +6,15 @@ go-json provides a command-line interface for running, validating, testing, and 
 go-json <command> [options]
 ```
 
+**Two CLI variants:**
+
+| Binary | Install | Script Runtimes |
+|--------|---------|-----------------|
+| Basic | `go install github.com/bitcode-framework/go-json/cmd/go-json@latest` | None (core language only) |
+| Full | `go install github.com/bitcode-framework/go-json-runtimes/cmd/go-json@latest` | goja (.js), quickjs (.js), yaegi (.go), Node.js (.ts/.mjs, auto), Python (.py, auto) |
+
+The "full" variant includes embedded script runtimes so `script:` imports work out of the box.
+
 ## Commands
 
 | Command | Description |

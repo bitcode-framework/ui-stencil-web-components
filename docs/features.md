@@ -60,7 +60,7 @@ Before the gap list — what's already **production-solid**:
 3. **Security stack** — JWT auth + RBAC permissions + Record Rules (row-level security) + audit logging. Full middleware chain.
 4. **Process engine** — 14 step types: validate, query, create, update, delete, if, switch, loop, emit, call, script, http, assign, log. DAG executor for parallel steps.
 5. **Workflow engine** — State machines with permission-gated transitions, initial state on create, process linking.
-6. **Plugin system** — Dual runtime (TypeScript + Python), JSON-RPC over stdin/stdout, health monitoring, auto-restart.
+6. **Plugin system** — Multi-runtime (TypeScript, Python, goja, quickjs, yaegi), JSON-RPC over stdin/stdout, health monitoring, auto-restart. Runtime engines extracted to `packages/go-json-runtimes/` (separate go.mod). go-json programs can call external scripts via `script:` imports.
 7. **View system** — 6 view types (list, form, kanban, calendar, chart, custom) with SSR rendering + layout system.
 8. **Web Components** — 103 Stencil.js components: 30+ field types, layout, views, charts, dialogs, widgets (incl. 8 media viewers/players), search, social, print.
 9. **Multi-database** — SQLite (zero-config default), PostgreSQL, MySQL, MongoDB. Auto-migration from JSON definitions. Per-module table prefix, Postgres schema support. Comprehensive query builder with JSON DSL, OQL (Object Query Language — 3 syntax styles), JOINs, OR/AND/NOT groups, HAVING, DISTINCT, aggregates (COUNT/SUM/AVG/MIN/MAX), subqueries, UNION, raw expressions, scopes, eager loading (WITH/preload), locking, soft delete scopes, transactions.

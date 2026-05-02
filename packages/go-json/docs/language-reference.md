@@ -732,7 +732,8 @@ go-json does not support struct inheritance. Use **composition** — embed one s
   "import": {
     "models": "./types.json",
     "http": "io:http",
-    "bc": "ext:bitcode"
+    "bc": "ext:bitcode",
+    "ml": "script:./plugins/predict.py"
   }
 }
 ```
@@ -747,6 +748,30 @@ Each key is a local alias; the value is the import path.
 | `stdlib:` | Standard library module | `"stdlib:math"` |
 | `io:` | I/O module | `"io:http"` |
 | `ext:` | Extension module | `"ext:bitcode"` |
+| `script:` | External script (requires ScriptRuntime) | `"script:./plugins/predict.py"` |
+
+### Script Imports
+
+`script:` imports call external scripts via registered `ScriptRuntime` engines. The file extension determines which runtime handles execution.
+
+```json
+{
+  "import": {"ml": "script:./plugins/predict.py"},
+  "steps": [
+    {"let": "result", "call": "ml.call", "with": ["'predict'", "features"]},
+    {"return": "result"}
+  ]
+}
+```
+
+The script proxy exposes two functions:
+- `ml.call("functionName", arg1, arg2, ...)` — calls a specific function in the script
+- `ml.exec(arg1, arg2, ...)` — executes the entire script
+
+Path rules:
+- Must be relative (absolute paths rejected)
+- Cannot escape the program's base directory (traversal prevention)
+- File extension must match a registered `ScriptRuntime`
 
 ### What Gets Exported
 

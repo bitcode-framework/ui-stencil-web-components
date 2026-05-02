@@ -1648,6 +1648,9 @@ func detectImportPathType(path string) string {
 	if strings.HasPrefix(path, "io:") {
 		return "io"
 	}
+	if strings.HasPrefix(path, "script:") {
+		return "script"
+	}
 	return "relative"
 }
 

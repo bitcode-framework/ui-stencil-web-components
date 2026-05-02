@@ -29,6 +29,7 @@ bitcode/
 ├── packages/
 │   ├── components/      Stencil Web Components (@bitcode/components, 103 components)
 │   ├── go-json/         go-json — JSON/JSONC programming language engine (standalone Go package)
+│   ├── go-json-runtimes/ Script runtime engines for go-json (separate go.mod: goja, quickjs, yaegi, Node.js, Python)
 │   └── tauri/           Tauri 2.0 native shell (desktop + mobile)
 ├── samples/
 │   └── erp/             Sample ERP application (CRM + HRM)

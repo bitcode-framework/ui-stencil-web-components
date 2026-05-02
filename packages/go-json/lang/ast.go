@@ -257,7 +257,9 @@ type Program struct {
 	Routes     []RouteConfig  `json:"routes,omitempty"`
 	Middleware []string       `json:"middleware,omitempty"` // global middleware names
 
-	RequestedModules map[string]ImportDef // io: and ext: imports for runtime validation
+	RequestedModules map[string]ImportDef // io:, ext:, and script: imports for runtime validation
+
+	SourcePath string // absolute path of the source file (set by CompileFile for relative import resolution)
 }
 
 func (n *Program) nodeType() string { return "program" }

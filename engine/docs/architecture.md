@@ -82,6 +82,7 @@ Execution engines.
 | `expression/` | Computed field hydration — `Hydrator` evaluates `computed`/`formula` fields via `go-json/runtime.EvalExpr`. Aggregate functions (`sum`, `count`, `avg`, `min`, `max`) scoped per-evaluation for child collection access. |
 | `agent/` | Agent worker (event subscription) + cron scheduler |
 | `workflow/` | State machine engine — validate transitions, get initial state |
+| `embedded/` | Embedded JS runtimes (goja, quickjs, yaegi) + `VMAdapter` that bridges `*bridge.Context` → `map[string]any` for `go-json-runtimes` |
 | `plugin/` | Plugin manager — spawn processes, JSON-RPC communication |
 
 ### Infrastructure Layer (`internal/infrastructure/`)

@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.15
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.0
 	github.com/bitcode-framework/go-json v0.0.0
+	github.com/bitcode-framework/go-json-runtimes v0.0.0
 	github.com/bogdanfinn/fhttp v0.6.8
 	github.com/bogdanfinn/tls-client v1.14.0
 	github.com/disintegration/imaging v1.6.2
@@ -120,3 +121,5 @@ require (
 )
 
 replace github.com/bitcode-framework/go-json => ../packages/go-json
+
+replace github.com/bitcode-framework/go-json-runtimes => ../packages/go-json-runtimes

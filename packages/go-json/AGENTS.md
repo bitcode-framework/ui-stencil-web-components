@@ -62,13 +62,27 @@ packages/go-json/
 ## Import System (Phase 4.5b)
 
 - Import key: `"import"` (preferred) or `"imports"` (compat)
-- Path types: relative (`./`), stdlib (`stdlib:`), extension (`ext:`), I/O (`io:`)
+- Path types: relative (`./`), stdlib (`stdlib:`), extension (`ext:`), I/O (`io:`), script (`script:`)
 - Imported items namespaced via alias: `alias.StructName`, `alias.functionName`
 - Circular import detection via import stack
 - Import alias collision detection (compile error on duplicate namespaced names)
 - Barrel file re-export via `{"alias": "imported.Type"}` in structs block
 - Diamond imports handled correctly (loaded once, cached)
 - Wired via `Runtime.CompileFile(path)` — import resolution between parse and compile
+- Script imports (`script:./path.py`) — resolved at runtime via `ScriptRuntime` interface (Phase 4.5j)
+
+## Script Plugin System (Phase 4.5j)
+
+- `ScriptRuntime` interface in `runtime/script_runtime.go` — defines contract for external script engines
+- `ScriptRuntimeRegistry` — manages multiple runtimes, resolves by file extension
+- `WithScriptRuntime(rt)` / `WithScriptBridge(bridge)` — runtime options
+- `script:` imports recorded in `RequestedModules`, resolved at execution time
+- Script proxy injected as `map[string]any{"call": fn, "exec": fn}` — expression-level: `ml.call("predict", data)`
+- Step-level calls: `{"call": "ml.call", "with": ["'predict'", "data"]}` via existing namespace function dispatch
+- Path validation: absolute paths rejected, traversal prevented via `filepath.Clean` + prefix check
+- `SourcePath` field on `Program` AST — set by `CompileFile` for relative path resolution
+- go-json core remains zero-dependency — `ScriptRuntime` is interface only
+- Implementations live in `packages/go-json-runtimes/` (separate go.mod)
 
 ## Parallel Execution (Phase 4.5b)
 

@@ -73,8 +73,9 @@ engine/
 │   │   │   ├── tx.go                       # Transaction manager
 │   │   │   ├── (12 more bridge files)      # db, cache, config, event, process, logger, email, notify, storage, i18n, security, audit, crypto
 │   │   │   └── bridge_test.go              # 27 tests
-│   │   ├── embedded/                        # Embedded runtimes — shared executor + per-engine VMs
+│   │   ├── embedded/                        # Embedded runtimes — shared executor + per-engine VMs + VMAdapter
 │   │   │   ├── runtime.go                  # EmbeddedRuntime + VM interfaces
+│   │   │   ├── adapter.go                  # VMAdapter — wraps go-json-runtimes VM, converts *bridge.Context → map[string]any
 │   │   │   ├── executor.go                 # ExecuteEmbedded() — timeout, panic recovery, context cancel
 │   │   │   ├── registry.go                 # Engine registry + runtime resolution (JS + Go)
 │   │   │   ├── bridge_helper.go            # Shared conversion: ParseSearchOpts, ParseHTTPOpts, etc.
