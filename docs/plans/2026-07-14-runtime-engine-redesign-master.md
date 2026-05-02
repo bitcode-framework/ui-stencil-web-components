@@ -477,12 +477,12 @@ Step 1 → Python **background** pool (step-level override).
 | **3** | Fix Python Child Process | Phase 1, 1.5 | ✅ Done | Bidirectional JSON-RPC (reuse Phase 2 protocol), threading model (router + worker), synchronous bridge calls, venv per-module + pip CLI commands, version validation (Python 3.10+), hot reload fix, 11 integration tests, 6 sample scripts migrated |
 | **6B** | Polymorphic Relations | Phase 6A | ✅ Done | morph_to, morph_one, morph_many, morph_to_many, morph_by_many |
 | **6C** | Engine Enhancements | Phase 6A, Phase 1 | ✅ Done | Array-backed models (Sushi-style), view modifiers, metadata API, eager loading fixes |
-| **4.5f** | go-json Stdlib Expansion | Phase 4.5e | 🔲 Pending | ~80 new stdlib functions (string, math, date, array, map, validate.*, crypto expansion, env(), number formatting). Layer 2 count: 42→120+. New deps: x/crypto/bcrypt, x/text. |
-| **4.5g** | go-json Lambda + Language Core | Phase 4.5f | 🔲 Pending | Lambda expressions (`fn(x) => expr`), dynamic call_ref, higher-order helpers (mapFn/filterFn/reduceFn), sleep/retry/assert steps, constants block, enum system, enhanced testing (expect_error, before/after, skip, table-driven). Step count: 16→20. |
-| **4.5h** | Bridge API Ergonomics | Phase 4.5f | 🔲 Pending | Fluent model API (`bc.model(x).where().limit().get()`), `bc.tx.begin/commit/rollback`, `bc.email.template()` shorthand, extends/overrides pattern documentation. **BitCode engine change**, not go-json. |
-| **4.5i** | go-json Advanced Features | Phase 4.5g | 🔲 Pending | `io:cache` (in-memory with TTL), `io:email` (SMTP client). DAG step type documented but **on hold**. I/O module count: 6→8. |
-| **4.5j** | Script Plugins + Runtime Extraction | Phase 4.5i, Phase 2, 3, 4, 5 | 🔲 Pending | `ScriptRuntime` interface in go-json core, `script:` import type, `packages/go-json-runtimes/` (separate go.mod), extract goja/quickjs/yaegi/Node.js/Python from BitCode, decouple VM from `*bridge.Context` → `map[string]any`, configurable pool manager, BitCode thin wrapper. |
-| **4.5k** | WASM + Native Plugins | Phase 4.5j | ✅ Done | `wasm:` import type (wazero, pure Go, zero CGO), `plugin:` import type (Go plugin package, Linux/macOS), WASM JSON-over-memory protocol, native plugin manifest convention, codegen for WASM/native calls, instance pooling, BitCode engine integration. |
+| **4.5f** | go-json Stdlib Expansion | Phase 4.5e | ✅ Done | ~80 new stdlib functions (string, math, date, array, map, validate.*, crypto expansion, env(), number formatting). Layer 2 count: 42→120+. New deps: x/crypto/bcrypt, x/text. |
+| **4.5g** | go-json Lambda + Language Core | Phase 4.5f | ✅ Done | Lambda expressions (`fn(x) => expr`), dynamic call_ref, higher-order helpers (mapFn/filterFn/reduceFn), sleep/retry/assert steps, constants block, enum system, enhanced testing (expect_error, before/after, skip, table-driven). Step count: 16→20. |
+| **4.5h** | Bridge API Ergonomics | Phase 4.5f | ✅ Done | Fluent model API (`bc.model(x).where().limit().get()`), `bc.tx.begin/commit/rollback` (unified imperative across all runtimes — goja/yaegi callback replaced), `bc.email.template()` shorthand, extends/overrides pattern documentation. **BitCode engine change**, not go-json. |
+| **4.5i** | go-json Advanced Features | Phase 4.5g | ✅ Done | `io:cache` (in-memory with TTL), `io:email` (SMTP client). DAG step type documented but **on hold**. I/O module count: 6→8. |
+| **4.5j** | Script Plugins + Runtime Extraction | Phase 4.5i, Phase 2, 3, 4, 5 | ✅ Done | `ScriptRuntime` interface in go-json core, `script:` import type, `packages/go-json-runtimes/` (separate go.mod), extract goja/quickjs/yaegi/Node.js/Python from BitCode, decouple VM from `*bridge.Context` → `map[string]any`, configurable pool manager (`HardMaxMemoryMB` + `TimeoutConfig`), BitCode thin wrapper (VMAdapter), CLI binary with default runtimes via `packages/go-json-runtimes/cmd/go-json/`. |
+| **4.5k** | WASM + Native Plugins | Phase 4.5j | ✅ Done | `wasm:` import type (wazero, pure Go, zero CGO), `plugin:` import type (Go plugin package, Linux/macOS), WASM JSON-over-memory protocol, native plugin manifest convention, codegen for WASM/native calls, instance pooling, BitCode engine integration. WASM default in CLI, native opt-in only. |
 | **7** | Module "setting" | Phase 4.5d + all others | 🔲 Pending | Admin panel as JSON module, go-json web server as process engine, 5+ runtimes stress test |
 
 ### Dependency Graph
@@ -588,11 +588,18 @@ Phase 7 needs Phase 4.5k + 4.5h complete — it uses go-json with full stdlib + 
 | Phase 4.5f (Design) | `2026-07-15-phase-4.5f-stdlib-expansion.md` |
 | Phase 4.5g (Design) | `2026-07-15-phase-4.5g-lambda-language-core.md` |
 | Phase 4.5h (Design) | `2026-07-15-phase-4.5h-bridge-ergonomics.md` |
+| Phase 4.5h (Instruction) | `instructions-implement-bridge-ergonomics.md` |
+| Phase 4.5h (Addendum) | `instructions-phase-4.5h-tx-consistency-addendum.md` |
+| Phase 4.5h (Agent Briefing) | `instructions-phase-4.5h-agent-briefing.md` |
 | Phase 4.5i (Design) | `2026-07-15-phase-4.5i-advanced-features.md` |
+| Phase 4.5i (Instruction) | `instructions-implement-advanced-features.md` |
 | Phase 4.5j (Design) | `2026-07-15-phase-4.5j-script-plugins-runtime-extraction.md` |
 | Phase 4.5j (Instruction) | `instructions-implement-script-plugins.md` |
+| Phase 4.5j (Agent Guide) | `instructions-agent-phase-4.5j.md` |
 | Phase 4.5k (Design) | `2026-07-15-phase-4.5k-wasm-native-plugins.md` |
 | Phase 4.5k (Instruction) | `instructions-implement-wasm-native-plugins.md` |
+| Phase 4.5k (Agent Guide) | `instructions-agent-phase-4.5k.md` |
+| Handoff (4.5h→4.5k) | `handoff-phase-4.5h-to-4.5k.md` |
 | Phase 4.5 (Roadmap) | `packages/go-json/docs/plans/2026-07-15-go-json-enhancement-roadmap.md` |
 | Phase 4.5 (Decisions) | `2026-04-28-go-json-brainstorming-design.md` |
 | Phase 5 | `2026-07-14-runtime-engine-phase-5-yaegi.md` |
