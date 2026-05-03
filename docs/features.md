@@ -62,7 +62,7 @@ Before the gap list — what's already **production-solid**:
 5. **Workflow engine** — State machines with permission-gated transitions, initial state on create, process linking.
 6. **Plugin system** — Multi-runtime (TypeScript, Python, goja, quickjs, yaegi), JSON-RPC over stdin/stdout, health monitoring, auto-restart. Runtime engines extracted to `packages/go-json-runtimes/` (separate go.mod). go-json programs can call external scripts via `script:` imports.
 7. **View system** — 6 view types (list, form, kanban, calendar, chart, custom) with SSR rendering + layout system.
-8. **Web Components** — 103 Stencil.js components: 30+ field types, layout, views, charts, dialogs, widgets (incl. 8 media viewers/players), search, social, print.
+8. **Web Components** — 118 Stencil.js components: 30+ field types, layout, views, 26 charts (23 ECharts + 3 pure CSS), dialogs, widgets (incl. 8 media viewers/players), search, social, print.
 9. **Multi-database** — SQLite (zero-config default), PostgreSQL, MySQL, MongoDB. Auto-migration from JSON definitions. Per-module table prefix, Postgres schema support. Comprehensive query builder with JSON DSL, OQL (Object Query Language — 3 syntax styles), JOINs, OR/AND/NOT groups, HAVING, DISTINCT, aggregates (COUNT/SUM/AVG/MIN/MAX), subqueries, UNION, raw expressions, scopes, eager loading (WITH/preload), locking, soft delete scopes, transactions.
 10. **Real-time** — WebSocket hub broadcasting domain events to connected clients.
 11. **File Storage** — Local + S3 storage with attachments table, path/name formatting, thumbnails, versioning, duplicate detection.
@@ -136,7 +136,7 @@ Before the gap list — what's already **production-solid**:
 
 | # | Feature | Status | Effort | What Exists | What's Missing |
 |---|---------|--------|--------|-------------|----------------|
-| 30 | Form Builder (Visual) | ⚠️ | L | JSON-based form layout (rows, fields, widths, tabs). SSR rendering. 103 Stencil.js components. | Visual drag-and-drop form designer in browser. |
+| 30 | Form Builder (Visual) | ⚠️ | L | JSON-based form layout (rows, fields, widths, tabs). SSR rendering. 119 Stencil.js components. | Visual drag-and-drop form designer in browser. |
 | 31 | Conditional Field Logic | ✅ | — | `"visible": "expression"`, `"readonly": true`. Component compiler evaluates conditions. Stencil components support `behavior.dependsOn`, `readonlyIf`, `mandatoryIf`. Client-side: `BcSetup.reactivity()` for imperative cross-field logic, `depend-on` prop for declarative cascading. | — |
 | 32 | Custom Validation Rules | ✅ | — | Process `validate` step with eq, neq, required operators. Client-side: 3-level validation (built-in props, custom JS validators, server-side validation). `BcSetup.registerValidator()` for named validators. | — |
 | 33 | Multi-Step Form / Wizard | ❌ | M | — | No wizard component. Need wizard JSON definition (steps + fields per step) + `bc-dialog-wizard` exists in Stencil but not wired to engine. |
@@ -144,7 +144,7 @@ Before the gap list — what's already **production-solid**:
 | 35 | Web Form (Public) | ❌ | M | — | All forms require auth. Need public form route (bypass auth) + CAPTCHA + rate limiting. |
 | 36 | View Types (List/Kanban/Calendar) | ✅ | — | 6 view types: list, form, kanban, calendar, chart, custom. All implemented in `view/renderer.go` + templates. Stencil has 9 view components (+ gantt, map, tree, report, activity). | — |
 | 37 | Dashboard Builder | ✅ | — | Custom view type with `data_sources`. Admin dashboard at `/admin`. | — |
-| 72 | Enterprise Component Infrastructure | ✅ | — | All 6 phases complete. BcSetup (global config + reactivity runtime), 4-level data fetching, 3-level validation, theming (light/dark/system/custom), 34 field components, 5 select-family with searchable dropdown + cascading, datatable with enterprise methods, 11 charts with enterprise features. All standalone — no BitCode dependency. | — |
+| 72 | Enterprise Component Infrastructure | ✅ | — | All 6 phases complete. BcSetup (global config + reactivity runtime), 4-level data fetching, 3-level validation, theming (light/dark/system/custom), 34 field components, 5 select-family with searchable dropdown + cascading, datatable with enterprise methods, 26 charts with enterprise features (modular ECharts, multi-series, shared chart-utils). All standalone — no BitCode dependency. | — |
 | 73 | Theming System | ✅ | — | CSS custom properties (`--bc-*`), light/dark themes, `prefers-color-scheme` auto-detect, `data-bc-theme` attribute for scoped themes, size tokens (sm/md/lg), `BcSetup.configure({ theme })` for programmatic switching. | — |
 | 74 | Offline Mode | ✅ | XL | **Phase 1-5 ✅ COMPLETE.** Engine understands `mode:"offline"` with resolution chain. Auto-generates `_off_*` columns. 4 client + 4 server infrastructure tables. PK validation. Tauri 2.0 native shell. `bc-native.ts` bridge (16 methods). `offline-store.ts` with SQL injection prevention, transactional CRUD, outbox with device_id/envelope_id. Sync engine: device registration, push with idempotency + batch size + gzip compression, pull with delta sync + pagination, envelope grouping. HLC for deterministic event ordering. Field-level conflict merge with HLC tie-breaking. Device-prefixed receipt numbering. Inventory delta-based tracking with oversell alerts. SQLite encryption at rest (SQLCipher via feature flag). Offline auth with 72h expiry + brute-force lockout. `bc-sync-status` UI component. Hardened CSP. Cross-platform connectivity detection. | — |
 | 75 | Native Shell (Tauri) | ⚠️ | L | **Phase 2 ✅.** Tauri 2.0 project at `packages/tauri/`. Stencil components run inside native WebView. Plugins: tauri-plugin-sql (SQLite + optional SQLCipher encryption), tauri-plugin-fs, tauri-plugin-notification. Mobile plugins (barcode-scanner, biometric) behind feature flag. Build pipeline: `npm run dev:desktop`, `build:desktop`, `dev:android`, `build:android`, `dev:ios`, `build:ios`. Icons generated for all platforms. Hardened CSP for production. | Mobile platform testing (Android/iOS). Camera/GPS plugins (less mature on mobile). App Store submission. |
@@ -157,7 +157,7 @@ Before the gap list — what's already **production-solid**:
 |---|---------|--------|--------|-------------|----------------|
 | 38 | Report Builder | ⚠️ | L | List view with filters + sort. Custom API endpoints can serve report data. | Dedicated report builder with group-by, aggregation, calculated columns. |
 | 39 | Query / Script Report | ⚠️ | M | Process `query` step + plugin scripts can execute custom logic. | Dedicated SQL/script report system runnable from UI. |
-| 40 | Chart Builder | ✅ | — | Chart view type. 11 Stencil chart components (line, bar, pie, area, gauge, funnel, heatmap, pivot, KPI, scorecard, progress). | — |
+| 40 | Chart Builder | ✅ | — | Chart view type. 26 Stencil chart components (23 ECharts: line, bar, pie, area, scatter, radar, gauge, funnel, heatmap, treemap, sunburst, candlestick, boxplot, mixed, sankey, graph, tree, polar, parallel, themeriver, pictorialbar, custom + 3 pure CSS: pivot, KPI, scorecard, progress). Modular ECharts imports, multi-series support, shared chart-utils, remote data fetching, toolbox, data zoom, theme/renderer switching. | — |
 | 41 | Export Data (CSV/Excel/PDF) | ❌ | M | `bc-export` Stencil component exists (uses xlsx library). | No server-side export handler. Need export endpoint per model (CSV via encoding/csv, Excel via excelize). |
 | 42 | Pivot Table | ❌ | L | `bc-chart-pivot` Stencil component exists. | No server-side pivot engine (dimensions, measures, aggregations). Frontend component needs data feed. |
 | 43 | Scheduled Report | ❌ | M* | Cron system exists. | No report + email delivery integration. *Depends on email (#26) + report builder (#38). |
@@ -231,7 +231,7 @@ The `@bitcode/components` Stencil library (94 components) provides rich UI widge
 | Fields | string, text, richtext, code, date, select, link, file, image, signature, barcode, geo, rating, json, etc. | 34 | ⚠️ Component compiler maps some; SSR uses Go templates |
 | Layout | row, column, section, tabs, sheet, header, separator, button-box, html-block | 9 | ⚠️ Partial via component compiler |
 | Views | list, form, kanban, calendar, gantt, map, tree, report, activity | 9 | ⚠️ SSR renders HTML; components for SPA mode |
-| Charts | line, bar, pie, area, gauge, funnel, heatmap, pivot, KPI, scorecard, progress | 11 | ✅ Chart view type uses ECharts |
+| Charts | line, bar, pie, area, scatter, radar, gauge, funnel, heatmap, treemap, sunburst, candlestick, boxplot, mixed, sankey, graph, tree, polar, parallel, themeriver, pictorialbar, custom, pivot, KPI, scorecard, progress | 26 | ✅ Chart view type uses ECharts (modular imports) |
 | Datatable | datatable, filter-builder, lookup-modal | 3 | ❌ Not wired |
 | Dialogs | modal, confirm, quick-entry, wizard, toast | 5 | ❌ Not wired |
 | Search | search, filter-bar, filter-panel, favorites | 4 | ❌ Not wired |

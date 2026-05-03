@@ -217,7 +217,7 @@ Views are wrapped in a layout template with sidebar navigation, navbar, and resp
 
 ### 7. Web Components (`@bitcode/components`)
 
-A Stencil.js component library providing 103 enterprise-grade UI widgets. **Standalone-capable** — works in plain HTML without BitCode framework.
+A Stencil.js component library providing 119 enterprise-grade UI widgets. **Standalone-capable** — works in plain HTML without BitCode framework.
 
 | Category | Components |
 |----------|------------|

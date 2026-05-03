@@ -5,8 +5,8 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
-import { ChartClickEvent, FieldBlurEvent, FieldChangeEvent, FieldClearEvent, FieldFocusEvent, FieldValidationEvent, FieldValidEvent, FilterChangeEvent as FilterChangeEventType, OptionCreateEvent, OptionsErrorEvent, OptionsLoadEvent, PageChangeEvent, SortChangeEvent as SortChangeEventType, ValidateOn, ValidationResult } from "./core/types";
-export { ChartClickEvent, FieldBlurEvent, FieldChangeEvent, FieldClearEvent, FieldFocusEvent, FieldValidationEvent, FieldValidEvent, FilterChangeEvent as FilterChangeEventType, OptionCreateEvent, OptionsErrorEvent, OptionsLoadEvent, PageChangeEvent, SortChangeEvent as SortChangeEventType, ValidateOn, ValidationResult } from "./core/types";
+import { ChartClickEvent, ChartDataZoomEvent, ChartHoverEvent, ChartLegendSelectEvent, FieldBlurEvent, FieldChangeEvent, FieldClearEvent, FieldFocusEvent, FieldValidationEvent, FieldValidEvent, FilterChangeEvent as FilterChangeEventType, OptionCreateEvent, OptionsErrorEvent, OptionsLoadEvent, PageChangeEvent, SortChangeEvent as SortChangeEventType, ValidateOn, ValidationResult } from "./core/types";
+export { ChartClickEvent, ChartDataZoomEvent, ChartHoverEvent, ChartLegendSelectEvent, FieldBlurEvent, FieldChangeEvent, FieldClearEvent, FieldFocusEvent, FieldValidationEvent, FieldValidEvent, FilterChangeEvent as FilterChangeEventType, OptionCreateEvent, OptionsErrorEvent, OptionsLoadEvent, PageChangeEvent, SortChangeEvent as SortChangeEventType, ValidateOn, ValidationResult } from "./core/types";
 export namespace Components {
     interface BcActivity {
         /**
@@ -45,11 +45,16 @@ export namespace Components {
           * @default ''
          */
         "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
         "exportImage": (format?: string) => Promise<string>;
         /**
           * @default ''
          */
         "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
          */
@@ -62,18 +67,46 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
          */
         "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
         "resize": () => Promise<void>;
         "setData": (newData: unknown) => Promise<void>;
         /**
           * @default true
          */
+        "smooth": boolean;
+        /**
+          * @default false
+         */
+        "stacked": boolean;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
         "tooltipEnabled": boolean;
         "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
     }
     interface BcChartBar {
         /**
@@ -96,11 +129,100 @@ export namespace Components {
           * @default ''
          */
         "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
         "exportImage": (format?: string) => Promise<string>;
         /**
           * @default ''
          */
         "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default false
+         */
+        "horizontal": boolean;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default false
+         */
+        "stacked": boolean;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartBoxplot {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
          */
@@ -113,18 +235,167 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
          */
         "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
         "resize": () => Promise<void>;
         "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
         /**
           * @default true
          */
         "tooltipEnabled": boolean;
         "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartCandlestick {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        /**
+          * @default 5
+         */
+        "maPeriod": number;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default false
+         */
+        "showMA": boolean;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartCustom {
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '400px'
+         */
+        "height": string;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default '{}'
+         */
+        "option": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        "setOption": (opt: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
     }
     interface BcChartFunnel {
         /**
@@ -152,6 +423,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
          */
@@ -164,18 +436,42 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
          */
         "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
         "resize": () => Promise<void>;
         "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default 'descending'
+         */
+        "sortOrder": string;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
         /**
           * @default true
          */
         "tooltipEnabled": boolean;
         "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
     }
     interface BcChartGauge {
         /**
@@ -186,7 +482,12 @@ export namespace Components {
           * @default ''
          */
         "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
         "exportImage": (format?: string) => Promise<string>;
+        "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
          */
@@ -196,16 +497,129 @@ export namespace Components {
          */
         "loading": boolean;
         /**
+          * @default ''
+         */
+        "locale": string;
+        /**
           * @default '100'
          */
         "max": string;
+        /**
+          * @default '0'
+         */
+        "min": string;
         "refresh": () => Promise<void>;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
         "resize": () => Promise<void>;
+        /**
+          * @default ''
+         */
+        "segments": string;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
         "updateData": (newData: unknown) => Promise<void>;
         /**
           * @default '0'
          */
         "value": string;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartGraph {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default true
+         */
+        "draggable": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default 'force'
+         */
+        "layout": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        /**
+          * @default true
+         */
+        "roam": boolean;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
     }
     interface BcChartHeatmap {
         /**
@@ -228,11 +642,16 @@ export namespace Components {
           * @default ''
          */
         "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
         "exportImage": (format?: string) => Promise<string>;
         /**
           * @default ''
          */
         "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
          */
@@ -245,18 +664,46 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
          */
         "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
         "resize": () => Promise<void>;
         "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
         /**
           * @default true
          */
         "tooltipEnabled": boolean;
         "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default 100
+         */
+        "visualMapMax": number;
+        /**
+          * @default 0
+         */
+        "visualMapMin": number;
+        /**
+          * @default '100%'
+         */
+        "width": string;
     }
     interface BcChartKpi {
         /**
@@ -311,11 +758,16 @@ export namespace Components {
           * @default ''
          */
         "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
         "exportImage": (format?: string) => Promise<string>;
         /**
           * @default ''
          */
         "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
          */
@@ -328,20 +780,132 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
          */
         "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
         "resize": () => Promise<void>;
         "setData": (newData: unknown) => Promise<void>;
         /**
           * @default true
          */
+        "smooth": boolean;
+        /**
+          * @default false
+         */
+        "stacked": boolean;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
         "tooltipEnabled": boolean;
         "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
     }
-    interface BcChartPie {
+    interface BcChartMixed {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
+        /**
+          * @default false
+         */
+        "dualAxis": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "stacked": string;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartParallel {
         /**
           * @default true
          */
@@ -367,6 +931,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
          */
@@ -379,18 +944,198 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
          */
         "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
         "resize": () => Promise<void>;
         "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
         /**
           * @default true
          */
         "tooltipEnabled": boolean;
         "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartPictorialbar {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default 'roundRect'
+         */
+        "symbol": string;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartPie {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default true
+         */
+        "donut": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        /**
+          * @default ''
+         */
+        "roseType": string;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
     }
     interface BcChartPivot {
         /**
@@ -416,6 +1161,86 @@ export namespace Components {
          */
         "valueField": string;
     }
+    interface BcChartPolar {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        /**
+          * @default 'bar'
+         */
+        "polarType": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default false
+         */
+        "stacked": boolean;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
     interface BcChartProgress {
         /**
           * @default 'primary'
@@ -440,8 +1265,265 @@ export namespace Components {
          */
         "value": string;
     }
-    interface BcChartScorecard {
+    interface BcChartRadar {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
         "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        /**
+          * @default false
+         */
+        "filled": boolean;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default 'polygon'
+         */
+        "shape": string;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartSankey {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default true
+         */
+        "draggable": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        /**
+          * @default 'horizontal'
+         */
+        "orient": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartScatter {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default false
+         */
+        "bubble": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
+        /**
+          * @default false
+         */
+        "effectScatter": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartScorecard {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        "exportImage": (format?: string) => Promise<string>;
+        "getChartInstance": () => Promise<unknown>;
         /**
           * @default '200px'
          */
@@ -450,17 +1532,354 @@ export namespace Components {
           * @default ''
          */
         "label": string;
+        /**
+          * @default ''
+         */
+        "locale": string;
         "refresh": () => Promise<void>;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
         "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
         /**
           * @default '100'
          */
         "target": string;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
         "updateData": (newData: unknown) => Promise<void>;
         /**
           * @default '0'
          */
         "value": string;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartSunburst {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default '0%'
+         */
+        "innerRadius": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        /**
+          * @default '90%'
+         */
+        "outerRadius": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartThemeriver {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartTree {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default 'orthogonal'
+         */
+        "layout": string;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        /**
+          * @default 'LR'
+         */
+        "orient": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
+    }
+    interface BcChartTreemap {
+        /**
+          * @default true
+         */
+        "animate": boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle": string;
+        /**
+          * @default ''
+         */
+        "colors": string;
+        /**
+          * @default '[]'
+         */
+        "data": string;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default false
+         */
+        "dataZoom": boolean;
+        "exportImage": (format?: string) => Promise<string>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "getChartInstance": () => Promise<unknown>;
+        /**
+          * @default '300px'
+         */
+        "height": string;
+        /**
+          * @default 0
+         */
+        "leafDepth": number;
+        /**
+          * @default true
+         */
+        "legend": boolean;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default ''
+         */
+        "locale": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer": string;
+        "resize": () => Promise<void>;
+        /**
+          * @default true
+         */
+        "roam": boolean;
+        "setData": (newData: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "theme": string;
+        /**
+          * @default false
+         */
+        "toolbox": boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled": boolean;
+        "updateData": (newData: unknown) => Promise<void>;
+        /**
+          * @default '100%'
+         */
+        "width": string;
     }
     interface BcChatter {
         /**
@@ -2430,6 +3849,91 @@ export namespace Components {
           * @default 'full'
          */
         "toolbar": string;
+        /**
+          * @default ''
+         */
+        "tooltip": string;
+        "validate": () => Promise<ValidationResult>;
+        /**
+          * @default ''
+         */
+        "validateOn": ValidateOn | '';
+        /**
+          * @default ''
+         */
+        "validationMessage": string;
+        /**
+          * @default 'none'
+         */
+        "validationStatus": 'none' | 'validating' | 'valid' | 'invalid';
+        /**
+          * @default ''
+         */
+        "value": string;
+    }
+    interface BcFieldMorph {
+        "blurField": () => Promise<void>;
+        "clear": () => Promise<void>;
+        "clearError": () => Promise<void>;
+        /**
+          * @default true
+         */
+        "clearable": boolean;
+        /**
+          * @default ''
+         */
+        "defaultValue": string;
+        /**
+          * @default false
+         */
+        "disabled": boolean;
+        "focusField": () => Promise<void>;
+        "getValue": () => Promise<string>;
+        /**
+          * @default ''
+         */
+        "hint": string;
+        "isDirty": () => Promise<boolean>;
+        "isTouched": () => Promise<boolean>;
+        /**
+          * @default ''
+         */
+        "label": string;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        /**
+          * @default '[]'
+         */
+        "models": string;
+        /**
+          * @default ''
+         */
+        "morphType": string;
+        /**
+          * @default ''
+         */
+        "name": string;
+        /**
+          * @default 'Search...'
+         */
+        "placeholder": string;
+        /**
+          * @default false
+         */
+        "readonly": boolean;
+        /**
+          * @default false
+         */
+        "required": boolean;
+        "reset": () => Promise<void>;
+        "setError": (message: string) => Promise<void>;
+        "setValue": (value: string, emit?: boolean) => Promise<void>;
+        /**
+          * @default 'md'
+         */
+        "size": 'sm' | 'md' | 'lg';
         /**
           * @default ''
          */
@@ -4712,6 +6216,18 @@ export interface BcChartBarCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcChartBarElement;
 }
+export interface BcChartBoxplotCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartBoxplotElement;
+}
+export interface BcChartCandlestickCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartCandlestickElement;
+}
+export interface BcChartCustomCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartCustomElement;
+}
 export interface BcChartFunnelCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcChartFunnelElement;
@@ -4719,6 +6235,10 @@ export interface BcChartFunnelCustomEvent<T> extends CustomEvent<T> {
 export interface BcChartGaugeCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcChartGaugeElement;
+}
+export interface BcChartGraphCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartGraphElement;
 }
 export interface BcChartHeatmapCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -4728,13 +6248,57 @@ export interface BcChartLineCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcChartLineElement;
 }
+export interface BcChartMixedCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartMixedElement;
+}
+export interface BcChartParallelCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartParallelElement;
+}
+export interface BcChartPictorialbarCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartPictorialbarElement;
+}
 export interface BcChartPieCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcChartPieElement;
 }
+export interface BcChartPolarCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartPolarElement;
+}
+export interface BcChartRadarCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartRadarElement;
+}
+export interface BcChartSankeyCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartSankeyElement;
+}
+export interface BcChartScatterCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartScatterElement;
+}
 export interface BcChartScorecardCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcChartScorecardElement;
+}
+export interface BcChartSunburstCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartSunburstElement;
+}
+export interface BcChartThemeriverCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartThemeriverElement;
+}
+export interface BcChartTreeCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartTreeElement;
+}
+export interface BcChartTreemapCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcChartTreemapElement;
 }
 export interface BcChatterCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -4843,6 +6407,10 @@ export interface BcFieldLinkCustomEvent<T> extends CustomEvent<T> {
 export interface BcFieldMarkdownCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcFieldMarkdownElement;
+}
+export interface BcFieldMorphCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcFieldMorphElement;
 }
 export interface BcFieldMulticheckCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -4982,6 +6550,10 @@ declare global {
     };
     interface HTMLBcChartAreaElementEventMap {
         "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
     }
     interface HTMLBcChartAreaElement extends Components.BcChartArea, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartAreaElementEventMap>(type: K, listener: (this: HTMLBcChartAreaElement, ev: BcChartAreaCustomEvent<HTMLBcChartAreaElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -4999,6 +6571,10 @@ declare global {
     };
     interface HTMLBcChartBarElementEventMap {
         "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
     }
     interface HTMLBcChartBarElement extends Components.BcChartBar, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartBarElementEventMap>(type: K, listener: (this: HTMLBcChartBarElement, ev: BcChartBarCustomEvent<HTMLBcChartBarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -5014,8 +6590,73 @@ declare global {
         prototype: HTMLBcChartBarElement;
         new (): HTMLBcChartBarElement;
     };
+    interface HTMLBcChartBoxplotElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartBoxplotElement extends Components.BcChartBoxplot, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartBoxplotElementEventMap>(type: K, listener: (this: HTMLBcChartBoxplotElement, ev: BcChartBoxplotCustomEvent<HTMLBcChartBoxplotElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartBoxplotElementEventMap>(type: K, listener: (this: HTMLBcChartBoxplotElement, ev: BcChartBoxplotCustomEvent<HTMLBcChartBoxplotElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartBoxplotElement: {
+        prototype: HTMLBcChartBoxplotElement;
+        new (): HTMLBcChartBoxplotElement;
+    };
+    interface HTMLBcChartCandlestickElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartCandlestickElement extends Components.BcChartCandlestick, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartCandlestickElementEventMap>(type: K, listener: (this: HTMLBcChartCandlestickElement, ev: BcChartCandlestickCustomEvent<HTMLBcChartCandlestickElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartCandlestickElementEventMap>(type: K, listener: (this: HTMLBcChartCandlestickElement, ev: BcChartCandlestickCustomEvent<HTMLBcChartCandlestickElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartCandlestickElement: {
+        prototype: HTMLBcChartCandlestickElement;
+        new (): HTMLBcChartCandlestickElement;
+    };
+    interface HTMLBcChartCustomElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartCustomElement extends Components.BcChartCustom, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartCustomElementEventMap>(type: K, listener: (this: HTMLBcChartCustomElement, ev: BcChartCustomCustomEvent<HTMLBcChartCustomElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartCustomElementEventMap>(type: K, listener: (this: HTMLBcChartCustomElement, ev: BcChartCustomCustomEvent<HTMLBcChartCustomElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartCustomElement: {
+        prototype: HTMLBcChartCustomElement;
+        new (): HTMLBcChartCustomElement;
+    };
     interface HTMLBcChartFunnelElementEventMap {
         "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
     }
     interface HTMLBcChartFunnelElement extends Components.BcChartFunnel, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartFunnelElementEventMap>(type: K, listener: (this: HTMLBcChartFunnelElement, ev: BcChartFunnelCustomEvent<HTMLBcChartFunnelElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -5033,6 +6674,10 @@ declare global {
     };
     interface HTMLBcChartGaugeElementEventMap {
         "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
     }
     interface HTMLBcChartGaugeElement extends Components.BcChartGauge, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartGaugeElementEventMap>(type: K, listener: (this: HTMLBcChartGaugeElement, ev: BcChartGaugeCustomEvent<HTMLBcChartGaugeElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -5048,8 +6693,33 @@ declare global {
         prototype: HTMLBcChartGaugeElement;
         new (): HTMLBcChartGaugeElement;
     };
+    interface HTMLBcChartGraphElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartGraphElement extends Components.BcChartGraph, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartGraphElementEventMap>(type: K, listener: (this: HTMLBcChartGraphElement, ev: BcChartGraphCustomEvent<HTMLBcChartGraphElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartGraphElementEventMap>(type: K, listener: (this: HTMLBcChartGraphElement, ev: BcChartGraphCustomEvent<HTMLBcChartGraphElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartGraphElement: {
+        prototype: HTMLBcChartGraphElement;
+        new (): HTMLBcChartGraphElement;
+    };
     interface HTMLBcChartHeatmapElementEventMap {
         "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
     }
     interface HTMLBcChartHeatmapElement extends Components.BcChartHeatmap, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartHeatmapElementEventMap>(type: K, listener: (this: HTMLBcChartHeatmapElement, ev: BcChartHeatmapCustomEvent<HTMLBcChartHeatmapElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -5073,6 +6743,10 @@ declare global {
     };
     interface HTMLBcChartLineElementEventMap {
         "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
     }
     interface HTMLBcChartLineElement extends Components.BcChartLine, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartLineElementEventMap>(type: K, listener: (this: HTMLBcChartLineElement, ev: BcChartLineCustomEvent<HTMLBcChartLineElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -5088,8 +6762,73 @@ declare global {
         prototype: HTMLBcChartLineElement;
         new (): HTMLBcChartLineElement;
     };
+    interface HTMLBcChartMixedElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartMixedElement extends Components.BcChartMixed, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartMixedElementEventMap>(type: K, listener: (this: HTMLBcChartMixedElement, ev: BcChartMixedCustomEvent<HTMLBcChartMixedElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartMixedElementEventMap>(type: K, listener: (this: HTMLBcChartMixedElement, ev: BcChartMixedCustomEvent<HTMLBcChartMixedElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartMixedElement: {
+        prototype: HTMLBcChartMixedElement;
+        new (): HTMLBcChartMixedElement;
+    };
+    interface HTMLBcChartParallelElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartParallelElement extends Components.BcChartParallel, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartParallelElementEventMap>(type: K, listener: (this: HTMLBcChartParallelElement, ev: BcChartParallelCustomEvent<HTMLBcChartParallelElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartParallelElementEventMap>(type: K, listener: (this: HTMLBcChartParallelElement, ev: BcChartParallelCustomEvent<HTMLBcChartParallelElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartParallelElement: {
+        prototype: HTMLBcChartParallelElement;
+        new (): HTMLBcChartParallelElement;
+    };
+    interface HTMLBcChartPictorialbarElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartPictorialbarElement extends Components.BcChartPictorialbar, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartPictorialbarElementEventMap>(type: K, listener: (this: HTMLBcChartPictorialbarElement, ev: BcChartPictorialbarCustomEvent<HTMLBcChartPictorialbarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartPictorialbarElementEventMap>(type: K, listener: (this: HTMLBcChartPictorialbarElement, ev: BcChartPictorialbarCustomEvent<HTMLBcChartPictorialbarElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartPictorialbarElement: {
+        prototype: HTMLBcChartPictorialbarElement;
+        new (): HTMLBcChartPictorialbarElement;
+    };
     interface HTMLBcChartPieElementEventMap {
         "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
     }
     interface HTMLBcChartPieElement extends Components.BcChartPie, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartPieElementEventMap>(type: K, listener: (this: HTMLBcChartPieElement, ev: BcChartPieCustomEvent<HTMLBcChartPieElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -5111,14 +6850,102 @@ declare global {
         prototype: HTMLBcChartPivotElement;
         new (): HTMLBcChartPivotElement;
     };
+    interface HTMLBcChartPolarElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartPolarElement extends Components.BcChartPolar, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartPolarElementEventMap>(type: K, listener: (this: HTMLBcChartPolarElement, ev: BcChartPolarCustomEvent<HTMLBcChartPolarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartPolarElementEventMap>(type: K, listener: (this: HTMLBcChartPolarElement, ev: BcChartPolarCustomEvent<HTMLBcChartPolarElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartPolarElement: {
+        prototype: HTMLBcChartPolarElement;
+        new (): HTMLBcChartPolarElement;
+    };
     interface HTMLBcChartProgressElement extends Components.BcChartProgress, HTMLStencilElement {
     }
     var HTMLBcChartProgressElement: {
         prototype: HTMLBcChartProgressElement;
         new (): HTMLBcChartProgressElement;
     };
+    interface HTMLBcChartRadarElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartRadarElement extends Components.BcChartRadar, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartRadarElementEventMap>(type: K, listener: (this: HTMLBcChartRadarElement, ev: BcChartRadarCustomEvent<HTMLBcChartRadarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartRadarElementEventMap>(type: K, listener: (this: HTMLBcChartRadarElement, ev: BcChartRadarCustomEvent<HTMLBcChartRadarElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartRadarElement: {
+        prototype: HTMLBcChartRadarElement;
+        new (): HTMLBcChartRadarElement;
+    };
+    interface HTMLBcChartSankeyElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartSankeyElement extends Components.BcChartSankey, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartSankeyElementEventMap>(type: K, listener: (this: HTMLBcChartSankeyElement, ev: BcChartSankeyCustomEvent<HTMLBcChartSankeyElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartSankeyElementEventMap>(type: K, listener: (this: HTMLBcChartSankeyElement, ev: BcChartSankeyCustomEvent<HTMLBcChartSankeyElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartSankeyElement: {
+        prototype: HTMLBcChartSankeyElement;
+        new (): HTMLBcChartSankeyElement;
+    };
+    interface HTMLBcChartScatterElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartScatterElement extends Components.BcChartScatter, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartScatterElementEventMap>(type: K, listener: (this: HTMLBcChartScatterElement, ev: BcChartScatterCustomEvent<HTMLBcChartScatterElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartScatterElementEventMap>(type: K, listener: (this: HTMLBcChartScatterElement, ev: BcChartScatterCustomEvent<HTMLBcChartScatterElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartScatterElement: {
+        prototype: HTMLBcChartScatterElement;
+        new (): HTMLBcChartScatterElement;
+    };
     interface HTMLBcChartScorecardElementEventMap {
         "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
     }
     interface HTMLBcChartScorecardElement extends Components.BcChartScorecard, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartScorecardElementEventMap>(type: K, listener: (this: HTMLBcChartScorecardElement, ev: BcChartScorecardCustomEvent<HTMLBcChartScorecardElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -5133,6 +6960,89 @@ declare global {
     var HTMLBcChartScorecardElement: {
         prototype: HTMLBcChartScorecardElement;
         new (): HTMLBcChartScorecardElement;
+    };
+    interface HTMLBcChartSunburstElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartSunburstElement extends Components.BcChartSunburst, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartSunburstElementEventMap>(type: K, listener: (this: HTMLBcChartSunburstElement, ev: BcChartSunburstCustomEvent<HTMLBcChartSunburstElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartSunburstElementEventMap>(type: K, listener: (this: HTMLBcChartSunburstElement, ev: BcChartSunburstCustomEvent<HTMLBcChartSunburstElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartSunburstElement: {
+        prototype: HTMLBcChartSunburstElement;
+        new (): HTMLBcChartSunburstElement;
+    };
+    interface HTMLBcChartThemeriverElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartThemeriverElement extends Components.BcChartThemeriver, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartThemeriverElementEventMap>(type: K, listener: (this: HTMLBcChartThemeriverElement, ev: BcChartThemeriverCustomEvent<HTMLBcChartThemeriverElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartThemeriverElementEventMap>(type: K, listener: (this: HTMLBcChartThemeriverElement, ev: BcChartThemeriverCustomEvent<HTMLBcChartThemeriverElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartThemeriverElement: {
+        prototype: HTMLBcChartThemeriverElement;
+        new (): HTMLBcChartThemeriverElement;
+    };
+    interface HTMLBcChartTreeElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartTreeElement extends Components.BcChartTree, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartTreeElementEventMap>(type: K, listener: (this: HTMLBcChartTreeElement, ev: BcChartTreeCustomEvent<HTMLBcChartTreeElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartTreeElementEventMap>(type: K, listener: (this: HTMLBcChartTreeElement, ev: BcChartTreeCustomEvent<HTMLBcChartTreeElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartTreeElement: {
+        prototype: HTMLBcChartTreeElement;
+        new (): HTMLBcChartTreeElement;
+    };
+    interface HTMLBcChartTreemapElementEventMap {
+        "lcChartClick": ChartClickEvent;
+        "lcChartHover": ChartHoverEvent;
+        "lcChartLegendSelect": ChartLegendSelectEvent;
+        "lcChartDataZoom": ChartDataZoomEvent;
+        "lcChartReady": void;
+    }
+    interface HTMLBcChartTreemapElement extends Components.BcChartTreemap, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcChartTreemapElementEventMap>(type: K, listener: (this: HTMLBcChartTreemapElement, ev: BcChartTreemapCustomEvent<HTMLBcChartTreemapElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcChartTreemapElementEventMap>(type: K, listener: (this: HTMLBcChartTreemapElement, ev: BcChartTreemapCustomEvent<HTMLBcChartTreemapElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcChartTreemapElement: {
+        prototype: HTMLBcChartTreemapElement;
+        new (): HTMLBcChartTreemapElement;
     };
     interface HTMLBcChatterElementEventMap {
         "lcChatterSend": {text: string; type: string};
@@ -5706,6 +7616,28 @@ declare global {
     var HTMLBcFieldMarkdownElement: {
         prototype: HTMLBcFieldMarkdownElement;
         new (): HTMLBcFieldMarkdownElement;
+    };
+    interface HTMLBcFieldMorphElementEventMap {
+        "lcFieldChange": FieldChangeEvent;
+        "lcFieldFocus": FieldFocusEvent;
+        "lcFieldBlur": FieldBlurEvent;
+        "lcFieldClear": FieldClearEvent;
+        "lcFieldInvalid": FieldValidationEvent;
+        "lcFieldValid": FieldValidEvent;
+    }
+    interface HTMLBcFieldMorphElement extends Components.BcFieldMorph, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcFieldMorphElementEventMap>(type: K, listener: (this: HTMLBcFieldMorphElement, ev: BcFieldMorphCustomEvent<HTMLBcFieldMorphElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcFieldMorphElementEventMap>(type: K, listener: (this: HTMLBcFieldMorphElement, ev: BcFieldMorphCustomEvent<HTMLBcFieldMorphElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcFieldMorphElement: {
+        prototype: HTMLBcFieldMorphElement;
+        new (): HTMLBcFieldMorphElement;
     };
     interface HTMLBcFieldMulticheckElementEventMap {
         "lcFieldChange": FieldChangeEvent;
@@ -6476,15 +8408,30 @@ declare global {
         "bc-button-box": HTMLBcButtonBoxElement;
         "bc-chart-area": HTMLBcChartAreaElement;
         "bc-chart-bar": HTMLBcChartBarElement;
+        "bc-chart-boxplot": HTMLBcChartBoxplotElement;
+        "bc-chart-candlestick": HTMLBcChartCandlestickElement;
+        "bc-chart-custom": HTMLBcChartCustomElement;
         "bc-chart-funnel": HTMLBcChartFunnelElement;
         "bc-chart-gauge": HTMLBcChartGaugeElement;
+        "bc-chart-graph": HTMLBcChartGraphElement;
         "bc-chart-heatmap": HTMLBcChartHeatmapElement;
         "bc-chart-kpi": HTMLBcChartKpiElement;
         "bc-chart-line": HTMLBcChartLineElement;
+        "bc-chart-mixed": HTMLBcChartMixedElement;
+        "bc-chart-parallel": HTMLBcChartParallelElement;
+        "bc-chart-pictorialbar": HTMLBcChartPictorialbarElement;
         "bc-chart-pie": HTMLBcChartPieElement;
         "bc-chart-pivot": HTMLBcChartPivotElement;
+        "bc-chart-polar": HTMLBcChartPolarElement;
         "bc-chart-progress": HTMLBcChartProgressElement;
+        "bc-chart-radar": HTMLBcChartRadarElement;
+        "bc-chart-sankey": HTMLBcChartSankeyElement;
+        "bc-chart-scatter": HTMLBcChartScatterElement;
         "bc-chart-scorecard": HTMLBcChartScorecardElement;
+        "bc-chart-sunburst": HTMLBcChartSunburstElement;
+        "bc-chart-themeriver": HTMLBcChartThemeriverElement;
+        "bc-chart-tree": HTMLBcChartTreeElement;
+        "bc-chart-treemap": HTMLBcChartTreemapElement;
         "bc-chatter": HTMLBcChatterElement;
         "bc-child-table": HTMLBcChildTableElement;
         "bc-column": HTMLBcColumnElement;
@@ -6514,6 +8461,7 @@ declare global {
         "bc-field-json": HTMLBcFieldJsonElement;
         "bc-field-link": HTMLBcFieldLinkElement;
         "bc-field-markdown": HTMLBcFieldMarkdownElement;
+        "bc-field-morph": HTMLBcFieldMorphElement;
         "bc-field-multicheck": HTMLBcFieldMulticheckElement;
         "bc-field-password": HTMLBcFieldPasswordElement;
         "bc-field-percent": HTMLBcFieldPercentElement;
@@ -6618,6 +8566,10 @@ declare namespace LocalJSX {
          */
         "dataSource"?: string;
         /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
           * @default ''
          */
         "fetchHeaders"?: string;
@@ -6633,15 +8585,47 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
         "onLcChartClick"?: (event: BcChartAreaCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartAreaCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartAreaCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartAreaCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartAreaCustomEvent<void>) => void;
         /**
           * @default 0
          */
         "refreshInterval"?: number;
         /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default true
+         */
+        "smooth"?: boolean;
+        /**
+          * @default false
+         */
+        "stacked"?: boolean;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
           * @default true
          */
         "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
     }
     interface BcChartBar {
         /**
@@ -6665,6 +8649,93 @@ declare namespace LocalJSX {
          */
         "dataSource"?: string;
         /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default false
+         */
+        "horizontal"?: boolean;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartBarCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartBarCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartBarCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartBarCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartBarCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default false
+         */
+        "stacked"?: boolean;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartBoxplot {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
           * @default ''
          */
         "fetchHeaders"?: string;
@@ -6680,15 +8751,163 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
-        "onLcChartClick"?: (event: BcChartBarCustomEvent<ChartClickEvent>) => void;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartBoxplotCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartBoxplotCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartBoxplotCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartBoxplotCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartBoxplotCustomEvent<void>) => void;
         /**
           * @default 0
          */
         "refreshInterval"?: number;
         /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
           * @default true
          */
         "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartCandlestick {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        /**
+          * @default 5
+         */
+        "maPeriod"?: number;
+        "onLcChartClick"?: (event: BcChartCandlestickCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartCandlestickCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartCandlestickCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartCandlestickCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartCandlestickCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default false
+         */
+        "showMA"?: boolean;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartCustom {
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '400px'
+         */
+        "height"?: string;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        "onLcChartClick"?: (event: BcChartCustomCustomEvent<ChartClickEvent>) => void;
+        "onLcChartHover"?: (event: BcChartCustomCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartReady"?: (event: BcChartCustomCustomEvent<void>) => void;
+        /**
+          * @default '{}'
+         */
+        "option"?: string;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
     }
     interface BcChartFunnel {
         /**
@@ -6727,15 +8946,43 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
         "onLcChartClick"?: (event: BcChartFunnelCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartFunnelCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartFunnelCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartFunnelCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartFunnelCustomEvent<void>) => void;
         /**
           * @default 0
          */
         "refreshInterval"?: number;
         /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default 'descending'
+         */
+        "sortOrder"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
           * @default true
          */
         "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
     }
     interface BcChartGauge {
         /**
@@ -6747,6 +8994,10 @@ declare namespace LocalJSX {
          */
         "chartTitle"?: string;
         /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
           * @default '300px'
          */
         "height"?: string;
@@ -6755,14 +9006,129 @@ declare namespace LocalJSX {
          */
         "loading"?: boolean;
         /**
+          * @default ''
+         */
+        "locale"?: string;
+        /**
           * @default '100'
          */
         "max"?: string;
+        /**
+          * @default '0'
+         */
+        "min"?: string;
         "onLcChartClick"?: (event: BcChartGaugeCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartGaugeCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartGaugeCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartGaugeCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartGaugeCustomEvent<void>) => void;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "segments"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
         /**
           * @default '0'
          */
         "value"?: string;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartGraph {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default true
+         */
+        "draggable"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default 'force'
+         */
+        "layout"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartGraphCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartGraphCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartGraphCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartGraphCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartGraphCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default true
+         */
+        "roam"?: boolean;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
     }
     interface BcChartHeatmap {
         /**
@@ -6786,6 +9152,10 @@ declare namespace LocalJSX {
          */
         "dataSource"?: string;
         /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
           * @default ''
          */
         "fetchHeaders"?: string;
@@ -6801,15 +9171,47 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
         "onLcChartClick"?: (event: BcChartHeatmapCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartHeatmapCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartHeatmapCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartHeatmapCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartHeatmapCustomEvent<void>) => void;
         /**
           * @default 0
          */
         "refreshInterval"?: number;
         /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
           * @default true
          */
         "tooltipEnabled"?: boolean;
+        /**
+          * @default 100
+         */
+        "visualMapMax"?: number;
+        /**
+          * @default 0
+         */
+        "visualMapMin"?: number;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
     }
     interface BcChartKpi {
         /**
@@ -6863,6 +9265,10 @@ declare namespace LocalJSX {
          */
         "dataSource"?: string;
         /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
           * @default ''
          */
         "fetchHeaders"?: string;
@@ -6878,17 +9284,132 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
         "onLcChartClick"?: (event: BcChartLineCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartLineCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartLineCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartLineCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartLineCustomEvent<void>) => void;
         /**
           * @default 0
          */
         "refreshInterval"?: number;
         /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default true
+         */
+        "smooth"?: boolean;
+        /**
+          * @default false
+         */
+        "stacked"?: boolean;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
           * @default true
          */
         "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
     }
-    interface BcChartPie {
+    interface BcChartMixed {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
+          * @default false
+         */
+        "dualAxis"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartMixedCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartMixedCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartMixedCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartMixedCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartMixedCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "stacked"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartParallel {
         /**
           * @default true
          */
@@ -6925,15 +9446,195 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
-        "onLcChartClick"?: (event: BcChartPieCustomEvent<ChartClickEvent>) => void;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartParallelCustomEvent<ChartClickEvent>) => void;
+        "onLcChartHover"?: (event: BcChartParallelCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartReady"?: (event: BcChartParallelCustomEvent<void>) => void;
         /**
           * @default 0
          */
         "refreshInterval"?: number;
         /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
           * @default true
          */
         "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartPictorialbar {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartPictorialbarCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartPictorialbarCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartPictorialbarCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartPictorialbarCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartPictorialbarCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default 'roundRect'
+         */
+        "symbol"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartPie {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default true
+         */
+        "donut"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartPieCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartPieCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartPieCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartPieCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartPieCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "roseType"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
     }
     interface BcChartPivot {
         /**
@@ -6957,6 +9658,85 @@ declare namespace LocalJSX {
          */
         "valueField"?: string;
     }
+    interface BcChartPolar {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartPolarCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartPolarCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartPolarCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartPolarCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartPolarCustomEvent<void>) => void;
+        /**
+          * @default 'bar'
+         */
+        "polarType"?: string;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default false
+         */
+        "stacked"?: boolean;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
     interface BcChartProgress {
         /**
           * @default 'primary'
@@ -6979,7 +9759,260 @@ declare namespace LocalJSX {
          */
         "value"?: string;
     }
+    interface BcChartRadar {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default false
+         */
+        "filled"?: boolean;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartRadarCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartRadarCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartRadarCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartRadarCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartRadarCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default 'polygon'
+         */
+        "shape"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartSankey {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default true
+         */
+        "draggable"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartSankeyCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartSankeyCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartSankeyCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartSankeyCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartSankeyCustomEvent<void>) => void;
+        /**
+          * @default 'horizontal'
+         */
+        "orient"?: string;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartScatter {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default false
+         */
+        "bubble"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
+          * @default false
+         */
+        "effectScatter"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartScatterCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartScatterCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartScatterCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartScatterCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartScatterCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
     interface BcChartScorecard {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
         /**
           * @default '200px'
          */
@@ -6988,15 +10021,350 @@ declare namespace LocalJSX {
           * @default ''
          */
         "label"?: string;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
         "onLcChartClick"?: (event: BcChartScorecardCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartScorecardCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartScorecardCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartScorecardCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartScorecardCustomEvent<void>) => void;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
         /**
           * @default '100'
          */
         "target"?: string;
         /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
           * @default '0'
          */
         "value"?: string;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartSunburst {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default '0%'
+         */
+        "innerRadius"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartSunburstCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartSunburstCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartSunburstCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartSunburstCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartSunburstCustomEvent<void>) => void;
+        /**
+          * @default '90%'
+         */
+        "outerRadius"?: string;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartThemeriver {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartThemeriverCustomEvent<ChartClickEvent>) => void;
+        "onLcChartHover"?: (event: BcChartThemeriverCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartThemeriverCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartThemeriverCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartTree {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default 'orthogonal'
+         */
+        "layout"?: string;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartTreeCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartTreeCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartTreeCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartTreeCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartTreeCustomEvent<void>) => void;
+        /**
+          * @default 'LR'
+         */
+        "orient"?: string;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
+    }
+    interface BcChartTreemap {
+        /**
+          * @default true
+         */
+        "animate"?: boolean;
+        /**
+          * @default ''
+         */
+        "chartTitle"?: string;
+        /**
+          * @default ''
+         */
+        "colors"?: string;
+        /**
+          * @default '[]'
+         */
+        "data"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default false
+         */
+        "dataZoom"?: boolean;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default '300px'
+         */
+        "height"?: string;
+        /**
+          * @default 0
+         */
+        "leafDepth"?: number;
+        /**
+          * @default true
+         */
+        "legend"?: boolean;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default ''
+         */
+        "locale"?: string;
+        "onLcChartClick"?: (event: BcChartTreemapCustomEvent<ChartClickEvent>) => void;
+        "onLcChartDataZoom"?: (event: BcChartTreemapCustomEvent<ChartDataZoomEvent>) => void;
+        "onLcChartHover"?: (event: BcChartTreemapCustomEvent<ChartHoverEvent>) => void;
+        "onLcChartLegendSelect"?: (event: BcChartTreemapCustomEvent<ChartLegendSelectEvent>) => void;
+        "onLcChartReady"?: (event: BcChartTreemapCustomEvent<void>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default 'canvas'
+         */
+        "renderer"?: string;
+        /**
+          * @default true
+         */
+        "roam"?: boolean;
+        /**
+          * @default ''
+         */
+        "theme"?: string;
+        /**
+          * @default false
+         */
+        "toolbox"?: boolean;
+        /**
+          * @default true
+         */
+        "tooltipEnabled"?: boolean;
+        /**
+          * @default '100%'
+         */
+        "width"?: string;
     }
     interface BcChatter {
         /**
@@ -8864,6 +12232,86 @@ declare namespace LocalJSX {
           * @default 'full'
          */
         "toolbar"?: string;
+        /**
+          * @default ''
+         */
+        "tooltip"?: string;
+        /**
+          * @default ''
+         */
+        "validateOn"?: ValidateOn | '';
+        /**
+          * @default ''
+         */
+        "validationMessage"?: string;
+        /**
+          * @default 'none'
+         */
+        "validationStatus"?: 'none' | 'validating' | 'valid' | 'invalid';
+        /**
+          * @default ''
+         */
+        "value"?: string;
+    }
+    interface BcFieldMorph {
+        /**
+          * @default true
+         */
+        "clearable"?: boolean;
+        /**
+          * @default ''
+         */
+        "defaultValue"?: string;
+        /**
+          * @default false
+         */
+        "disabled"?: boolean;
+        /**
+          * @default ''
+         */
+        "hint"?: string;
+        /**
+          * @default ''
+         */
+        "label"?: string;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        /**
+          * @default '[]'
+         */
+        "models"?: string;
+        /**
+          * @default ''
+         */
+        "morphType"?: string;
+        /**
+          * @default ''
+         */
+        "name"?: string;
+        "onLcFieldBlur"?: (event: BcFieldMorphCustomEvent<FieldBlurEvent>) => void;
+        "onLcFieldChange"?: (event: BcFieldMorphCustomEvent<FieldChangeEvent>) => void;
+        "onLcFieldClear"?: (event: BcFieldMorphCustomEvent<FieldClearEvent>) => void;
+        "onLcFieldFocus"?: (event: BcFieldMorphCustomEvent<FieldFocusEvent>) => void;
+        "onLcFieldInvalid"?: (event: BcFieldMorphCustomEvent<FieldValidationEvent>) => void;
+        "onLcFieldValid"?: (event: BcFieldMorphCustomEvent<FieldValidEvent>) => void;
+        /**
+          * @default 'Search...'
+         */
+        "placeholder"?: string;
+        /**
+          * @default false
+         */
+        "readonly"?: boolean;
+        /**
+          * @default false
+         */
+        "required"?: boolean;
+        /**
+          * @default 'md'
+         */
+        "size"?: 'sm' | 'md' | 'lg';
         /**
           * @default ''
          */
@@ -11045,10 +14493,18 @@ declare namespace LocalJSX {
         "tooltipEnabled": boolean;
         "animate": boolean;
         "height": string;
+        "width": string;
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
         "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "smooth": boolean;
+        "stacked": boolean;
     }
     interface BcChartBarAttributes {
         "data": string;
@@ -11058,7 +14514,66 @@ declare namespace LocalJSX {
         "tooltipEnabled": boolean;
         "animate": boolean;
         "height": string;
+        "width": string;
         "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "stacked": boolean;
+        "horizontal": boolean;
+    }
+    interface BcChartBoxplotAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+    }
+    interface BcChartCandlestickAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "showMA": boolean;
+        "maPeriod": number;
+    }
+    interface BcChartCustomAttributes {
+        "option": string;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "theme": string;
+        "renderer": string;
         "dataSource": string;
         "fetchHeaders": string;
         "refreshInterval": number;
@@ -11071,18 +14586,53 @@ declare namespace LocalJSX {
         "tooltipEnabled": boolean;
         "animate": boolean;
         "height": string;
+        "width": string;
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
         "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+        "sortOrder": string;
     }
     interface BcChartGaugeAttributes {
         "value": string;
         "max": string;
+        "min": string;
         "chartTitle": string;
+        "colors": string;
         "height": string;
+        "width": string;
         "loading": boolean;
         "animate": boolean;
+        "locale": string;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "segments": string;
+    }
+    interface BcChartGraphAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+        "layout": string;
+        "roam": boolean;
+        "draggable": boolean;
     }
     interface BcChartHeatmapAttributes {
         "data": string;
@@ -11092,10 +14642,18 @@ declare namespace LocalJSX {
         "tooltipEnabled": boolean;
         "animate": boolean;
         "height": string;
+        "width": string;
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
         "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "visualMapMin": number;
+        "visualMapMax": number;
     }
     interface BcChartKpiAttributes {
         "value": string;
@@ -11114,10 +14672,77 @@ declare namespace LocalJSX {
         "tooltipEnabled": boolean;
         "animate": boolean;
         "height": string;
+        "width": string;
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
         "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "smooth": boolean;
+        "stacked": boolean;
+    }
+    interface BcChartMixedAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "dualAxis": boolean;
+        "stacked": string;
+    }
+    interface BcChartParallelAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+    }
+    interface BcChartPictorialbarAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "symbol": string;
     }
     interface BcChartPieAttributes {
         "data": string;
@@ -11127,10 +14752,17 @@ declare namespace LocalJSX {
         "tooltipEnabled": boolean;
         "animate": boolean;
         "height": string;
+        "width": string;
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
         "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+        "donut": boolean;
+        "roseType": string;
     }
     interface BcChartPivotAttributes {
         "data": string;
@@ -11139,6 +14771,26 @@ declare namespace LocalJSX {
         "valueField": string;
         "aggFunc": string;
     }
+    interface BcChartPolarAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+        "polarType": string;
+        "stacked": boolean;
+    }
     interface BcChartProgressAttributes {
         "value": string;
         "max": string;
@@ -11146,11 +14798,159 @@ declare namespace LocalJSX {
         "color": string;
         "showPercent": boolean;
     }
+    interface BcChartRadarAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "shape": string;
+        "filled": boolean;
+    }
+    interface BcChartSankeyAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+        "orient": string;
+        "draggable": boolean;
+    }
+    interface BcChartScatterAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "bubble": boolean;
+        "effectScatter": boolean;
+    }
     interface BcChartScorecardAttributes {
         "value": string;
-        "height": string;
         "target": string;
         "label": string;
+        "height": string;
+        "width": string;
+        "colors": string;
+        "animate": boolean;
+        "locale": string;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+    }
+    interface BcChartSunburstAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+        "innerRadius": string;
+        "outerRadius": string;
+    }
+    interface BcChartThemeriverAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+    }
+    interface BcChartTreeAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "locale": string;
+        "layout": string;
+        "orient": string;
+    }
+    interface BcChartTreemapAttributes {
+        "data": string;
+        "chartTitle": string;
+        "colors": string;
+        "legend": boolean;
+        "tooltipEnabled": boolean;
+        "animate": boolean;
+        "height": string;
+        "width": string;
+        "loading": boolean;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "refreshInterval": number;
+        "theme": string;
+        "renderer": string;
+        "toolbox": boolean;
+        "dataZoom": boolean;
+        "locale": string;
+        "leafDepth": number;
+        "roam": boolean;
     }
     interface BcChatterAttributes {
         "recordId": string;
@@ -11631,6 +15431,26 @@ declare namespace LocalJSX {
         "clearable": boolean;
         "tooltip": string;
         "showCount": boolean;
+        "loading": boolean;
+        "defaultValue": string;
+        "validateOn": ValidateOn | '';
+    }
+    interface BcFieldMorphAttributes {
+        "name": string;
+        "label": string;
+        "value": string;
+        "morphType": string;
+        "placeholder": string;
+        "models": string;
+        "required": boolean;
+        "readonly": boolean;
+        "disabled": boolean;
+        "validationStatus": 'none' | 'validating' | 'valid' | 'invalid';
+        "validationMessage": string;
+        "hint": string;
+        "size": 'sm' | 'md' | 'lg';
+        "clearable": boolean;
+        "tooltip": string;
         "loading": boolean;
         "defaultValue": string;
         "validateOn": ValidateOn | '';
@@ -12236,15 +16056,30 @@ declare namespace LocalJSX {
         "bc-button-box": Omit<BcButtonBox, keyof BcButtonBoxAttributes> & { [K in keyof BcButtonBox & keyof BcButtonBoxAttributes]?: BcButtonBox[K] } & { [K in keyof BcButtonBox & keyof BcButtonBoxAttributes as `attr:${K}`]?: BcButtonBoxAttributes[K] } & { [K in keyof BcButtonBox & keyof BcButtonBoxAttributes as `prop:${K}`]?: BcButtonBox[K] };
         "bc-chart-area": Omit<BcChartArea, keyof BcChartAreaAttributes> & { [K in keyof BcChartArea & keyof BcChartAreaAttributes]?: BcChartArea[K] } & { [K in keyof BcChartArea & keyof BcChartAreaAttributes as `attr:${K}`]?: BcChartAreaAttributes[K] } & { [K in keyof BcChartArea & keyof BcChartAreaAttributes as `prop:${K}`]?: BcChartArea[K] };
         "bc-chart-bar": Omit<BcChartBar, keyof BcChartBarAttributes> & { [K in keyof BcChartBar & keyof BcChartBarAttributes]?: BcChartBar[K] } & { [K in keyof BcChartBar & keyof BcChartBarAttributes as `attr:${K}`]?: BcChartBarAttributes[K] } & { [K in keyof BcChartBar & keyof BcChartBarAttributes as `prop:${K}`]?: BcChartBar[K] };
+        "bc-chart-boxplot": Omit<BcChartBoxplot, keyof BcChartBoxplotAttributes> & { [K in keyof BcChartBoxplot & keyof BcChartBoxplotAttributes]?: BcChartBoxplot[K] } & { [K in keyof BcChartBoxplot & keyof BcChartBoxplotAttributes as `attr:${K}`]?: BcChartBoxplotAttributes[K] } & { [K in keyof BcChartBoxplot & keyof BcChartBoxplotAttributes as `prop:${K}`]?: BcChartBoxplot[K] };
+        "bc-chart-candlestick": Omit<BcChartCandlestick, keyof BcChartCandlestickAttributes> & { [K in keyof BcChartCandlestick & keyof BcChartCandlestickAttributes]?: BcChartCandlestick[K] } & { [K in keyof BcChartCandlestick & keyof BcChartCandlestickAttributes as `attr:${K}`]?: BcChartCandlestickAttributes[K] } & { [K in keyof BcChartCandlestick & keyof BcChartCandlestickAttributes as `prop:${K}`]?: BcChartCandlestick[K] };
+        "bc-chart-custom": Omit<BcChartCustom, keyof BcChartCustomAttributes> & { [K in keyof BcChartCustom & keyof BcChartCustomAttributes]?: BcChartCustom[K] } & { [K in keyof BcChartCustom & keyof BcChartCustomAttributes as `attr:${K}`]?: BcChartCustomAttributes[K] } & { [K in keyof BcChartCustom & keyof BcChartCustomAttributes as `prop:${K}`]?: BcChartCustom[K] };
         "bc-chart-funnel": Omit<BcChartFunnel, keyof BcChartFunnelAttributes> & { [K in keyof BcChartFunnel & keyof BcChartFunnelAttributes]?: BcChartFunnel[K] } & { [K in keyof BcChartFunnel & keyof BcChartFunnelAttributes as `attr:${K}`]?: BcChartFunnelAttributes[K] } & { [K in keyof BcChartFunnel & keyof BcChartFunnelAttributes as `prop:${K}`]?: BcChartFunnel[K] };
         "bc-chart-gauge": Omit<BcChartGauge, keyof BcChartGaugeAttributes> & { [K in keyof BcChartGauge & keyof BcChartGaugeAttributes]?: BcChartGauge[K] } & { [K in keyof BcChartGauge & keyof BcChartGaugeAttributes as `attr:${K}`]?: BcChartGaugeAttributes[K] } & { [K in keyof BcChartGauge & keyof BcChartGaugeAttributes as `prop:${K}`]?: BcChartGauge[K] };
+        "bc-chart-graph": Omit<BcChartGraph, keyof BcChartGraphAttributes> & { [K in keyof BcChartGraph & keyof BcChartGraphAttributes]?: BcChartGraph[K] } & { [K in keyof BcChartGraph & keyof BcChartGraphAttributes as `attr:${K}`]?: BcChartGraphAttributes[K] } & { [K in keyof BcChartGraph & keyof BcChartGraphAttributes as `prop:${K}`]?: BcChartGraph[K] };
         "bc-chart-heatmap": Omit<BcChartHeatmap, keyof BcChartHeatmapAttributes> & { [K in keyof BcChartHeatmap & keyof BcChartHeatmapAttributes]?: BcChartHeatmap[K] } & { [K in keyof BcChartHeatmap & keyof BcChartHeatmapAttributes as `attr:${K}`]?: BcChartHeatmapAttributes[K] } & { [K in keyof BcChartHeatmap & keyof BcChartHeatmapAttributes as `prop:${K}`]?: BcChartHeatmap[K] };
         "bc-chart-kpi": Omit<BcChartKpi, keyof BcChartKpiAttributes> & { [K in keyof BcChartKpi & keyof BcChartKpiAttributes]?: BcChartKpi[K] } & { [K in keyof BcChartKpi & keyof BcChartKpiAttributes as `attr:${K}`]?: BcChartKpiAttributes[K] } & { [K in keyof BcChartKpi & keyof BcChartKpiAttributes as `prop:${K}`]?: BcChartKpi[K] };
         "bc-chart-line": Omit<BcChartLine, keyof BcChartLineAttributes> & { [K in keyof BcChartLine & keyof BcChartLineAttributes]?: BcChartLine[K] } & { [K in keyof BcChartLine & keyof BcChartLineAttributes as `attr:${K}`]?: BcChartLineAttributes[K] } & { [K in keyof BcChartLine & keyof BcChartLineAttributes as `prop:${K}`]?: BcChartLine[K] };
+        "bc-chart-mixed": Omit<BcChartMixed, keyof BcChartMixedAttributes> & { [K in keyof BcChartMixed & keyof BcChartMixedAttributes]?: BcChartMixed[K] } & { [K in keyof BcChartMixed & keyof BcChartMixedAttributes as `attr:${K}`]?: BcChartMixedAttributes[K] } & { [K in keyof BcChartMixed & keyof BcChartMixedAttributes as `prop:${K}`]?: BcChartMixed[K] };
+        "bc-chart-parallel": Omit<BcChartParallel, keyof BcChartParallelAttributes> & { [K in keyof BcChartParallel & keyof BcChartParallelAttributes]?: BcChartParallel[K] } & { [K in keyof BcChartParallel & keyof BcChartParallelAttributes as `attr:${K}`]?: BcChartParallelAttributes[K] } & { [K in keyof BcChartParallel & keyof BcChartParallelAttributes as `prop:${K}`]?: BcChartParallel[K] };
+        "bc-chart-pictorialbar": Omit<BcChartPictorialbar, keyof BcChartPictorialbarAttributes> & { [K in keyof BcChartPictorialbar & keyof BcChartPictorialbarAttributes]?: BcChartPictorialbar[K] } & { [K in keyof BcChartPictorialbar & keyof BcChartPictorialbarAttributes as `attr:${K}`]?: BcChartPictorialbarAttributes[K] } & { [K in keyof BcChartPictorialbar & keyof BcChartPictorialbarAttributes as `prop:${K}`]?: BcChartPictorialbar[K] };
         "bc-chart-pie": Omit<BcChartPie, keyof BcChartPieAttributes> & { [K in keyof BcChartPie & keyof BcChartPieAttributes]?: BcChartPie[K] } & { [K in keyof BcChartPie & keyof BcChartPieAttributes as `attr:${K}`]?: BcChartPieAttributes[K] } & { [K in keyof BcChartPie & keyof BcChartPieAttributes as `prop:${K}`]?: BcChartPie[K] };
         "bc-chart-pivot": Omit<BcChartPivot, keyof BcChartPivotAttributes> & { [K in keyof BcChartPivot & keyof BcChartPivotAttributes]?: BcChartPivot[K] } & { [K in keyof BcChartPivot & keyof BcChartPivotAttributes as `attr:${K}`]?: BcChartPivotAttributes[K] } & { [K in keyof BcChartPivot & keyof BcChartPivotAttributes as `prop:${K}`]?: BcChartPivot[K] };
+        "bc-chart-polar": Omit<BcChartPolar, keyof BcChartPolarAttributes> & { [K in keyof BcChartPolar & keyof BcChartPolarAttributes]?: BcChartPolar[K] } & { [K in keyof BcChartPolar & keyof BcChartPolarAttributes as `attr:${K}`]?: BcChartPolarAttributes[K] } & { [K in keyof BcChartPolar & keyof BcChartPolarAttributes as `prop:${K}`]?: BcChartPolar[K] };
         "bc-chart-progress": Omit<BcChartProgress, keyof BcChartProgressAttributes> & { [K in keyof BcChartProgress & keyof BcChartProgressAttributes]?: BcChartProgress[K] } & { [K in keyof BcChartProgress & keyof BcChartProgressAttributes as `attr:${K}`]?: BcChartProgressAttributes[K] } & { [K in keyof BcChartProgress & keyof BcChartProgressAttributes as `prop:${K}`]?: BcChartProgress[K] };
+        "bc-chart-radar": Omit<BcChartRadar, keyof BcChartRadarAttributes> & { [K in keyof BcChartRadar & keyof BcChartRadarAttributes]?: BcChartRadar[K] } & { [K in keyof BcChartRadar & keyof BcChartRadarAttributes as `attr:${K}`]?: BcChartRadarAttributes[K] } & { [K in keyof BcChartRadar & keyof BcChartRadarAttributes as `prop:${K}`]?: BcChartRadar[K] };
+        "bc-chart-sankey": Omit<BcChartSankey, keyof BcChartSankeyAttributes> & { [K in keyof BcChartSankey & keyof BcChartSankeyAttributes]?: BcChartSankey[K] } & { [K in keyof BcChartSankey & keyof BcChartSankeyAttributes as `attr:${K}`]?: BcChartSankeyAttributes[K] } & { [K in keyof BcChartSankey & keyof BcChartSankeyAttributes as `prop:${K}`]?: BcChartSankey[K] };
+        "bc-chart-scatter": Omit<BcChartScatter, keyof BcChartScatterAttributes> & { [K in keyof BcChartScatter & keyof BcChartScatterAttributes]?: BcChartScatter[K] } & { [K in keyof BcChartScatter & keyof BcChartScatterAttributes as `attr:${K}`]?: BcChartScatterAttributes[K] } & { [K in keyof BcChartScatter & keyof BcChartScatterAttributes as `prop:${K}`]?: BcChartScatter[K] };
         "bc-chart-scorecard": Omit<BcChartScorecard, keyof BcChartScorecardAttributes> & { [K in keyof BcChartScorecard & keyof BcChartScorecardAttributes]?: BcChartScorecard[K] } & { [K in keyof BcChartScorecard & keyof BcChartScorecardAttributes as `attr:${K}`]?: BcChartScorecardAttributes[K] } & { [K in keyof BcChartScorecard & keyof BcChartScorecardAttributes as `prop:${K}`]?: BcChartScorecard[K] };
+        "bc-chart-sunburst": Omit<BcChartSunburst, keyof BcChartSunburstAttributes> & { [K in keyof BcChartSunburst & keyof BcChartSunburstAttributes]?: BcChartSunburst[K] } & { [K in keyof BcChartSunburst & keyof BcChartSunburstAttributes as `attr:${K}`]?: BcChartSunburstAttributes[K] } & { [K in keyof BcChartSunburst & keyof BcChartSunburstAttributes as `prop:${K}`]?: BcChartSunburst[K] };
+        "bc-chart-themeriver": Omit<BcChartThemeriver, keyof BcChartThemeriverAttributes> & { [K in keyof BcChartThemeriver & keyof BcChartThemeriverAttributes]?: BcChartThemeriver[K] } & { [K in keyof BcChartThemeriver & keyof BcChartThemeriverAttributes as `attr:${K}`]?: BcChartThemeriverAttributes[K] } & { [K in keyof BcChartThemeriver & keyof BcChartThemeriverAttributes as `prop:${K}`]?: BcChartThemeriver[K] };
+        "bc-chart-tree": Omit<BcChartTree, keyof BcChartTreeAttributes> & { [K in keyof BcChartTree & keyof BcChartTreeAttributes]?: BcChartTree[K] } & { [K in keyof BcChartTree & keyof BcChartTreeAttributes as `attr:${K}`]?: BcChartTreeAttributes[K] } & { [K in keyof BcChartTree & keyof BcChartTreeAttributes as `prop:${K}`]?: BcChartTree[K] };
+        "bc-chart-treemap": Omit<BcChartTreemap, keyof BcChartTreemapAttributes> & { [K in keyof BcChartTreemap & keyof BcChartTreemapAttributes]?: BcChartTreemap[K] } & { [K in keyof BcChartTreemap & keyof BcChartTreemapAttributes as `attr:${K}`]?: BcChartTreemapAttributes[K] } & { [K in keyof BcChartTreemap & keyof BcChartTreemapAttributes as `prop:${K}`]?: BcChartTreemap[K] };
         "bc-chatter": Omit<BcChatter, keyof BcChatterAttributes> & { [K in keyof BcChatter & keyof BcChatterAttributes]?: BcChatter[K] } & { [K in keyof BcChatter & keyof BcChatterAttributes as `attr:${K}`]?: BcChatterAttributes[K] } & { [K in keyof BcChatter & keyof BcChatterAttributes as `prop:${K}`]?: BcChatter[K] };
         "bc-child-table": Omit<BcChildTable, keyof BcChildTableAttributes> & { [K in keyof BcChildTable & keyof BcChildTableAttributes]?: BcChildTable[K] } & { [K in keyof BcChildTable & keyof BcChildTableAttributes as `attr:${K}`]?: BcChildTableAttributes[K] } & { [K in keyof BcChildTable & keyof BcChildTableAttributes as `prop:${K}`]?: BcChildTable[K] };
         "bc-column": Omit<BcColumn, keyof BcColumnAttributes> & { [K in keyof BcColumn & keyof BcColumnAttributes]?: BcColumn[K] } & { [K in keyof BcColumn & keyof BcColumnAttributes as `attr:${K}`]?: BcColumnAttributes[K] } & { [K in keyof BcColumn & keyof BcColumnAttributes as `prop:${K}`]?: BcColumn[K] };
@@ -12274,6 +16109,7 @@ declare namespace LocalJSX {
         "bc-field-json": Omit<BcFieldJson, keyof BcFieldJsonAttributes> & { [K in keyof BcFieldJson & keyof BcFieldJsonAttributes]?: BcFieldJson[K] } & { [K in keyof BcFieldJson & keyof BcFieldJsonAttributes as `attr:${K}`]?: BcFieldJsonAttributes[K] } & { [K in keyof BcFieldJson & keyof BcFieldJsonAttributes as `prop:${K}`]?: BcFieldJson[K] };
         "bc-field-link": Omit<BcFieldLink, keyof BcFieldLinkAttributes> & { [K in keyof BcFieldLink & keyof BcFieldLinkAttributes]?: BcFieldLink[K] } & { [K in keyof BcFieldLink & keyof BcFieldLinkAttributes as `attr:${K}`]?: BcFieldLinkAttributes[K] } & { [K in keyof BcFieldLink & keyof BcFieldLinkAttributes as `prop:${K}`]?: BcFieldLink[K] };
         "bc-field-markdown": Omit<BcFieldMarkdown, keyof BcFieldMarkdownAttributes> & { [K in keyof BcFieldMarkdown & keyof BcFieldMarkdownAttributes]?: BcFieldMarkdown[K] } & { [K in keyof BcFieldMarkdown & keyof BcFieldMarkdownAttributes as `attr:${K}`]?: BcFieldMarkdownAttributes[K] } & { [K in keyof BcFieldMarkdown & keyof BcFieldMarkdownAttributes as `prop:${K}`]?: BcFieldMarkdown[K] };
+        "bc-field-morph": Omit<BcFieldMorph, keyof BcFieldMorphAttributes> & { [K in keyof BcFieldMorph & keyof BcFieldMorphAttributes]?: BcFieldMorph[K] } & { [K in keyof BcFieldMorph & keyof BcFieldMorphAttributes as `attr:${K}`]?: BcFieldMorphAttributes[K] } & { [K in keyof BcFieldMorph & keyof BcFieldMorphAttributes as `prop:${K}`]?: BcFieldMorph[K] };
         "bc-field-multicheck": Omit<BcFieldMulticheck, keyof BcFieldMulticheckAttributes> & { [K in keyof BcFieldMulticheck & keyof BcFieldMulticheckAttributes]?: BcFieldMulticheck[K] } & { [K in keyof BcFieldMulticheck & keyof BcFieldMulticheckAttributes as `attr:${K}`]?: BcFieldMulticheckAttributes[K] } & { [K in keyof BcFieldMulticheck & keyof BcFieldMulticheckAttributes as `prop:${K}`]?: BcFieldMulticheck[K] };
         "bc-field-password": Omit<BcFieldPassword, keyof BcFieldPasswordAttributes> & { [K in keyof BcFieldPassword & keyof BcFieldPasswordAttributes]?: BcFieldPassword[K] } & { [K in keyof BcFieldPassword & keyof BcFieldPasswordAttributes as `attr:${K}`]?: BcFieldPasswordAttributes[K] } & { [K in keyof BcFieldPassword & keyof BcFieldPasswordAttributes as `prop:${K}`]?: BcFieldPassword[K] };
         "bc-field-percent": Omit<BcFieldPercent, keyof BcFieldPercentAttributes> & { [K in keyof BcFieldPercent & keyof BcFieldPercentAttributes]?: BcFieldPercent[K] } & { [K in keyof BcFieldPercent & keyof BcFieldPercentAttributes as `attr:${K}`]?: BcFieldPercentAttributes[K] } & { [K in keyof BcFieldPercent & keyof BcFieldPercentAttributes as `prop:${K}`]?: BcFieldPercent[K] };
@@ -12346,15 +16182,30 @@ declare module "@stencil/core" {
             "bc-button-box": LocalJSX.IntrinsicElements["bc-button-box"] & JSXBase.HTMLAttributes<HTMLBcButtonBoxElement>;
             "bc-chart-area": LocalJSX.IntrinsicElements["bc-chart-area"] & JSXBase.HTMLAttributes<HTMLBcChartAreaElement>;
             "bc-chart-bar": LocalJSX.IntrinsicElements["bc-chart-bar"] & JSXBase.HTMLAttributes<HTMLBcChartBarElement>;
+            "bc-chart-boxplot": LocalJSX.IntrinsicElements["bc-chart-boxplot"] & JSXBase.HTMLAttributes<HTMLBcChartBoxplotElement>;
+            "bc-chart-candlestick": LocalJSX.IntrinsicElements["bc-chart-candlestick"] & JSXBase.HTMLAttributes<HTMLBcChartCandlestickElement>;
+            "bc-chart-custom": LocalJSX.IntrinsicElements["bc-chart-custom"] & JSXBase.HTMLAttributes<HTMLBcChartCustomElement>;
             "bc-chart-funnel": LocalJSX.IntrinsicElements["bc-chart-funnel"] & JSXBase.HTMLAttributes<HTMLBcChartFunnelElement>;
             "bc-chart-gauge": LocalJSX.IntrinsicElements["bc-chart-gauge"] & JSXBase.HTMLAttributes<HTMLBcChartGaugeElement>;
+            "bc-chart-graph": LocalJSX.IntrinsicElements["bc-chart-graph"] & JSXBase.HTMLAttributes<HTMLBcChartGraphElement>;
             "bc-chart-heatmap": LocalJSX.IntrinsicElements["bc-chart-heatmap"] & JSXBase.HTMLAttributes<HTMLBcChartHeatmapElement>;
             "bc-chart-kpi": LocalJSX.IntrinsicElements["bc-chart-kpi"] & JSXBase.HTMLAttributes<HTMLBcChartKpiElement>;
             "bc-chart-line": LocalJSX.IntrinsicElements["bc-chart-line"] & JSXBase.HTMLAttributes<HTMLBcChartLineElement>;
+            "bc-chart-mixed": LocalJSX.IntrinsicElements["bc-chart-mixed"] & JSXBase.HTMLAttributes<HTMLBcChartMixedElement>;
+            "bc-chart-parallel": LocalJSX.IntrinsicElements["bc-chart-parallel"] & JSXBase.HTMLAttributes<HTMLBcChartParallelElement>;
+            "bc-chart-pictorialbar": LocalJSX.IntrinsicElements["bc-chart-pictorialbar"] & JSXBase.HTMLAttributes<HTMLBcChartPictorialbarElement>;
             "bc-chart-pie": LocalJSX.IntrinsicElements["bc-chart-pie"] & JSXBase.HTMLAttributes<HTMLBcChartPieElement>;
             "bc-chart-pivot": LocalJSX.IntrinsicElements["bc-chart-pivot"] & JSXBase.HTMLAttributes<HTMLBcChartPivotElement>;
+            "bc-chart-polar": LocalJSX.IntrinsicElements["bc-chart-polar"] & JSXBase.HTMLAttributes<HTMLBcChartPolarElement>;
             "bc-chart-progress": LocalJSX.IntrinsicElements["bc-chart-progress"] & JSXBase.HTMLAttributes<HTMLBcChartProgressElement>;
+            "bc-chart-radar": LocalJSX.IntrinsicElements["bc-chart-radar"] & JSXBase.HTMLAttributes<HTMLBcChartRadarElement>;
+            "bc-chart-sankey": LocalJSX.IntrinsicElements["bc-chart-sankey"] & JSXBase.HTMLAttributes<HTMLBcChartSankeyElement>;
+            "bc-chart-scatter": LocalJSX.IntrinsicElements["bc-chart-scatter"] & JSXBase.HTMLAttributes<HTMLBcChartScatterElement>;
             "bc-chart-scorecard": LocalJSX.IntrinsicElements["bc-chart-scorecard"] & JSXBase.HTMLAttributes<HTMLBcChartScorecardElement>;
+            "bc-chart-sunburst": LocalJSX.IntrinsicElements["bc-chart-sunburst"] & JSXBase.HTMLAttributes<HTMLBcChartSunburstElement>;
+            "bc-chart-themeriver": LocalJSX.IntrinsicElements["bc-chart-themeriver"] & JSXBase.HTMLAttributes<HTMLBcChartThemeriverElement>;
+            "bc-chart-tree": LocalJSX.IntrinsicElements["bc-chart-tree"] & JSXBase.HTMLAttributes<HTMLBcChartTreeElement>;
+            "bc-chart-treemap": LocalJSX.IntrinsicElements["bc-chart-treemap"] & JSXBase.HTMLAttributes<HTMLBcChartTreemapElement>;
             "bc-chatter": LocalJSX.IntrinsicElements["bc-chatter"] & JSXBase.HTMLAttributes<HTMLBcChatterElement>;
             "bc-child-table": LocalJSX.IntrinsicElements["bc-child-table"] & JSXBase.HTMLAttributes<HTMLBcChildTableElement>;
             "bc-column": LocalJSX.IntrinsicElements["bc-column"] & JSXBase.HTMLAttributes<HTMLBcColumnElement>;
@@ -12384,6 +16235,7 @@ declare module "@stencil/core" {
             "bc-field-json": LocalJSX.IntrinsicElements["bc-field-json"] & JSXBase.HTMLAttributes<HTMLBcFieldJsonElement>;
             "bc-field-link": LocalJSX.IntrinsicElements["bc-field-link"] & JSXBase.HTMLAttributes<HTMLBcFieldLinkElement>;
             "bc-field-markdown": LocalJSX.IntrinsicElements["bc-field-markdown"] & JSXBase.HTMLAttributes<HTMLBcFieldMarkdownElement>;
+            "bc-field-morph": LocalJSX.IntrinsicElements["bc-field-morph"] & JSXBase.HTMLAttributes<HTMLBcFieldMorphElement>;
             "bc-field-multicheck": LocalJSX.IntrinsicElements["bc-field-multicheck"] & JSXBase.HTMLAttributes<HTMLBcFieldMulticheckElement>;
             "bc-field-password": LocalJSX.IntrinsicElements["bc-field-password"] & JSXBase.HTMLAttributes<HTMLBcFieldPasswordElement>;
             "bc-field-percent": LocalJSX.IntrinsicElements["bc-field-percent"] & JSXBase.HTMLAttributes<HTMLBcFieldPercentElement>;

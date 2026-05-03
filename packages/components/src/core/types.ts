@@ -186,6 +186,25 @@ export interface ChartHoverEvent {
   dataIndex: number;
 }
 
+export interface ChartLegendSelectEvent {
+  name: string;
+  selected: Record<string, boolean>;
+}
+
+export interface ChartDataZoomEvent {
+  start: number;
+  end: number;
+  startValue?: unknown;
+  endValue?: unknown;
+}
+
+export interface ChartBrushEvent {
+  areas: Array<{
+    brushType: string;
+    coordRange: number[];
+  }>;
+}
+
 // ============================================================================
 // DATA FETCHING TYPES (used by data-fetcher.ts and components)
 // ============================================================================

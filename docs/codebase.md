@@ -450,18 +450,33 @@ packages/components/
         │   ├── bc-view-report/                 # Report view
         │   └── bc-view-activity/               # Activity stream view
         │
-        ├── charts/                             # Chart components (ECharts)
+        ├── charts/                             # Chart components (23 ECharts + 3 pure CSS)
         │   ├── bc-chart-line/                  # Line chart
         │   ├── bc-chart-bar/                   # Bar chart
         │   ├── bc-chart-pie/                   # Pie/donut chart
         │   ├── bc-chart-area/                  # Area chart
+        │   ├── bc-chart-scatter/               # Scatter/bubble chart
+        │   ├── bc-chart-radar/                 # Radar chart
         │   ├── bc-chart-gauge/                 # Gauge chart
         │   ├── bc-chart-funnel/                # Funnel chart
         │   ├── bc-chart-heatmap/               # Heatmap
-        │   ├── bc-chart-pivot/                 # Pivot table
-        │   ├── bc-chart-kpi/                   # KPI card
+        │   ├── bc-chart-treemap/               # Treemap (hierarchical)
+        │   ├── bc-chart-sunburst/              # Sunburst chart (hierarchical)
+        │   ├── bc-chart-candlestick/           # Candlestick/OHLC chart
+        │   ├── bc-chart-boxplot/               # Box plot (statistics)
+        │   ├── bc-chart-mixed/                 # Mixed/combo chart (bar+line+scatter)
+        │   ├── bc-chart-sankey/                # Sankey flow diagram
+        │   ├── bc-chart-graph/                 # Network/relationship graph
+        │   ├── bc-chart-tree/                  # Tree diagram (org chart)
+        │   ├── bc-chart-polar/                 # Polar coordinate chart
+        │   ├── bc-chart-parallel/              # Parallel coordinates
+        │   ├── bc-chart-themeriver/            # Theme river/stream graph
+        │   ├── bc-chart-pictorialbar/          # Pictorial bar chart
+        │   ├── bc-chart-custom/                # Custom chart (raw ECharts option)
+        │   ├── bc-chart-pivot/                 # Pivot table (pure CSS)
+        │   ├── bc-chart-kpi/                   # KPI card (pure CSS)
         │   ├── bc-chart-scorecard/             # Scorecard
-        │   └── bc-chart-progress/              # Progress indicator
+        │   └── bc-chart-progress/              # Progress indicator (pure CSS)
         │
         ├── datatable/                          # Data table components
         │   ├── bc-datatable/                   # Full-featured data table

@@ -241,7 +241,7 @@ docker-compose up -d
 - **Template engine** — Go html/template with helpers and partials
 - **File storage** — Local + S3 with attachments table, thumbnails, versioning, path formatting
 - **View system** — List, form, kanban, calendar, chart, custom views (SSR)
-- **Web Components** — 103 Stencil.js enterprise components (fields, layout, views, charts, dialogs, widgets, media viewers/players). **Standalone-capable** — works without BitCode framework
+- **Web Components** — 119 Stencil.js enterprise components (fields, layout, views, charts, dialogs, widgets, media viewers/players). **Standalone-capable** — works without BitCode framework
 - **Component Theming** — Light/dark/system-detect/custom themes via CSS custom properties
 - **4-Level Data Fetching** — Local data, URL endpoint, event intercept, custom fetcher function
 - **3-Level Validation** — Built-in rules, custom JS validators, server-side validation
