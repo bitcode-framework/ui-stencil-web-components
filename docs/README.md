@@ -69,7 +69,7 @@ See [getting-started.md](getting-started.md) for full setup guide.
 |-----------|-------------|
 | [bc-datatable](datatable/bc-datatable.md) | Full-featured data table |
 
-### Charts (11)
+### Charts (26)
 
 | Component | Description |
 |-----------|-------------|
@@ -77,9 +77,24 @@ See [getting-started.md](getting-started.md) for full setup guide.
 | [bc-chart-line](charts/bc-chart-line.md) | Line chart |
 | [bc-chart-pie](charts/bc-chart-pie.md) | Pie/donut chart |
 | [bc-chart-area](charts/bc-chart-area.md) | Area chart |
+| [bc-chart-scatter](charts/bc-chart-scatter.md) | Scatter/bubble chart |
+| [bc-chart-radar](charts/bc-chart-radar.md) | Radar chart |
 | [bc-chart-gauge](charts/bc-chart-gauge.md) | Gauge chart |
 | [bc-chart-funnel](charts/bc-chart-funnel.md) | Funnel chart |
 | [bc-chart-heatmap](charts/bc-chart-heatmap.md) | Heatmap |
+| [bc-chart-treemap](charts/bc-chart-treemap.md) | Treemap |
+| [bc-chart-sunburst](charts/bc-chart-sunburst.md) | Sunburst chart |
+| [bc-chart-candlestick](charts/bc-chart-candlestick.md) | Candlestick/OHLC chart |
+| [bc-chart-boxplot](charts/bc-chart-boxplot.md) | Box plot |
+| [bc-chart-mixed](charts/bc-chart-mixed.md) | Mixed/combo chart |
+| [bc-chart-sankey](charts/bc-chart-sankey.md) | Sankey flow diagram |
+| [bc-chart-graph](charts/bc-chart-graph.md) | Network graph |
+| [bc-chart-tree](charts/bc-chart-tree.md) | Tree diagram |
+| [bc-chart-polar](charts/bc-chart-polar.md) | Polar coordinate chart |
+| [bc-chart-parallel](charts/bc-chart-parallel.md) | Parallel coordinates |
+| [bc-chart-themeriver](charts/bc-chart-themeriver.md) | Theme river/stream graph |
+| [bc-chart-pictorialbar](charts/bc-chart-pictorialbar.md) | Pictorial bar chart |
+| [bc-chart-custom](charts/bc-chart-custom.md) | Custom chart (raw ECharts option) |
 | [bc-chart-pivot](charts/bc-chart-pivot.md) | Pivot table |
 | [bc-chart-kpi](charts/bc-chart-kpi.md) | KPI card |
 | [bc-chart-scorecard](charts/bc-chart-scorecard.md) | Scorecard |

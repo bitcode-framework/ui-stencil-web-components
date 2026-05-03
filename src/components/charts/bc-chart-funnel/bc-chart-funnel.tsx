@@ -1,11 +1,20 @@
 import { Component, Prop, Element, Watch, Method, Event, EventEmitter, h } from '@stencil/core';
-import { ChartClickEvent, DataFetcher } from '../../../core/types';
-import { fetchData } from '../../../core/data-fetcher';
-import * as echarts from 'echarts';
+import { ChartClickEvent, ChartHoverEvent, ChartLegendSelectEvent, ChartDataZoomEvent, DataFetcher } from '../../../core/types';
+import {
+  echarts, ECharts,
+  parseChartData, isSingleSeries, getColorList,
+  initChart, disposeChart, setupResizeObserver, fetchChartData,
+  buildTitleOption, buildTooltipOption, buildLegendOption, buildToolboxOption,
+  SingleSeriesItem,
+} from '../../../core/chart-utils';
+import { FunnelChart } from 'echarts/charts';
+
+echarts.use([FunnelChart]);
 
 @Component({ tag: 'bc-chart-funnel', styleUrl: 'bc-chart-funnel.css', shadow: false })
 export class BcChartFunnel {
   @Element() el!: HTMLElement;
+
   @Prop({ mutable: true }) data: string = '[]';
   @Prop() chartTitle: string = '';
   @Prop() colors: string = '';
@@ -13,42 +22,101 @@ export class BcChartFunnel {
   @Prop() tooltipEnabled: boolean = true;
   @Prop() animate: boolean = true;
   @Prop() height: string = '300px';
+  @Prop() width: string = '100%';
   @Prop({ mutable: true }) loading: boolean = false;
   @Prop() dataSource: string = '';
   @Prop() fetchHeaders: string = '';
   @Prop() refreshInterval: number = 0;
-  @Event() lcChartClick!: EventEmitter<ChartClickEvent>;
-  private chart: echarts.ECharts | null = null;
-  private _refreshTimer: ReturnType<typeof setInterval> | null = null;
   dataFetcher?: DataFetcher;
 
-  componentDidLoad() { this.renderChart(); if (this.dataSource || this.dataFetcher) this._fetchRemoteData(); if (this.refreshInterval > 0) this._refreshTimer = setInterval(() => this._fetchRemoteData(), this.refreshInterval); }
+  @Prop() theme: string = '';
+  @Prop() renderer: string = 'canvas';
+  @Prop() toolbox: boolean = false;
+  @Prop() locale: string = '';
+  @Prop() sortOrder: string = 'descending';
+
+  private chart: ECharts | null = null;
+  private _refreshTimer: ReturnType<typeof setInterval> | null = null;
+  private _resizeObserver: ResizeObserver | null = null;
+
+  @Event() lcChartClick!: EventEmitter<ChartClickEvent>;
+  @Event() lcChartHover!: EventEmitter<ChartHoverEvent>;
+  @Event() lcChartLegendSelect!: EventEmitter<ChartLegendSelectEvent>;
+  @Event() lcChartDataZoom!: EventEmitter<ChartDataZoomEvent>;
+  @Event() lcChartReady!: EventEmitter<void>;
+
+  componentDidLoad() {
+    this.chart = initChart(this.el, this.theme, this.renderer, {
+      lcChartClick: this.lcChartClick, lcChartHover: this.lcChartHover,
+      lcChartLegendSelect: this.lcChartLegendSelect, lcChartDataZoom: this.lcChartDataZoom, lcChartReady: this.lcChartReady,
+    });
+    this._resizeObserver = setupResizeObserver(this.el, this.chart);
+    this.renderChart();
+    if (this.dataSource || this.dataFetcher) this._fetchData();
+    if (this.refreshInterval > 0) this._refreshTimer = setInterval(() => this._fetchData(), this.refreshInterval);
+  }
+
   @Watch('data') onDataChange() { this.renderChart(); }
-  disconnectedCallback() { this.chart?.dispose(); if (this._refreshTimer) clearInterval(this._refreshTimer); }  private async _fetchRemoteData() { this.loading = true; try { const result = await fetchData({ fetcher: this.dataFetcher, element: this.el, dataSource: this.dataSource, fetchHeaders: this.fetchHeaders }); this.data = JSON.stringify(result.data); } catch {} this.loading = false; }
+  @Watch('theme') onThemeChange() { this._reinit(); }
+  @Watch('renderer') onRendererChange() { this._reinit(); }
+
+  disconnectedCallback() { disposeChart(this.chart, this._refreshTimer, this._resizeObserver); }
+
+  private _reinit() {
+    disposeChart(this.chart, null, this._resizeObserver);
+    this.chart = initChart(this.el, this.theme, this.renderer, {
+      lcChartClick: this.lcChartClick, lcChartHover: this.lcChartHover,
+      lcChartLegendSelect: this.lcChartLegendSelect, lcChartDataZoom: this.lcChartDataZoom, lcChartReady: this.lcChartReady,
+    });
+    this._resizeObserver = setupResizeObserver(this.el, this.chart);
+    this.renderChart();
+  }
+
+  private async _fetchData() {
+    this.loading = true;
+    try {
+      const result = await fetchChartData({ dataFetcher: this.dataFetcher, el: this.el, dataSource: this.dataSource, fetchHeaders: this.fetchHeaders });
+      this.data = JSON.stringify(result);
+    } catch { /* keep existing */ }
+    this.loading = false;
+  }
 
   private renderChart() {
-    const container = this.el.querySelector('.bc-echart') as HTMLElement;
-    if (!container) return;
-    if (!this.chart) this.chart = echarts.init(container);
-    let parsed: Array<{name: string; value: number}> = [];
-    try { parsed = JSON.parse(this.data); } catch {}
+    if (!this.chart) return;
+    const parsed = parseChartData(this.data);
+    const colorList = getColorList(this.colors);
+    let funnelData: Array<Record<string, unknown>> = [];
+
+    if (isSingleSeries(parsed)) {
+      funnelData = (parsed as SingleSeriesItem[]).map(d => ({ name: d.name, value: d.value }));
+    } else if (Array.isArray(parsed)) {
+      funnelData = parsed as Array<Record<string, unknown>>;
+    }
+
     this.chart.setOption({
-      title: { text: this.chartTitle, left: 'center', textStyle: { fontSize: 14 } },
-      tooltip: { trigger: 'item' },
-      series: [{ type: 'funnel', data: parsed, sort: 'descending' }],
-    });
-  }  @Method() async updateData(newData: unknown): Promise<void> { this.data = typeof newData === 'string' ? newData : JSON.stringify(newData); }
+      title: buildTitleOption(this.chartTitle),
+      tooltip: buildTooltipOption(this.tooltipEnabled, 'item'),
+      legend: buildLegendOption(this.legend),
+      toolbox: buildToolboxOption(this.toolbox),
+      animation: this.animate,
+      color: colorList,
+      series: [{ type: 'funnel', data: funnelData, sort: this.sortOrder }],
+    }, true);
+  }
+
+  @Method() async updateData(newData: unknown): Promise<void> { this.data = typeof newData === 'string' ? newData : JSON.stringify(newData); }
   @Method() async setData(newData: unknown): Promise<void> { this.data = typeof newData === 'string' ? newData : JSON.stringify(newData); }
-  @Method() async refresh(): Promise<void> { if (this.dataSource || this.dataFetcher) await this._fetchRemoteData(); else this.renderChart(); }
+  @Method() async refresh(): Promise<void> { if (this.dataSource || this.dataFetcher) await this._fetchData(); else this.renderChart(); }
   @Method() async resize(): Promise<void> { this.chart?.resize(); }
   @Method() async exportImage(format: string = 'png'): Promise<string> { return this.chart?.getDataURL({ type: format as 'png' | 'jpeg' | 'svg', pixelRatio: 2 }) || ''; }
+  @Method() async getChartInstance(): Promise<unknown> { return this.chart; }
 
-
-
-  render() { return (<div class="bc-chart-wrap"><div class="bc-echart"></div></div>); }
+  render() {
+    return (
+      <div class={{ 'bc-chart-wrap': true, 'bc-chart-loading': this.loading }}>
+        {this.loading && <div class="bc-chart-loading-overlay"><span class="bc-field-loading-indicator" /></div>}
+        <div class="bc-echart" style={{ height: this.height, width: this.width }}></div>
+      </div>
+    );
+  }
 }
-
-
-
-
-

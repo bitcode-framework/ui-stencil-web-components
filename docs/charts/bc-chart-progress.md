@@ -1,37 +1,49 @@
 # bc-chart-progress
 
-> Progress bar (pure HTML)
+> Progress bar (pure CSS, no ECharts)
 
 ## Quick Start
 
 ```html
-<bc-chart-progress data='[{"name":"A","value":10},{"name":"B","value":20}]' />
+<bc-chart-progress data='[{"name":"Tasks","value":75}]' chart-title="Completion" />
 ```
 
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| data | string (JSON) | '[]' | Chart data |
-| chart-title | string | '' | Chart title |
+| data | string (JSON) | '[]' | Chart data — `[{name,value}]` |
+| chart-title | string | '' | Card title |
+| colors | string (JSON) | '' | Color palette |
+| height | string | '300px' | Card height |
+| width | string | '100%' | Card width |
+| loading | boolean | false | Show loading overlay |
+| data-source | string | '' | Remote data URL |
+| fetch-headers | string | '' | Custom fetch headers (JSON) |
+| refresh-interval | number | 0 | Auto-refresh interval (ms) |
 
-Enterprise props: max, color, showPercent
+Note: Pure CSS component — no ECharts dependency. Props like `theme`, `renderer`, `toolbox`, `data-zoom` are not applicable.
+
+## Data Format
+
+```json
+[{"name":"Progress","value":75}]
+```
+
+Value represents percentage (0-100).
 
 ## Events
 
 | Event | Payload |
 |-------|---------|
-| lcChartClick | {name, value, dataIndex} |
+| lcChartClick | `{name, value, dataIndex}` |
 
 ## Methods
 
-| Method | Returns |
-|--------|---------|
-| updateData(data) | Promise<void> |
-| setData(data) | Promise<void> |
-| refresh() | Promise<void> |
-| resize() | Promise<void> |
-| exportImage(format?) | Promise<string> |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| updateData(data) | Promise<void> | Update progress data |
+| setData(data) | Promise<void> | Alias for updateData |
+| refresh() | Promise<void> | Re-fetch or re-render |
 
 See [theming](../theming.md), [data-fetching](../data-fetching.md).
-
