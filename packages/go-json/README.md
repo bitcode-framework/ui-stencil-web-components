@@ -213,6 +213,32 @@ go-json supports JSONC — JSON with comments and trailing commas:
 }
 ```
 
+### 7. Script Plugins (Multi-Language)
+
+go-json can orchestrate Python, JavaScript, and Go scripts from a single JSON program via the `script:` import prefix. Each script file is loaded by the matching runtime (detected by extension) and exposed as a callable module.
+
+This requires the [go-json-runtimes](https://github.com/bitcode-framework/go-json-runtimes) package, which provides the runtime engines (Goja for JS, QuickJS, Yaegi for Go, subprocess for Python). go-json core stays zero-dependency.
+
+```json
+{
+  "name": "ml_pipeline",
+  "go_json": "1",
+  "import": {
+    "ml": "script:./plugins/predict.py",
+    "utils": "script:./helpers/format.js",
+    "fast": "script:./compute/process.go"
+  },
+  "steps": [
+    {"let": "prediction", "call": "ml.call", "with": ["'predict'", "input.features"]},
+    {"let": "formatted", "call": "utils.call", "with": ["'format'", "prediction"]},
+    {"let": "result", "call": "fast.call", "with": ["'process'", "formatted"]},
+    {"return": "result"}
+  ]
+}
+```
+
+Each imported script exposes `call(functionName, ...args)` and `exec(code)` to your JSON program. Write your ML in Python, formatting in JavaScript, heavy compute in Go, and glue it all together in JSON.
+
 ## Embedding in Go
 
 ```go
@@ -316,7 +342,8 @@ rt := gojson.NewRuntime(
                                    │
                     ┌──────────────▼──────────────────────────┐
                     │        Import Resolver                   │
-                    │   Resolve ./relative, stdlib:, io:, ext: │
+                    │   Resolve ./relative, stdlib:, io:, ext:,│
+                    │                    script:                │
                     └──────────────┬──────────────────────────┘
                                    │
                     ┌──────────────▼──────────────────────────┐
@@ -338,6 +365,15 @@ rt := gojson.NewRuntime(
 - **Expression engine abstraction** — The VM never calls expr-lang directly. All expressions go through the `ExprEngine` interface.
 - **Safe by default** — Resource limits (step count, call depth, loop iterations, timeout, memory proxies) enforced at every step.
 - **JSON-native** — Programs are valid JSON (or JSONC). No custom syntax to learn beyond JSON.
+
+## Related Repositories
+
+| Repository | Description |
+|------------|-------------|
+| [go-json](https://github.com/bitcode-framework/go-json) | This repo. JSON/JSONC programming language engine in Go |
+| [go-json-runtimes](https://github.com/bitcode-framework/go-json-runtimes) | Script runtime engines for go-json (Goja, QuickJS, Yaegi, Python subprocess) |
+| [ui-stencil-web-components](https://github.com/bitcode-framework/ui-stencil-web-components) | 119 Stencil Web Components for enterprise applications |
+| [ui-tauri](https://github.com/bitcode-framework/ui-tauri) | Tauri 2.0 native shell for desktop and mobile |
 
 ## License
 

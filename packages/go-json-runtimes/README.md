@@ -2,6 +2,12 @@
 
 Script runtime engines for [go-json](../go-json/). Provides goja (JavaScript), yaegi (Go), quickjs (JavaScript ES2023), WASM (wazero), Node.js, and Python runtimes that implement go-json's `ScriptRuntime` interface.
 
+## Why go-json-runtimes?
+
+The [go-json](../go-json/) core engine is zero-dependency. It defines the `ScriptRuntime` interface but ships no runtimes. This package provides them. Each runtime is a separate import, so you pull in only what you need. Want JavaScript? Import `goja/`. Need Python? Import `python/`. No unused dependencies, no heavy transitive pulls.
+
+Seven runtimes covering three tiers: embedded (pure Go, no system deps), external (child process to system-installed interpreters), and native (shared libraries via Go plugin).
+
 ## Installation
 
 ```bash
@@ -103,9 +109,16 @@ All runtimes receive the bridge as `map[string]any`. Runtimes never import BitCo
 ## Architecture
 
 ```
-go-json (core)          ← zero external deps, defines ScriptRuntime interface
+[go-json](https://github.com/bitcode-framework/go-json) (core)      ← zero external deps, defines ScriptRuntime interface
      ↑
-go-json-runtimes        ← imports go-json (for interface), goja, wazero, etc.
+[go-json-runtimes](https://github.com/bitcode-framework/go-json-runtimes)  ← imports go-json (for interface), goja, wazero, etc.
      ↑
-BitCode engine          ← imports go-json-runtimes, builds bridge map
+BitCode engine                                                       ← imports go-json-runtimes, builds bridge map
 ```
+
+## Related Repositories
+
+- [go-json](https://github.com/bitcode-framework/go-json) — Core JSON/JSONC programming language engine
+- [go-json-runtimes](https://github.com/bitcode-framework/go-json-runtimes) — Script runtime engines (this repo)
+- [ui-stencil-web-components](https://github.com/bitcode-framework/ui-stencil-web-components) — 119 Stencil Web Components for enterprise UIs
+- [ui-tauri](https://github.com/bitcode-framework/ui-tauri) — Tauri 2.0 native shell for desktop and mobile
