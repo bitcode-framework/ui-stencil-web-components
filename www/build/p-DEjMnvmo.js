@@ -1,0 +1,1 @@
+import{az as n,a3 as a,di as e,b5 as o}from"./p-hPT9E7Kn.js";function s(s,r,i){r=n(r)&&{coordDimensions:r}||a({encodeDefine:s.getEncode()},r);var c=s.getSource(),t=e(c,r).dimensions,d=new o(t,s);return d.initData(c,i),d}export{s as c}

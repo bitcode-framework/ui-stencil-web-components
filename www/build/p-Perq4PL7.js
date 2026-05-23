@@ -1,1 +1,0 @@
-import{i as s,a as e,q as n,s as o}from"./p-J26RXq7I.js";function a(a,r,i){r=s(r)&&{coordDimensions:r}||e({encodeDefine:a.getEncode()},r);var c=a.getSource(),t=n(c,r).dimensions,f=new o(t,a);return f.initData(c,i),f}export{a as c}
