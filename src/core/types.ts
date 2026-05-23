@@ -328,6 +328,9 @@ export interface BcAuthConfig {
   headerValue?: string | (() => string | null);
 }
 
+export type BcTheme = 'light' | 'dark' | 'system' | string;
+export type BcRtl = boolean | 'auto';
+
 export interface BcConfig {
   baseUrl: string;
   headers: Record<string, string | (() => string)>;
@@ -337,5 +340,8 @@ export interface BcConfig {
   validationMessages: Record<string, string>;
   size: 'sm' | 'md' | 'lg';
   locale: string;
-  theme: 'light' | 'dark' | 'system' | string;
+  theme: BcTheme;
+  rtl?: BcRtl;
 }
+
+export type ThemeChangeCallback = (theme: 'light' | 'dark') => void;

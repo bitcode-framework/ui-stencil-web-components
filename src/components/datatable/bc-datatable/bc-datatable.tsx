@@ -575,7 +575,7 @@ export class BcDatatable {
                 {visibleDefs.map(col => (
                   <th
                     class={'bc-dt-th ' + (col.sortable !== false ? 'sortable ' : '') + (this.sorts.find(s => s.field === col.field) ? 'sorted' : '')}
-                     style={{ width: (this.colWidths[col.field] || col.width) ? ((this.colWidths[col.field] || col.width) + 'px') : 'auto', textAlign: (col.align || (i18n.isRTL ? 'right' : 'left')) as any }}
+                     style={{ width: (this.colWidths[col.field] || col.width) ? ((this.colWidths[col.field] || col.width) + 'px') : 'auto', textAlign: (col.align || 'start') as any }}
                     onClick={(e) => col.sortable !== false && this.handleSort(col.field, e)}
                   >
                     <span class="bc-dt-th-label">{col.label || col.field}</span>
@@ -616,7 +616,7 @@ export class BcDatatable {
                       </td>
                     )}
                     {visibleDefs.map(col => (
-                      <td class="bc-dt-td" style={{ textAlign: (col.align || (i18n.isRTL ? 'right' : 'left')) as any }}>
+                      <td class="bc-dt-td" style={{ textAlign: (col.align || 'start') as any }}>
                         {this.formatCell(row[col.field], col)}
                       </td>
                     ))}

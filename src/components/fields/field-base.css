@@ -138,28 +138,28 @@
 }
 
 .bc-field-prefix {
-  border-right: none;
+  border-inline-end: none;
   border-radius: var(--bc-input-radius, 0.375rem) 0 0 var(--bc-input-radius, 0.375rem);
 }
 
 .bc-field-suffix {
-  border-left: none;
+  border-inline-start: none;
   border-radius: 0 var(--bc-input-radius, 0.375rem) var(--bc-input-radius, 0.375rem) 0;
 }
 
 .bc-field-input-wrapper .bc-field-prefix + .bc-field-input {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
 }
 
 .bc-field-input-wrapper .bc-field-input:has(+ .bc-field-suffix) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
 }
 
 .bc-field-clear-btn {
   position: absolute;
-  right: 0.5rem;
+  inset-inline-end: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,7 +183,7 @@
 
 .bc-field-loading-indicator {
   position: absolute;
-  right: 0.5rem;
+  inset-inline-end: 0.5rem;
   width: 1rem;
   height: 1rem;
   border: 2px solid var(--bc-bg-tertiary, #f3f4f6);

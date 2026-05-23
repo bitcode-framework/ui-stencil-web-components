@@ -11,7 +11,8 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs.js"
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/types/index.d.ts"
     },
     "./utils": {
       "import": "./dist/components/index.js",
@@ -20,19 +21,468 @@
     "./loader": {
       "import": "./loader/index.js",
       "require": "./loader/index.cjs.js"
+    },
+    "./registry": {
+      "import": "./dist/collection/registry.js",
+      "types": "./dist/types/registry.d.ts"
+    },
+    "./full": {
+      "import": "./dist/full.js",
+      "types": "./dist/types/full.d.ts"
+    },
+    "./charts": {
+      "import": "./dist/components/charts/index.js"
+    },
+    "./datatable": {
+      "import": "./dist/components/datatable/index.js"
+    },
+    "./dialogs": {
+      "import": "./dist/components/dialogs/index.js"
+    },
+    "./fields": {
+      "import": "./dist/components/fields/index.js"
+    },
+    "./layout": {
+      "import": "./dist/components/layout/index.js"
+    },
+    "./media": {
+      "import": "./dist/components/media/index.js"
+    },
+    "./print": {
+      "import": "./dist/components/print/index.js"
+    },
+    "./search": {
+      "import": "./dist/components/search/index.js"
+    },
+    "./social": {
+      "import": "./dist/components/social/index.js"
+    },
+    "./views": {
+      "import": "./dist/components/views/index.js"
+    },
+    "./widgets": {
+      "import": "./dist/components/widgets/index.js"
+    },
+    "./css/bc-activity": {
+      "import": "./dist/collection/components/social/bc-activity/bc-activity.css"
+    },
+    "./css/bc-badge": {
+      "import": "./dist/collection/components/widgets/bc-badge/bc-badge.css"
+    },
+    "./css/bc-button-box": {
+      "import": "./dist/collection/components/layout/bc-button-box/bc-button-box.css"
+    },
+    "./css/bc-chart-area": {
+      "import": "./dist/collection/components/charts/bc-chart-area/bc-chart-area.css"
+    },
+    "./css/bc-chart-bar": {
+      "import": "./dist/collection/components/charts/bc-chart-bar/bc-chart-bar.css"
+    },
+    "./css/bc-chart-boxplot": {
+      "import": "./dist/collection/components/charts/bc-chart-boxplot/bc-chart-boxplot.css"
+    },
+    "./css/bc-chart-candlestick": {
+      "import": "./dist/collection/components/charts/bc-chart-candlestick/bc-chart-candlestick.css"
+    },
+    "./css/bc-chart-custom": {
+      "import": "./dist/collection/components/charts/bc-chart-custom/bc-chart-custom.css"
+    },
+    "./css/bc-chart-funnel": {
+      "import": "./dist/collection/components/charts/bc-chart-funnel/bc-chart-funnel.css"
+    },
+    "./css/bc-chart-gauge": {
+      "import": "./dist/collection/components/charts/bc-chart-gauge/bc-chart-gauge.css"
+    },
+    "./css/bc-chart-graph": {
+      "import": "./dist/collection/components/charts/bc-chart-graph/bc-chart-graph.css"
+    },
+    "./css/bc-chart-heatmap": {
+      "import": "./dist/collection/components/charts/bc-chart-heatmap/bc-chart-heatmap.css"
+    },
+    "./css/bc-chart-kpi": {
+      "import": "./dist/collection/components/charts/bc-chart-kpi/bc-chart-kpi.css"
+    },
+    "./css/bc-chart-line": {
+      "import": "./dist/collection/components/charts/bc-chart-line/bc-chart-line.css"
+    },
+    "./css/bc-chart-mixed": {
+      "import": "./dist/collection/components/charts/bc-chart-mixed/bc-chart-mixed.css"
+    },
+    "./css/bc-chart-parallel": {
+      "import": "./dist/collection/components/charts/bc-chart-parallel/bc-chart-parallel.css"
+    },
+    "./css/bc-chart-pictorialbar": {
+      "import": "./dist/collection/components/charts/bc-chart-pictorialbar/bc-chart-pictorialbar.css"
+    },
+    "./css/bc-chart-pie": {
+      "import": "./dist/collection/components/charts/bc-chart-pie/bc-chart-pie.css"
+    },
+    "./css/bc-chart-pivot": {
+      "import": "./dist/collection/components/charts/bc-chart-pivot/bc-chart-pivot.css"
+    },
+    "./css/bc-chart-polar": {
+      "import": "./dist/collection/components/charts/bc-chart-polar/bc-chart-polar.css"
+    },
+    "./css/bc-chart-progress": {
+      "import": "./dist/collection/components/charts/bc-chart-progress/bc-chart-progress.css"
+    },
+    "./css/bc-chart-radar": {
+      "import": "./dist/collection/components/charts/bc-chart-radar/bc-chart-radar.css"
+    },
+    "./css/bc-chart-sankey": {
+      "import": "./dist/collection/components/charts/bc-chart-sankey/bc-chart-sankey.css"
+    },
+    "./css/bc-chart-scatter": {
+      "import": "./dist/collection/components/charts/bc-chart-scatter/bc-chart-scatter.css"
+    },
+    "./css/bc-chart-scorecard": {
+      "import": "./dist/collection/components/charts/bc-chart-scorecard/bc-chart-scorecard.css"
+    },
+    "./css/bc-chart-sunburst": {
+      "import": "./dist/collection/components/charts/bc-chart-sunburst/bc-chart-sunburst.css"
+    },
+    "./css/bc-chart-themeriver": {
+      "import": "./dist/collection/components/charts/bc-chart-themeriver/bc-chart-themeriver.css"
+    },
+    "./css/bc-chart-tree": {
+      "import": "./dist/collection/components/charts/bc-chart-tree/bc-chart-tree.css"
+    },
+    "./css/bc-chart-treemap": {
+      "import": "./dist/collection/components/charts/bc-chart-treemap/bc-chart-treemap.css"
+    },
+    "./css/bc-chatter": {
+      "import": "./dist/collection/components/social/bc-chatter/bc-chatter.css"
+    },
+    "./css/bc-child-table": {
+      "import": "./dist/collection/components/datatable/bc-child-table/bc-child-table.css"
+    },
+    "./css/bc-column": {
+      "import": "./dist/collection/components/layout/bc-column/bc-column.css"
+    },
+    "./css/bc-copy": {
+      "import": "./dist/collection/components/widgets/bc-copy/bc-copy.css"
+    },
+    "./css/bc-datatable": {
+      "import": "./dist/collection/components/datatable/bc-datatable/bc-datatable.css"
+    },
+    "./css/bc-dialog-alert": {
+      "import": "./dist/collection/components/dialogs/bc-dialog-alert/bc-dialog-alert.css"
+    },
+    "./css/bc-dialog-confirm": {
+      "import": "./dist/collection/components/dialogs/bc-dialog-confirm/bc-dialog-confirm.css"
+    },
+    "./css/bc-dialog-modal": {
+      "import": "./dist/collection/components/dialogs/bc-dialog-modal/bc-dialog-modal.css"
+    },
+    "./css/bc-dialog-prompt": {
+      "import": "./dist/collection/components/dialogs/bc-dialog-prompt/bc-dialog-prompt.css"
+    },
+    "./css/bc-dialog-quickentry": {
+      "import": "./dist/collection/components/dialogs/bc-dialog-quickentry/bc-dialog-quickentry.css"
+    },
+    "./css/bc-dialog-wizard": {
+      "import": "./dist/collection/components/dialogs/bc-dialog-wizard/bc-dialog-wizard.css"
+    },
+    "./css/bc-domain": {
+      "import": "./dist/collection/components/widgets/bc-domain/bc-domain.css"
+    },
+    "./css/bc-email": {
+      "import": "./dist/collection/components/widgets/bc-email/bc-email.css"
+    },
+    "./css/bc-export": {
+      "import": "./dist/collection/components/print/bc-export/bc-export.css"
+    },
+    "./css/bc-favorites": {
+      "import": "./dist/collection/components/search/bc-favorites/bc-favorites.css"
+    },
+    "./css/bc-field-barcode": {
+      "import": "./dist/collection/components/fields/bc-field-barcode/bc-field-barcode.css"
+    },
+    "./css/bc-field-checkbox": {
+      "import": "./dist/collection/components/fields/bc-field-checkbox/bc-field-checkbox.css"
+    },
+    "./css/bc-field-code": {
+      "import": "./dist/collection/components/fields/bc-field-code/bc-field-code.css"
+    },
+    "./css/bc-field-color": {
+      "import": "./dist/collection/components/fields/bc-field-color/bc-field-color.css"
+    },
+    "./css/bc-field-currency": {
+      "import": "./dist/collection/components/fields/bc-field-currency/bc-field-currency.css"
+    },
+    "./css/bc-field-date": {
+      "import": "./dist/collection/components/fields/bc-field-date/bc-field-date.css"
+    },
+    "./css/bc-field-datetime": {
+      "import": "./dist/collection/components/fields/bc-field-datetime/bc-field-datetime.css"
+    },
+    "./css/bc-field-decimal": {
+      "import": "./dist/collection/components/fields/bc-field-decimal/bc-field-decimal.css"
+    },
+    "./css/bc-field-duration": {
+      "import": "./dist/collection/components/fields/bc-field-duration/bc-field-duration.css"
+    },
+    "./css/bc-field-dynlink": {
+      "import": "./dist/collection/components/fields/bc-field-dynlink/bc-field-dynlink.css"
+    },
+    "./css/bc-field-file": {
+      "import": "./dist/collection/components/fields/bc-field-file/bc-field-file.css"
+    },
+    "./css/bc-field-float": {
+      "import": "./dist/collection/components/fields/bc-field-float/bc-field-float.css"
+    },
+    "./css/bc-field-geo": {
+      "import": "./dist/collection/components/fields/bc-field-geo/bc-field-geo.css"
+    },
+    "./css/bc-field-html": {
+      "import": "./dist/collection/components/fields/bc-field-html/bc-field-html.css"
+    },
+    "./css/bc-field-image": {
+      "import": "./dist/collection/components/fields/bc-field-image/bc-field-image.css"
+    },
+    "./css/bc-field-integer": {
+      "import": "./dist/collection/components/fields/bc-field-integer/bc-field-integer.css"
+    },
+    "./css/bc-field-json": {
+      "import": "./dist/collection/components/fields/bc-field-json/bc-field-json.css"
+    },
+    "./css/bc-field-link": {
+      "import": "./dist/collection/components/fields/bc-field-link/bc-field-link.css"
+    },
+    "./css/bc-field-markdown": {
+      "import": "./dist/collection/components/fields/bc-field-markdown/bc-field-markdown.css"
+    },
+    "./css/bc-field-morph": {
+      "import": "./dist/collection/components/fields/bc-field-morph/bc-field-morph.css"
+    },
+    "./css/bc-field-multicheck": {
+      "import": "./dist/collection/components/fields/bc-field-multicheck/bc-field-multicheck.css"
+    },
+    "./css/bc-field-password": {
+      "import": "./dist/collection/components/fields/bc-field-password/bc-field-password.css"
+    },
+    "./css/bc-field-percent": {
+      "import": "./dist/collection/components/fields/bc-field-percent/bc-field-percent.css"
+    },
+    "./css/bc-field-radio": {
+      "import": "./dist/collection/components/fields/bc-field-radio/bc-field-radio.css"
+    },
+    "./css/bc-field-rating": {
+      "import": "./dist/collection/components/fields/bc-field-rating/bc-field-rating.css"
+    },
+    "./css/bc-field-richtext": {
+      "import": "./dist/collection/components/fields/bc-field-richtext/bc-field-richtext.css"
+    },
+    "./css/bc-field-select": {
+      "import": "./dist/collection/components/fields/bc-field-select/bc-field-select.css"
+    },
+    "./css/bc-field-signature": {
+      "import": "./dist/collection/components/fields/bc-field-signature/bc-field-signature.css"
+    },
+    "./css/bc-field-smalltext": {
+      "import": "./dist/collection/components/fields/bc-field-smalltext/bc-field-smalltext.css"
+    },
+    "./css/bc-field-string": {
+      "import": "./dist/collection/components/fields/bc-field-string/bc-field-string.css"
+    },
+    "./css/bc-field-tableselect": {
+      "import": "./dist/collection/components/fields/bc-field-tableselect/bc-field-tableselect.css"
+    },
+    "./css/bc-field-tags": {
+      "import": "./dist/collection/components/fields/bc-field-tags/bc-field-tags.css"
+    },
+    "./css/bc-field-text": {
+      "import": "./dist/collection/components/fields/bc-field-text/bc-field-text.css"
+    },
+    "./css/bc-field-time": {
+      "import": "./dist/collection/components/fields/bc-field-time/bc-field-time.css"
+    },
+    "./css/bc-field-toggle": {
+      "import": "./dist/collection/components/fields/bc-field-toggle/bc-field-toggle.css"
+    },
+    "./css/bc-filter-bar": {
+      "import": "./dist/collection/components/datatable/bc-filter-bar/bc-filter-bar.css"
+    },
+    "./css/bc-filter-builder": {
+      "import": "./dist/collection/components/datatable/bc-filter-builder/bc-filter-builder.css"
+    },
+    "./css/bc-filter-panel": {
+      "import": "./dist/collection/components/datatable/bc-filter-panel/bc-filter-panel.css"
+    },
+    "./css/bc-handle": {
+      "import": "./dist/collection/components/widgets/bc-handle/bc-handle.css"
+    },
+    "./css/bc-header": {
+      "import": "./dist/collection/components/layout/bc-header/bc-header.css"
+    },
+    "./css/bc-html-block": {
+      "import": "./dist/collection/components/layout/bc-html-block/bc-html-block.css"
+    },
+    "./css/bc-lookup-modal": {
+      "import": "./dist/collection/components/fields/bc-lookup-modal/bc-lookup-modal.css"
+    },
+    "./css/bc-phone": {
+      "import": "./dist/collection/components/widgets/bc-phone/bc-phone.css"
+    },
+    "./css/bc-placeholder": {
+      "import": "./dist/collection/components/widgets/bc-placeholder/bc-placeholder.css"
+    },
+    "./css/bc-print": {
+      "import": "./dist/collection/components/print/bc-print/bc-print.css"
+    },
+    "./css/bc-priority": {
+      "import": "./dist/collection/components/widgets/bc-priority/bc-priority.css"
+    },
+    "./css/bc-progress": {
+      "import": "./dist/collection/components/widgets/bc-progress/bc-progress.css"
+    },
+    "./css/bc-report-link": {
+      "import": "./dist/collection/components/print/bc-report-link/bc-report-link.css"
+    },
+    "./css/bc-row": {
+      "import": "./dist/collection/components/layout/bc-row/bc-row.css"
+    },
+    "./css/bc-search": {
+      "import": "./dist/collection/components/search/bc-search/bc-search.css"
+    },
+    "./css/bc-section": {
+      "import": "./dist/collection/components/layout/bc-section/bc-section.css"
+    },
+    "./css/bc-separator": {
+      "import": "./dist/collection/components/layout/bc-separator/bc-separator.css"
+    },
+    "./css/bc-sheet": {
+      "import": "./dist/collection/components/layout/bc-sheet/bc-sheet.css"
+    },
+    "./css/bc-statusbar": {
+      "import": "./dist/collection/components/widgets/bc-statusbar/bc-statusbar.css"
+    },
+    "./css/bc-sync-status": {
+      "import": "./dist/collection/components/widgets/bc-sync-status/bc-sync-status.css"
+    },
+    "./css/bc-tab": {
+      "import": "./dist/collection/components/layout/bc-tab/bc-tab.css"
+    },
+    "./css/bc-tabs": {
+      "import": "./dist/collection/components/layout/bc-tabs/bc-tabs.css"
+    },
+    "./css/bc-timeline": {
+      "import": "./dist/collection/components/social/bc-timeline/bc-timeline.css"
+    },
+    "./css/bc-toast": {
+      "import": "./dist/collection/components/dialogs/bc-toast/bc-toast.css"
+    },
+    "./css/bc-url": {
+      "import": "./dist/collection/components/widgets/bc-url/bc-url.css"
+    },
+    "./css/bc-view-activity": {
+      "import": "./dist/collection/components/views/bc-view-activity/bc-view-activity.css"
+    },
+    "./css/bc-view-calendar": {
+      "import": "./dist/collection/components/views/bc-view-calendar/bc-view-calendar.css"
+    },
+    "./css/bc-view-editor": {
+      "import": "./dist/collection/components/views/bc-view-editor/bc-view-editor.css"
+    },
+    "./css/bc-view-form": {
+      "import": "./dist/collection/components/views/bc-view-form/bc-view-form.css"
+    },
+    "./css/bc-view-gantt": {
+      "import": "./dist/collection/components/views/bc-view-gantt/bc-view-gantt.css"
+    },
+    "./css/bc-view-kanban": {
+      "import": "./dist/collection/components/views/bc-view-kanban/bc-view-kanban.css"
+    },
+    "./css/bc-view-list": {
+      "import": "./dist/collection/components/views/bc-view-list/bc-view-list.css"
+    },
+    "./css/bc-view-map": {
+      "import": "./dist/collection/components/views/bc-view-map/bc-view-map.css"
+    },
+    "./css/bc-view-report": {
+      "import": "./dist/collection/components/views/bc-view-report/bc-view-report.css"
+    },
+    "./css/bc-view-tree": {
+      "import": "./dist/collection/components/views/bc-view-tree/bc-view-tree.css"
+    },
+    "./css/bc-viewer-audio": {
+      "import": "./dist/collection/components/media/bc-viewer-audio/bc-viewer-audio.css"
+    },
+    "./css/bc-viewer-document": {
+      "import": "./dist/collection/components/media/bc-viewer-document/bc-viewer-document.css"
+    },
+    "./css/bc-viewer-image": {
+      "import": "./dist/collection/components/media/bc-viewer-image/bc-viewer-image.css"
+    },
+    "./css/bc-viewer-instagram": {
+      "import": "./dist/collection/components/media/bc-viewer-instagram/bc-viewer-instagram.css"
+    },
+    "./css/bc-viewer-pdf": {
+      "import": "./dist/collection/components/media/bc-viewer-pdf/bc-viewer-pdf.css"
+    },
+    "./css/bc-viewer-tiktok": {
+      "import": "./dist/collection/components/media/bc-viewer-tiktok/bc-viewer-tiktok.css"
+    },
+    "./css/bc-viewer-video": {
+      "import": "./dist/collection/components/media/bc-viewer-video/bc-viewer-video.css"
+    },
+    "./css/bc-viewer-youtube": {
+      "import": "./dist/collection/components/media/bc-viewer-youtube/bc-viewer-youtube.css"
+    },
+    "./css/charts": {
+      "import": "./dist/collection/components/charts/charts.css"
+    },
+    "./css/datatable": {
+      "import": "./dist/collection/components/datatable/datatable.css"
+    },
+    "./css/dialogs": {
+      "import": "./dist/collection/components/dialogs/dialogs.css"
+    },
+    "./css/fields": {
+      "import": "./dist/collection/components/fields/fields.css"
+    },
+    "./css/layout": {
+      "import": "./dist/collection/components/layout/layout.css"
+    },
+    "./css/media": {
+      "import": "./dist/collection/components/media/media.css"
+    },
+    "./css/print": {
+      "import": "./dist/collection/components/print/print.css"
+    },
+    "./css/search": {
+      "import": "./dist/collection/components/search/search.css"
+    },
+    "./css/social": {
+      "import": "./dist/collection/components/social/social.css"
+    },
+    "./css/views": {
+      "import": "./dist/collection/components/views/views.css"
+    },
+    "./css/widgets": {
+      "import": "./dist/collection/components/widgets/widgets.css"
+    },
+    "./themes/dark": {
+      "import": "./dist/themes/dark.css"
+    },
+    "./themes/light": {
+      "import": "./dist/themes/light.css"
     }
   },
   "files": [
     "dist/",
-    "loader/"
+    "loader/",
+    "scripts/"
   ],
   "scripts": {
-    "build": "stencil build",
+    "build": "stencil build && node scripts/generate-exports.mjs",
+    "build:stencil": "stencil build",
     "start": "stencil build --dev --watch --serve",
     "test": "stencil test --spec",
     "test:watch": "stencil test --spec --watchAll",
     "test:e2e": "stencil test --e2e",
-    "generate": "stencil generate"
+    "generate": "stencil generate",
+    "generate:exports": "node scripts/generate-exports.mjs"
   },
   "devDependencies": {
     "@stencil/core": "^4.22.0",
@@ -46,6 +496,10 @@
     "jest-cli": "^29.7.0"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "@codemirror/basic-setup": "^0.20.0",
     "@codemirror/lang-css": "^6.3.1",

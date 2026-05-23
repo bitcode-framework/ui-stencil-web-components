@@ -1,4 +1,6 @@
 :root {
+  --bc-direction: ltr;
+
   --bc-primary: #4f46e5;
   --bc-primary-hover: #4338ca;
   --bc-primary-light: #eef2ff;
@@ -150,6 +152,14 @@
   --bc-chart-colors: #4f46e5, #10b981, #f59e0b, #ef4444, #8b5cf6, #06b6d4, #f97316, #ec4899;
 }
 
+[dir="rtl"] {
+  --bc-direction: rtl;
+}
+
+[data-bc-theme="light"] {
+  --bc-bg: #ffffff;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-bc-theme]) {
     --bc-primary: #818cf8;
@@ -194,22 +204,4 @@
 *::before,
 *::after {
   box-sizing: border-box;
-}
-
-.bc-chart-wrap {
-  position: relative;
-}
-
-.bc-chart-loading-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.7);
-  z-index: 1;
-}
-
-[data-bc-theme="dark"] .bc-chart-loading-overlay {
-  background: rgba(15, 23, 42, 0.7);
 }

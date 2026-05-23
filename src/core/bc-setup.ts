@@ -1,4 +1,4 @@
-import { BcConfig } from './types';
+import { BcConfig, BcRtl, BcTheme, ThemeChangeCallback } from './types';
 
 type ReactivityHandler = (value: unknown, form: FormProxy) => void;
 type ValidatorFn = (value: unknown) => string | null | Promise<string | null>;
@@ -49,6 +49,7 @@ const DEFAULT_CONFIG: BcConfig = {
   size: 'md',
   locale: 'en',
   theme: 'light',
+  rtl: 'auto',
 };
 
 class BcSetupImpl {
@@ -58,6 +59,8 @@ class BcSetupImpl {
   private _systemThemeCleanup: (() => void) | null = null;
   private _reactivityListener: ((e: Event) => void) | null = null;
   private _offlineModels: Set<string> = new Set();
+  private _themeChangeCallbacks: Set<ThemeChangeCallback> = new Set();
+  private _currentResolvedTheme: 'light' | 'dark' = 'light';
 
   configure(partial: Partial<BcConfig>): void {
     if (partial.headers) {
@@ -85,6 +88,10 @@ class BcSetupImpl {
 
     if (partial.theme !== undefined) {
       this._applyTheme(partial.theme);
+    }
+
+    if (partial.rtl !== undefined) {
+      this._applyRtl(partial.rtl);
     }
 
     if (partial.baseUrl && !this._offlineInitDone) {
@@ -182,6 +189,37 @@ class BcSetupImpl {
     return this._reactivityRules.has(fieldName);
   }
 
+  setTheme(theme: BcTheme): void {
+    this._config.theme = theme;
+    this._applyTheme(theme);
+  }
+
+  getTheme(): BcTheme {
+    return this._config.theme;
+  }
+
+  getResolvedTheme(): 'light' | 'dark' {
+    return this._currentResolvedTheme;
+  }
+
+  onThemeChange(callback: ThemeChangeCallback): () => void {
+    this._themeChangeCallbacks.add(callback);
+    return () => { this._themeChangeCallbacks.delete(callback); };
+  }
+
+  setRtl(rtl: BcRtl): void {
+    this._config.rtl = rtl;
+    this._applyRtl(rtl);
+  }
+
+  isRtl(): boolean {
+    if (typeof document === 'undefined') return false;
+    const config = this._config.rtl;
+    if (config === true) return true;
+    if (config === false) return false;
+    return document.documentElement.getAttribute('dir') === 'rtl';
+  }
+
   registerValidator(name: string, fn: ValidatorFn): void {
     this._validators.set(name, fn);
   }
@@ -209,7 +247,10 @@ class BcSetupImpl {
     if (theme === 'system') {
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
       const apply = (e: MediaQueryList | MediaQueryListEvent) => {
-        document.documentElement.setAttribute('data-bc-theme', e.matches ? 'dark' : 'light');
+        const resolved = e.matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-bc-theme', resolved);
+        this._currentResolvedTheme = resolved;
+        this._notifyThemeChange(resolved);
       };
       apply(mq);
       const handler = (e: MediaQueryListEvent) => apply(e);
@@ -217,8 +258,32 @@ class BcSetupImpl {
       this._systemThemeCleanup = () => mq.removeEventListener('change', handler);
     } else if (theme === 'light') {
       document.documentElement.removeAttribute('data-bc-theme');
+      this._currentResolvedTheme = 'light';
+      this._notifyThemeChange('light');
     } else {
       document.documentElement.setAttribute('data-bc-theme', theme);
+      this._currentResolvedTheme = theme as 'light' | 'dark';
+      this._notifyThemeChange(theme as 'light' | 'dark');
+    }
+  }
+
+  private _notifyThemeChange(resolved: 'light' | 'dark'): void {
+    this._themeChangeCallbacks.forEach(cb => {
+      try { cb(resolved); } catch { /* non-fatal */ }
+    });
+  }
+
+  private _applyRtl(rtl: BcRtl): void {
+    if (typeof document === 'undefined') return;
+    if (rtl === true) {
+      document.documentElement.setAttribute('dir', 'rtl');
+    } else if (rtl === false) {
+      document.documentElement.setAttribute('dir', 'ltr');
+    } else {
+      const current = document.documentElement.getAttribute('dir');
+      if (!current) {
+        document.documentElement.setAttribute('dir', 'ltr');
+      }
     }
   }
 
