@@ -2,7 +2,7 @@ import { FetchParams, FetchResult } from './types';
 import { BcSetup } from './bc-setup';
 import { BcNative, BcDbRow } from './bc-native';
 import { buildHeaders, normalizeResponse } from './data-fetcher';
-import { hlcNow, hlcSetDeviceId as _hlcSetDeviceId, hlcCompare, parseHLC } from './hlc';
+import { hlcNow, hlcSetDeviceId as _hlcSetDeviceId, hlcCompare, parseHLC as _parseHLC } from './hlc';
 
 interface SaveResult {
   id: string;
@@ -209,7 +209,7 @@ function buildInsertSQL(table: string, data: Record<string, unknown>): { sql: st
   };
 }
 
-function buildUpdateSQL(table: string, id: string, data: Record<string, unknown>): { sql: string; values: unknown[] } {
+export function buildUpdateSQL(table: string, id: string, data: Record<string, unknown>): { sql: string; values: unknown[] } {
   assertSafeTable(table);
   const entries = Object.entries(data).filter(([k]) => k !== 'id');
   for (const [k] of entries) assertValidColumn(table, k);
