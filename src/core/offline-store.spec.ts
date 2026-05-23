@@ -216,6 +216,7 @@ describe('OfflineStore', () => {
 
       const result = await OfflineStore.find('lead', { filters: { name: 'Test' } });
       expect(result.data).toHaveLength(1);
+      expect(dbSelectSpy).toHaveBeenCalled();
     });
   });
 

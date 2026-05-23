@@ -194,13 +194,22 @@ function createOfflineProxy(httpClient: LcApiClient): LcApiClient {
           if (BcSetup.isModelOffline(model)) {
             try {
               const { OfflineStore } = await import('./offline-store');
-              return await OfflineStore.find(model, {
-                page: params?.page,
-                pageSize: params?.pageSize,
+              const page = params?.page || 1;
+              const pageSize = params?.pageSize || 20;
+              const result = await OfflineStore.find(model, {
+                page,
+                pageSize,
                 search: params?.q,
                 sort: params?.sort ? [{ field: params.sort, direction: (params.order as 'asc' | 'desc') || 'asc' }] : undefined,
                 filters: params?.filters as Record<string, string>,
               });
+              return {
+                data: result.data as Record<string, unknown>[],
+                total: result.total,
+                page,
+                pageSize,
+                totalPages: Math.ceil(result.total / pageSize),
+              };
             } catch (err) {
               console.warn('[api-client] offline list failed for "%s":', model, err);
             }

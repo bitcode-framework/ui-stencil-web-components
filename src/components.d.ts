@@ -18,6 +18,18 @@ export namespace Components {
          */
         "recordId": string;
     }
+    interface BcBadge {
+        "getValue": () => Promise<unknown>;
+        "setValue": (value: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "value": string;
+        /**
+          * @default 'default'
+         */
+        "variant": string;
+    }
     interface BcButtonBox {
         /**
           * @default '[]'
@@ -1919,6 +1931,14 @@ export namespace Components {
          */
         "width": number;
     }
+    interface BcCopy {
+        "getValue": () => Promise<string>;
+        "setValue": (value: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "value": string;
+    }
     interface BcDatatable {
         /**
           * @default '[]'
@@ -2027,12 +2047,20 @@ export namespace Components {
          */
         "viewTitle": string;
     }
-    interface BcDialogConfirm {
+    interface BcDialogAlert {
         "closeDialog": () => Promise<void>;
         /**
           * @default ''
          */
         "dialogTitle": string;
+        /**
+          * @default ''
+         */
+        "message": string;
+        /**
+          * @default 'OK'
+         */
+        "okText": string;
         /**
           * @default false
          */
@@ -2042,6 +2070,42 @@ export namespace Components {
           * @default 'sm'
          */
         "size": 'sm' | 'md' | 'lg';
+        /**
+          * @default 'default'
+         */
+        "variant": 'default' | 'success' | 'danger' | 'warning' | 'info';
+    }
+    interface BcDialogConfirm {
+        /**
+          * @default 'Cancel'
+         */
+        "cancelText": string;
+        "closeDialog": () => Promise<void>;
+        /**
+          * @default 'Confirm'
+         */
+        "confirmText": string;
+        /**
+          * @default ''
+         */
+        "dialogTitle": string;
+        /**
+          * @default ''
+         */
+        "message": string;
+        /**
+          * @default false
+         */
+        "open": boolean;
+        "openDialog": () => Promise<void>;
+        /**
+          * @default 'sm'
+         */
+        "size": 'sm' | 'md' | 'lg';
+        /**
+          * @default 'default'
+         */
+        "variant": 'default' | 'danger' | 'warning' | 'info';
     }
     interface BcDialogModal {
         "closeDialog": () => Promise<void>;
@@ -2063,6 +2127,50 @@ export namespace Components {
           * @default 'md'
          */
         "size": 'sm' | 'md' | 'lg' | 'xl';
+    }
+    interface BcDialogPrompt {
+        /**
+          * @default 'Cancel'
+         */
+        "cancelText": string;
+        "closeDialog": () => Promise<void>;
+        /**
+          * @default ''
+         */
+        "dialogTitle": string;
+        /**
+          * @default 'text'
+         */
+        "inputType": 'text' | 'number' | 'password';
+        /**
+          * @default ''
+         */
+        "inputValue": string;
+        /**
+          * @default ''
+         */
+        "message": string;
+        /**
+          * @default 'OK'
+         */
+        "okText": string;
+        /**
+          * @default false
+         */
+        "open": boolean;
+        "openDialog": () => Promise<void>;
+        /**
+          * @default ''
+         */
+        "placeholder": string;
+        /**
+          * @default false
+         */
+        "required": boolean;
+        /**
+          * @default 'sm'
+         */
+        "size": 'sm' | 'md' | 'lg';
     }
     interface BcDialogQuickentry {
         "closeDialog": () => Promise<void>;
@@ -2103,6 +2211,22 @@ export namespace Components {
           * @default '[]'
          */
         "steps": string;
+    }
+    interface BcDomain {
+        "getValue": () => Promise<unknown>;
+        "setValue": (value: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "value": string;
+    }
+    interface BcEmail {
+        "getValue": () => Promise<unknown>;
+        "setValue": (value: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "value": string;
     }
     interface BcExport {
         /**
@@ -5408,6 +5532,8 @@ export namespace Components {
          */
         "value": string;
     }
+    interface BcHandle {
+    }
     interface BcHeader {
         /**
           * @default '[]'
@@ -5462,6 +5588,14 @@ export namespace Components {
          */
         "open": boolean;
     }
+    interface BcPhone {
+        "getValue": () => Promise<unknown>;
+        "setValue": (value: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "value": string;
+    }
     interface BcPlaceholder {
         /**
           * @default ''
@@ -5477,6 +5611,36 @@ export namespace Components {
           * @default 'Print'
          */
         "label": string;
+    }
+    interface BcPriority {
+        /**
+          * @default false
+         */
+        "disabled": boolean;
+        /**
+          * @default 3
+         */
+        "max": number;
+        /**
+          * @default 0
+         */
+        "value": number;
+    }
+    interface BcProgress {
+        "getValue": () => Promise<number>;
+        /**
+          * @default 100
+         */
+        "max": number;
+        "setValue": (value: unknown) => Promise<void>;
+        /**
+          * @default 0
+         */
+        "value": number;
+        /**
+          * @default 'primary'
+         */
+        "variant": string;
     }
     interface BcReportLink {
         /**
@@ -5536,6 +5700,18 @@ export namespace Components {
         "label": string;
     }
     interface BcSheet {
+    }
+    interface BcStatusbar {
+        "getValue": () => Promise<unknown>;
+        "setValue": (value: unknown) => Promise<void>;
+        /**
+          * @default '[]'
+         */
+        "states": string;
+        /**
+          * @default ''
+         */
+        "value": string;
     }
     interface BcSyncStatus {
         /**
@@ -5600,6 +5776,14 @@ export namespace Components {
           * @default 'info'
          */
         "variant": string;
+    }
+    interface BcUrl {
+        "getValue": () => Promise<unknown>;
+        "setValue": (value: unknown) => Promise<void>;
+        /**
+          * @default ''
+         */
+        "value": string;
     }
     interface BcViewActivity {
         /**
@@ -6107,102 +6291,6 @@ export namespace Components {
          */
         "width": string;
     }
-    interface BcWidgetBadge {
-        "getValue": () => Promise<unknown>;
-        "setValue": (value: unknown) => Promise<void>;
-        /**
-          * @default ''
-         */
-        "value": string;
-        /**
-          * @default 'default'
-         */
-        "variant": string;
-    }
-    interface BcWidgetCopy {
-        "getValue": () => Promise<string>;
-        "setValue": (value: unknown) => Promise<void>;
-        /**
-          * @default ''
-         */
-        "value": string;
-    }
-    interface BcWidgetDomain {
-        "getValue": () => Promise<unknown>;
-        "setValue": (value: unknown) => Promise<void>;
-        /**
-          * @default ''
-         */
-        "value": string;
-    }
-    interface BcWidgetEmail {
-        "getValue": () => Promise<unknown>;
-        "setValue": (value: unknown) => Promise<void>;
-        /**
-          * @default ''
-         */
-        "value": string;
-    }
-    interface BcWidgetHandle {
-    }
-    interface BcWidgetPhone {
-        "getValue": () => Promise<unknown>;
-        "setValue": (value: unknown) => Promise<void>;
-        /**
-          * @default ''
-         */
-        "value": string;
-    }
-    interface BcWidgetPriority {
-        /**
-          * @default false
-         */
-        "disabled": boolean;
-        /**
-          * @default 3
-         */
-        "max": number;
-        /**
-          * @default 0
-         */
-        "value": number;
-    }
-    interface BcWidgetProgress {
-        "getValue": () => Promise<number>;
-        /**
-          * @default 100
-         */
-        "max": number;
-        "setValue": (value: unknown) => Promise<void>;
-        /**
-          * @default 0
-         */
-        "value": number;
-        /**
-          * @default 'primary'
-         */
-        "variant": string;
-    }
-    interface BcWidgetStatusbar {
-        "getValue": () => Promise<unknown>;
-        "setValue": (value: unknown) => Promise<void>;
-        /**
-          * @default '[]'
-         */
-        "states": string;
-        /**
-          * @default ''
-         */
-        "value": string;
-    }
-    interface BcWidgetUrl {
-        "getValue": () => Promise<unknown>;
-        "setValue": (value: unknown) => Promise<void>;
-        /**
-          * @default ''
-         */
-        "value": string;
-    }
 }
 export interface BcActivityCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -6312,6 +6400,10 @@ export interface BcDatatableCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcDatatableElement;
 }
+export interface BcDialogAlertCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcDialogAlertElement;
+}
 export interface BcDialogConfirmCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcDialogConfirmElement;
@@ -6319,6 +6411,10 @@ export interface BcDialogConfirmCustomEvent<T> extends CustomEvent<T> {
 export interface BcDialogModalCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcDialogModalElement;
+}
+export interface BcDialogPromptCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcDialogPromptElement;
 }
 export interface BcDialogQuickentryCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -6492,6 +6588,10 @@ export interface BcLookupModalCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcLookupModalElement;
 }
+export interface BcPriorityCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcPriorityElement;
+}
 export interface BcSearchCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcSearchElement;
@@ -6520,10 +6620,6 @@ export interface BcViewListCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcViewListElement;
 }
-export interface BcWidgetPriorityCustomEvent<T> extends CustomEvent<T> {
-    detail: T;
-    target: HTMLBcWidgetPriorityElement;
-}
 declare global {
     interface HTMLBcActivityElementEventMap {
         "lcActivitySchedule": {type: string; summary: string; dueDate: string};
@@ -6541,6 +6637,12 @@ declare global {
     var HTMLBcActivityElement: {
         prototype: HTMLBcActivityElement;
         new (): HTMLBcActivityElement;
+    };
+    interface HTMLBcBadgeElement extends Components.BcBadge, HTMLStencilElement {
+    }
+    var HTMLBcBadgeElement: {
+        prototype: HTMLBcBadgeElement;
+        new (): HTMLBcBadgeElement;
     };
     interface HTMLBcButtonBoxElement extends Components.BcButtonBox, HTMLStencilElement {
     }
@@ -7084,6 +7186,12 @@ declare global {
         prototype: HTMLBcColumnElement;
         new (): HTMLBcColumnElement;
     };
+    interface HTMLBcCopyElement extends Components.BcCopy, HTMLStencilElement {
+    }
+    var HTMLBcCopyElement: {
+        prototype: HTMLBcCopyElement;
+        new (): HTMLBcCopyElement;
+    };
     interface HTMLBcDatatableElementEventMap {
         "lcRowClick": { record: Record<string, unknown> };
         "lcSelectionChange": { ids: string[] };
@@ -7106,8 +7214,28 @@ declare global {
         prototype: HTMLBcDatatableElement;
         new (): HTMLBcDatatableElement;
     };
+    interface HTMLBcDialogAlertElementEventMap {
+        "lcDialogConfirm": void;
+        "lcDialogClose": {type: string};
+    }
+    interface HTMLBcDialogAlertElement extends Components.BcDialogAlert, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcDialogAlertElementEventMap>(type: K, listener: (this: HTMLBcDialogAlertElement, ev: BcDialogAlertCustomEvent<HTMLBcDialogAlertElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcDialogAlertElementEventMap>(type: K, listener: (this: HTMLBcDialogAlertElement, ev: BcDialogAlertCustomEvent<HTMLBcDialogAlertElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcDialogAlertElement: {
+        prototype: HTMLBcDialogAlertElement;
+        new (): HTMLBcDialogAlertElement;
+    };
     interface HTMLBcDialogConfirmElementEventMap {
         "lcDialogClose": {type: string};
+        "lcDialogConfirm": void;
+        "lcDialogCancel": void;
     }
     interface HTMLBcDialogConfirmElement extends Components.BcDialogConfirm, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcDialogConfirmElementEventMap>(type: K, listener: (this: HTMLBcDialogConfirmElement, ev: BcDialogConfirmCustomEvent<HTMLBcDialogConfirmElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -7139,6 +7267,25 @@ declare global {
     var HTMLBcDialogModalElement: {
         prototype: HTMLBcDialogModalElement;
         new (): HTMLBcDialogModalElement;
+    };
+    interface HTMLBcDialogPromptElementEventMap {
+        "lcDialogConfirm": {value: string};
+        "lcDialogCancel": void;
+        "lcDialogClose": {type: string};
+    }
+    interface HTMLBcDialogPromptElement extends Components.BcDialogPrompt, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcDialogPromptElementEventMap>(type: K, listener: (this: HTMLBcDialogPromptElement, ev: BcDialogPromptCustomEvent<HTMLBcDialogPromptElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcDialogPromptElementEventMap>(type: K, listener: (this: HTMLBcDialogPromptElement, ev: BcDialogPromptCustomEvent<HTMLBcDialogPromptElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcDialogPromptElement: {
+        prototype: HTMLBcDialogPromptElement;
+        new (): HTMLBcDialogPromptElement;
     };
     interface HTMLBcDialogQuickentryElementEventMap {
         "lcDialogClose": {type: string; data?: Record<string, string>};
@@ -7174,6 +7321,18 @@ declare global {
     var HTMLBcDialogWizardElement: {
         prototype: HTMLBcDialogWizardElement;
         new (): HTMLBcDialogWizardElement;
+    };
+    interface HTMLBcDomainElement extends Components.BcDomain, HTMLStencilElement {
+    }
+    var HTMLBcDomainElement: {
+        prototype: HTMLBcDomainElement;
+        new (): HTMLBcDomainElement;
+    };
+    interface HTMLBcEmailElement extends Components.BcEmail, HTMLStencilElement {
+    }
+    var HTMLBcEmailElement: {
+        prototype: HTMLBcEmailElement;
+        new (): HTMLBcEmailElement;
     };
     interface HTMLBcExportElement extends Components.BcExport, HTMLStencilElement {
     }
@@ -8027,6 +8186,12 @@ declare global {
         prototype: HTMLBcFilterPanelElement;
         new (): HTMLBcFilterPanelElement;
     };
+    interface HTMLBcHandleElement extends Components.BcHandle, HTMLStencilElement {
+    }
+    var HTMLBcHandleElement: {
+        prototype: HTMLBcHandleElement;
+        new (): HTMLBcHandleElement;
+    };
     interface HTMLBcHeaderElementEventMap {
         "lcActionClick": { process: string };
     }
@@ -8068,6 +8233,12 @@ declare global {
         prototype: HTMLBcLookupModalElement;
         new (): HTMLBcLookupModalElement;
     };
+    interface HTMLBcPhoneElement extends Components.BcPhone, HTMLStencilElement {
+    }
+    var HTMLBcPhoneElement: {
+        prototype: HTMLBcPhoneElement;
+        new (): HTMLBcPhoneElement;
+    };
     interface HTMLBcPlaceholderElement extends Components.BcPlaceholder, HTMLStencilElement {
     }
     var HTMLBcPlaceholderElement: {
@@ -8079,6 +8250,29 @@ declare global {
     var HTMLBcPrintElement: {
         prototype: HTMLBcPrintElement;
         new (): HTMLBcPrintElement;
+    };
+    interface HTMLBcPriorityElementEventMap {
+        "lcFieldChange": {name: string; value: unknown; oldValue: unknown};
+    }
+    interface HTMLBcPriorityElement extends Components.BcPriority, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcPriorityElementEventMap>(type: K, listener: (this: HTMLBcPriorityElement, ev: BcPriorityCustomEvent<HTMLBcPriorityElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcPriorityElementEventMap>(type: K, listener: (this: HTMLBcPriorityElement, ev: BcPriorityCustomEvent<HTMLBcPriorityElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcPriorityElement: {
+        prototype: HTMLBcPriorityElement;
+        new (): HTMLBcPriorityElement;
+    };
+    interface HTMLBcProgressElement extends Components.BcProgress, HTMLStencilElement {
+    }
+    var HTMLBcProgressElement: {
+        prototype: HTMLBcProgressElement;
+        new (): HTMLBcProgressElement;
     };
     interface HTMLBcReportLinkElement extends Components.BcReportLink, HTMLStencilElement {
     }
@@ -8126,6 +8320,12 @@ declare global {
     var HTMLBcSheetElement: {
         prototype: HTMLBcSheetElement;
         new (): HTMLBcSheetElement;
+    };
+    interface HTMLBcStatusbarElement extends Components.BcStatusbar, HTMLStencilElement {
+    }
+    var HTMLBcStatusbarElement: {
+        prototype: HTMLBcStatusbarElement;
+        new (): HTMLBcStatusbarElement;
     };
     interface HTMLBcSyncStatusElementEventMap {
         "bcSyncTriggered": void;
@@ -8179,6 +8379,12 @@ declare global {
     var HTMLBcToastElement: {
         prototype: HTMLBcToastElement;
         new (): HTMLBcToastElement;
+    };
+    interface HTMLBcUrlElement extends Components.BcUrl, HTMLStencilElement {
+    }
+    var HTMLBcUrlElement: {
+        prototype: HTMLBcUrlElement;
+        new (): HTMLBcUrlElement;
     };
     interface HTMLBcViewActivityElement extends Components.BcViewActivity, HTMLStencilElement {
     }
@@ -8332,79 +8538,9 @@ declare global {
         prototype: HTMLBcViewerYoutubeElement;
         new (): HTMLBcViewerYoutubeElement;
     };
-    interface HTMLBcWidgetBadgeElement extends Components.BcWidgetBadge, HTMLStencilElement {
-    }
-    var HTMLBcWidgetBadgeElement: {
-        prototype: HTMLBcWidgetBadgeElement;
-        new (): HTMLBcWidgetBadgeElement;
-    };
-    interface HTMLBcWidgetCopyElement extends Components.BcWidgetCopy, HTMLStencilElement {
-    }
-    var HTMLBcWidgetCopyElement: {
-        prototype: HTMLBcWidgetCopyElement;
-        new (): HTMLBcWidgetCopyElement;
-    };
-    interface HTMLBcWidgetDomainElement extends Components.BcWidgetDomain, HTMLStencilElement {
-    }
-    var HTMLBcWidgetDomainElement: {
-        prototype: HTMLBcWidgetDomainElement;
-        new (): HTMLBcWidgetDomainElement;
-    };
-    interface HTMLBcWidgetEmailElement extends Components.BcWidgetEmail, HTMLStencilElement {
-    }
-    var HTMLBcWidgetEmailElement: {
-        prototype: HTMLBcWidgetEmailElement;
-        new (): HTMLBcWidgetEmailElement;
-    };
-    interface HTMLBcWidgetHandleElement extends Components.BcWidgetHandle, HTMLStencilElement {
-    }
-    var HTMLBcWidgetHandleElement: {
-        prototype: HTMLBcWidgetHandleElement;
-        new (): HTMLBcWidgetHandleElement;
-    };
-    interface HTMLBcWidgetPhoneElement extends Components.BcWidgetPhone, HTMLStencilElement {
-    }
-    var HTMLBcWidgetPhoneElement: {
-        prototype: HTMLBcWidgetPhoneElement;
-        new (): HTMLBcWidgetPhoneElement;
-    };
-    interface HTMLBcWidgetPriorityElementEventMap {
-        "lcFieldChange": {name: string; value: unknown; oldValue: unknown};
-    }
-    interface HTMLBcWidgetPriorityElement extends Components.BcWidgetPriority, HTMLStencilElement {
-        addEventListener<K extends keyof HTMLBcWidgetPriorityElementEventMap>(type: K, listener: (this: HTMLBcWidgetPriorityElement, ev: BcWidgetPriorityCustomEvent<HTMLBcWidgetPriorityElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLBcWidgetPriorityElementEventMap>(type: K, listener: (this: HTMLBcWidgetPriorityElement, ev: BcWidgetPriorityCustomEvent<HTMLBcWidgetPriorityElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    }
-    var HTMLBcWidgetPriorityElement: {
-        prototype: HTMLBcWidgetPriorityElement;
-        new (): HTMLBcWidgetPriorityElement;
-    };
-    interface HTMLBcWidgetProgressElement extends Components.BcWidgetProgress, HTMLStencilElement {
-    }
-    var HTMLBcWidgetProgressElement: {
-        prototype: HTMLBcWidgetProgressElement;
-        new (): HTMLBcWidgetProgressElement;
-    };
-    interface HTMLBcWidgetStatusbarElement extends Components.BcWidgetStatusbar, HTMLStencilElement {
-    }
-    var HTMLBcWidgetStatusbarElement: {
-        prototype: HTMLBcWidgetStatusbarElement;
-        new (): HTMLBcWidgetStatusbarElement;
-    };
-    interface HTMLBcWidgetUrlElement extends Components.BcWidgetUrl, HTMLStencilElement {
-    }
-    var HTMLBcWidgetUrlElement: {
-        prototype: HTMLBcWidgetUrlElement;
-        new (): HTMLBcWidgetUrlElement;
-    };
     interface HTMLElementTagNameMap {
         "bc-activity": HTMLBcActivityElement;
+        "bc-badge": HTMLBcBadgeElement;
         "bc-button-box": HTMLBcButtonBoxElement;
         "bc-chart-area": HTMLBcChartAreaElement;
         "bc-chart-bar": HTMLBcChartBarElement;
@@ -8435,11 +8571,16 @@ declare global {
         "bc-chatter": HTMLBcChatterElement;
         "bc-child-table": HTMLBcChildTableElement;
         "bc-column": HTMLBcColumnElement;
+        "bc-copy": HTMLBcCopyElement;
         "bc-datatable": HTMLBcDatatableElement;
+        "bc-dialog-alert": HTMLBcDialogAlertElement;
         "bc-dialog-confirm": HTMLBcDialogConfirmElement;
         "bc-dialog-modal": HTMLBcDialogModalElement;
+        "bc-dialog-prompt": HTMLBcDialogPromptElement;
         "bc-dialog-quickentry": HTMLBcDialogQuickentryElement;
         "bc-dialog-wizard": HTMLBcDialogWizardElement;
+        "bc-domain": HTMLBcDomainElement;
+        "bc-email": HTMLBcEmailElement;
         "bc-export": HTMLBcExportElement;
         "bc-favorites": HTMLBcFavoritesElement;
         "bc-field-barcode": HTMLBcFieldBarcodeElement;
@@ -8480,22 +8621,28 @@ declare global {
         "bc-filter-bar": HTMLBcFilterBarElement;
         "bc-filter-builder": HTMLBcFilterBuilderElement;
         "bc-filter-panel": HTMLBcFilterPanelElement;
+        "bc-handle": HTMLBcHandleElement;
         "bc-header": HTMLBcHeaderElement;
         "bc-html-block": HTMLBcHtmlBlockElement;
         "bc-lookup-modal": HTMLBcLookupModalElement;
+        "bc-phone": HTMLBcPhoneElement;
         "bc-placeholder": HTMLBcPlaceholderElement;
         "bc-print": HTMLBcPrintElement;
+        "bc-priority": HTMLBcPriorityElement;
+        "bc-progress": HTMLBcProgressElement;
         "bc-report-link": HTMLBcReportLinkElement;
         "bc-row": HTMLBcRowElement;
         "bc-search": HTMLBcSearchElement;
         "bc-section": HTMLBcSectionElement;
         "bc-separator": HTMLBcSeparatorElement;
         "bc-sheet": HTMLBcSheetElement;
+        "bc-statusbar": HTMLBcStatusbarElement;
         "bc-sync-status": HTMLBcSyncStatusElement;
         "bc-tab": HTMLBcTabElement;
         "bc-tabs": HTMLBcTabsElement;
         "bc-timeline": HTMLBcTimelineElement;
         "bc-toast": HTMLBcToastElement;
+        "bc-url": HTMLBcUrlElement;
         "bc-view-activity": HTMLBcViewActivityElement;
         "bc-view-calendar": HTMLBcViewCalendarElement;
         "bc-view-editor": HTMLBcViewEditorElement;
@@ -8514,16 +8661,6 @@ declare global {
         "bc-viewer-tiktok": HTMLBcViewerTiktokElement;
         "bc-viewer-video": HTMLBcViewerVideoElement;
         "bc-viewer-youtube": HTMLBcViewerYoutubeElement;
-        "bc-widget-badge": HTMLBcWidgetBadgeElement;
-        "bc-widget-copy": HTMLBcWidgetCopyElement;
-        "bc-widget-domain": HTMLBcWidgetDomainElement;
-        "bc-widget-email": HTMLBcWidgetEmailElement;
-        "bc-widget-handle": HTMLBcWidgetHandleElement;
-        "bc-widget-phone": HTMLBcWidgetPhoneElement;
-        "bc-widget-priority": HTMLBcWidgetPriorityElement;
-        "bc-widget-progress": HTMLBcWidgetProgressElement;
-        "bc-widget-statusbar": HTMLBcWidgetStatusbarElement;
-        "bc-widget-url": HTMLBcWidgetUrlElement;
     }
 }
 declare namespace LocalJSX {
@@ -8537,6 +8674,16 @@ declare namespace LocalJSX {
           * @default ''
          */
         "recordId"?: string;
+    }
+    interface BcBadge {
+        /**
+          * @default ''
+         */
+        "value"?: string;
+        /**
+          * @default 'default'
+         */
+        "variant"?: string;
     }
     interface BcButtonBox {
         /**
@@ -10406,6 +10553,12 @@ declare namespace LocalJSX {
          */
         "width"?: number;
     }
+    interface BcCopy {
+        /**
+          * @default ''
+         */
+        "value"?: string;
+    }
     interface BcDatatable {
         /**
           * @default '[]'
@@ -10510,12 +10663,21 @@ declare namespace LocalJSX {
          */
         "viewTitle"?: string;
     }
-    interface BcDialogConfirm {
+    interface BcDialogAlert {
         /**
           * @default ''
          */
         "dialogTitle"?: string;
-        "onLcDialogClose"?: (event: BcDialogConfirmCustomEvent<{type: string}>) => void;
+        /**
+          * @default ''
+         */
+        "message"?: string;
+        /**
+          * @default 'OK'
+         */
+        "okText"?: string;
+        "onLcDialogClose"?: (event: BcDialogAlertCustomEvent<{type: string}>) => void;
+        "onLcDialogConfirm"?: (event: BcDialogAlertCustomEvent<void>) => void;
         /**
           * @default false
          */
@@ -10524,6 +10686,43 @@ declare namespace LocalJSX {
           * @default 'sm'
          */
         "size"?: 'sm' | 'md' | 'lg';
+        /**
+          * @default 'default'
+         */
+        "variant"?: 'default' | 'success' | 'danger' | 'warning' | 'info';
+    }
+    interface BcDialogConfirm {
+        /**
+          * @default 'Cancel'
+         */
+        "cancelText"?: string;
+        /**
+          * @default 'Confirm'
+         */
+        "confirmText"?: string;
+        /**
+          * @default ''
+         */
+        "dialogTitle"?: string;
+        /**
+          * @default ''
+         */
+        "message"?: string;
+        "onLcDialogCancel"?: (event: BcDialogConfirmCustomEvent<void>) => void;
+        "onLcDialogClose"?: (event: BcDialogConfirmCustomEvent<{type: string}>) => void;
+        "onLcDialogConfirm"?: (event: BcDialogConfirmCustomEvent<void>) => void;
+        /**
+          * @default false
+         */
+        "open"?: boolean;
+        /**
+          * @default 'sm'
+         */
+        "size"?: 'sm' | 'md' | 'lg';
+        /**
+          * @default 'default'
+         */
+        "variant"?: 'default' | 'danger' | 'warning' | 'info';
     }
     interface BcDialogModal {
         /**
@@ -10543,6 +10742,51 @@ declare namespace LocalJSX {
           * @default 'md'
          */
         "size"?: 'sm' | 'md' | 'lg' | 'xl';
+    }
+    interface BcDialogPrompt {
+        /**
+          * @default 'Cancel'
+         */
+        "cancelText"?: string;
+        /**
+          * @default ''
+         */
+        "dialogTitle"?: string;
+        /**
+          * @default 'text'
+         */
+        "inputType"?: 'text' | 'number' | 'password';
+        /**
+          * @default ''
+         */
+        "inputValue"?: string;
+        /**
+          * @default ''
+         */
+        "message"?: string;
+        /**
+          * @default 'OK'
+         */
+        "okText"?: string;
+        "onLcDialogCancel"?: (event: BcDialogPromptCustomEvent<void>) => void;
+        "onLcDialogClose"?: (event: BcDialogPromptCustomEvent<{type: string}>) => void;
+        "onLcDialogConfirm"?: (event: BcDialogPromptCustomEvent<{value: string}>) => void;
+        /**
+          * @default false
+         */
+        "open"?: boolean;
+        /**
+          * @default ''
+         */
+        "placeholder"?: string;
+        /**
+          * @default false
+         */
+        "required"?: boolean;
+        /**
+          * @default 'sm'
+         */
+        "size"?: 'sm' | 'md' | 'lg';
     }
     interface BcDialogQuickentry {
         /**
@@ -10578,6 +10822,18 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "steps"?: string;
+    }
+    interface BcDomain {
+        /**
+          * @default ''
+         */
+        "value"?: string;
+    }
+    interface BcEmail {
+        /**
+          * @default ''
+         */
+        "value"?: string;
     }
     interface BcExport {
         /**
@@ -13713,6 +13969,8 @@ declare namespace LocalJSX {
          */
         "value"?: string;
     }
+    interface BcHandle {
+    }
     interface BcHeader {
         /**
           * @default '[]'
@@ -13770,6 +14028,12 @@ declare namespace LocalJSX {
          */
         "open"?: boolean;
     }
+    interface BcPhone {
+        /**
+          * @default ''
+         */
+        "value"?: string;
+    }
     interface BcPlaceholder {
         /**
           * @default ''
@@ -13785,6 +14049,35 @@ declare namespace LocalJSX {
           * @default 'Print'
          */
         "label"?: string;
+    }
+    interface BcPriority {
+        /**
+          * @default false
+         */
+        "disabled"?: boolean;
+        /**
+          * @default 3
+         */
+        "max"?: number;
+        "onLcFieldChange"?: (event: BcPriorityCustomEvent<{name: string; value: unknown; oldValue: unknown}>) => void;
+        /**
+          * @default 0
+         */
+        "value"?: number;
+    }
+    interface BcProgress {
+        /**
+          * @default 100
+         */
+        "max"?: number;
+        /**
+          * @default 0
+         */
+        "value"?: number;
+        /**
+          * @default 'primary'
+         */
+        "variant"?: string;
     }
     interface BcReportLink {
         /**
@@ -13842,6 +14135,16 @@ declare namespace LocalJSX {
         "label"?: string;
     }
     interface BcSheet {
+    }
+    interface BcStatusbar {
+        /**
+          * @default '[]'
+         */
+        "states"?: string;
+        /**
+          * @default ''
+         */
+        "value"?: string;
     }
     interface BcSyncStatus {
         /**
@@ -13903,6 +14206,12 @@ declare namespace LocalJSX {
           * @default 'info'
          */
         "variant"?: string;
+    }
+    interface BcUrl {
+        /**
+          * @default ''
+         */
+        "value"?: string;
     }
     interface BcViewActivity {
         /**
@@ -14396,91 +14705,14 @@ declare namespace LocalJSX {
          */
         "width"?: string;
     }
-    interface BcWidgetBadge {
-        /**
-          * @default ''
-         */
-        "value"?: string;
-        /**
-          * @default 'default'
-         */
-        "variant"?: string;
-    }
-    interface BcWidgetCopy {
-        /**
-          * @default ''
-         */
-        "value"?: string;
-    }
-    interface BcWidgetDomain {
-        /**
-          * @default ''
-         */
-        "value"?: string;
-    }
-    interface BcWidgetEmail {
-        /**
-          * @default ''
-         */
-        "value"?: string;
-    }
-    interface BcWidgetHandle {
-    }
-    interface BcWidgetPhone {
-        /**
-          * @default ''
-         */
-        "value"?: string;
-    }
-    interface BcWidgetPriority {
-        /**
-          * @default false
-         */
-        "disabled"?: boolean;
-        /**
-          * @default 3
-         */
-        "max"?: number;
-        "onLcFieldChange"?: (event: BcWidgetPriorityCustomEvent<{name: string; value: unknown; oldValue: unknown}>) => void;
-        /**
-          * @default 0
-         */
-        "value"?: number;
-    }
-    interface BcWidgetProgress {
-        /**
-          * @default 100
-         */
-        "max"?: number;
-        /**
-          * @default 0
-         */
-        "value"?: number;
-        /**
-          * @default 'primary'
-         */
-        "variant"?: string;
-    }
-    interface BcWidgetStatusbar {
-        /**
-          * @default '[]'
-         */
-        "states"?: string;
-        /**
-          * @default ''
-         */
-        "value"?: string;
-    }
-    interface BcWidgetUrl {
-        /**
-          * @default ''
-         */
-        "value"?: string;
-    }
 
     interface BcActivityAttributes {
         "recordId": string;
         "model": string;
+    }
+    interface BcBadgeAttributes {
+        "value": string;
+        "variant": string;
     }
     interface BcButtonBoxAttributes {
         "buttons": string;
@@ -14966,6 +15198,9 @@ declare namespace LocalJSX {
     interface BcColumnAttributes {
         "width": number;
     }
+    interface BcCopyAttributes {
+        "value": string;
+    }
     interface BcDatatableAttributes {
         "model": string;
         "columns": string;
@@ -14992,16 +15227,40 @@ declare namespace LocalJSX {
         "fetchHeaders": string;
         "emptyText": string;
     }
+    interface BcDialogAlertAttributes {
+        "open": boolean;
+        "dialogTitle": string;
+        "message": string;
+        "okText": string;
+        "variant": 'default' | 'success' | 'danger' | 'warning' | 'info';
+        "size": 'sm' | 'md' | 'lg';
+    }
     interface BcDialogConfirmAttributes {
         "open": boolean;
         "dialogTitle": string;
         "size": 'sm' | 'md' | 'lg';
+        "message": string;
+        "confirmText": string;
+        "cancelText": string;
+        "variant": 'default' | 'danger' | 'warning' | 'info';
     }
     interface BcDialogModalAttributes {
         "open": boolean;
         "dialogTitle": string;
         "size": 'sm' | 'md' | 'lg' | 'xl';
         "loading": boolean;
+    }
+    interface BcDialogPromptAttributes {
+        "open": boolean;
+        "dialogTitle": string;
+        "message": string;
+        "placeholder": string;
+        "inputValue": string;
+        "okText": string;
+        "cancelText": string;
+        "inputType": 'text' | 'number' | 'password';
+        "required": boolean;
+        "size": 'sm' | 'md' | 'lg';
     }
     interface BcDialogQuickentryAttributes {
         "open": boolean;
@@ -15013,6 +15272,12 @@ declare namespace LocalJSX {
         "open": boolean;
         "dialogTitle": string;
         "steps": string;
+    }
+    interface BcDomainAttributes {
+        "value": string;
+    }
+    interface BcEmailAttributes {
+        "value": string;
     }
     interface BcExportAttributes {
         "label": string;
@@ -15820,12 +16085,25 @@ declare namespace LocalJSX {
         "apiUrl": string;
         "modalTitle": string;
     }
+    interface BcPhoneAttributes {
+        "value": string;
+    }
     interface BcPlaceholderAttributes {
         "text": string;
     }
     interface BcPrintAttributes {
         "label": string;
         "href": string;
+    }
+    interface BcPriorityAttributes {
+        "value": number;
+        "max": number;
+        "disabled": boolean;
+    }
+    interface BcProgressAttributes {
+        "value": number;
+        "max": number;
+        "variant": string;
     }
     interface BcReportLinkAttributes {
         "label": string;
@@ -15848,6 +16126,10 @@ declare namespace LocalJSX {
     interface BcSeparatorAttributes {
         "label": string;
     }
+    interface BcStatusbarAttributes {
+        "states": string;
+        "value": string;
+    }
     interface BcSyncStatusAttributes {
         "pollInterval": number;
         "compact": boolean;
@@ -15867,6 +16149,9 @@ declare namespace LocalJSX {
         "variant": string;
         "duration": number;
         "position": string;
+    }
+    interface BcUrlAttributes {
+        "value": string;
     }
     interface BcViewActivityAttributes {
         "model": string;
@@ -16017,42 +16302,10 @@ declare namespace LocalJSX {
         "dataSource": string;
         "srcField": string;
     }
-    interface BcWidgetBadgeAttributes {
-        "value": string;
-        "variant": string;
-    }
-    interface BcWidgetCopyAttributes {
-        "value": string;
-    }
-    interface BcWidgetDomainAttributes {
-        "value": string;
-    }
-    interface BcWidgetEmailAttributes {
-        "value": string;
-    }
-    interface BcWidgetPhoneAttributes {
-        "value": string;
-    }
-    interface BcWidgetPriorityAttributes {
-        "value": number;
-        "max": number;
-        "disabled": boolean;
-    }
-    interface BcWidgetProgressAttributes {
-        "value": number;
-        "max": number;
-        "variant": string;
-    }
-    interface BcWidgetStatusbarAttributes {
-        "states": string;
-        "value": string;
-    }
-    interface BcWidgetUrlAttributes {
-        "value": string;
-    }
 
     interface IntrinsicElements {
         "bc-activity": Omit<BcActivity, keyof BcActivityAttributes> & { [K in keyof BcActivity & keyof BcActivityAttributes]?: BcActivity[K] } & { [K in keyof BcActivity & keyof BcActivityAttributes as `attr:${K}`]?: BcActivityAttributes[K] } & { [K in keyof BcActivity & keyof BcActivityAttributes as `prop:${K}`]?: BcActivity[K] };
+        "bc-badge": Omit<BcBadge, keyof BcBadgeAttributes> & { [K in keyof BcBadge & keyof BcBadgeAttributes]?: BcBadge[K] } & { [K in keyof BcBadge & keyof BcBadgeAttributes as `attr:${K}`]?: BcBadgeAttributes[K] } & { [K in keyof BcBadge & keyof BcBadgeAttributes as `prop:${K}`]?: BcBadge[K] };
         "bc-button-box": Omit<BcButtonBox, keyof BcButtonBoxAttributes> & { [K in keyof BcButtonBox & keyof BcButtonBoxAttributes]?: BcButtonBox[K] } & { [K in keyof BcButtonBox & keyof BcButtonBoxAttributes as `attr:${K}`]?: BcButtonBoxAttributes[K] } & { [K in keyof BcButtonBox & keyof BcButtonBoxAttributes as `prop:${K}`]?: BcButtonBox[K] };
         "bc-chart-area": Omit<BcChartArea, keyof BcChartAreaAttributes> & { [K in keyof BcChartArea & keyof BcChartAreaAttributes]?: BcChartArea[K] } & { [K in keyof BcChartArea & keyof BcChartAreaAttributes as `attr:${K}`]?: BcChartAreaAttributes[K] } & { [K in keyof BcChartArea & keyof BcChartAreaAttributes as `prop:${K}`]?: BcChartArea[K] };
         "bc-chart-bar": Omit<BcChartBar, keyof BcChartBarAttributes> & { [K in keyof BcChartBar & keyof BcChartBarAttributes]?: BcChartBar[K] } & { [K in keyof BcChartBar & keyof BcChartBarAttributes as `attr:${K}`]?: BcChartBarAttributes[K] } & { [K in keyof BcChartBar & keyof BcChartBarAttributes as `prop:${K}`]?: BcChartBar[K] };
@@ -16083,11 +16336,16 @@ declare namespace LocalJSX {
         "bc-chatter": Omit<BcChatter, keyof BcChatterAttributes> & { [K in keyof BcChatter & keyof BcChatterAttributes]?: BcChatter[K] } & { [K in keyof BcChatter & keyof BcChatterAttributes as `attr:${K}`]?: BcChatterAttributes[K] } & { [K in keyof BcChatter & keyof BcChatterAttributes as `prop:${K}`]?: BcChatter[K] };
         "bc-child-table": Omit<BcChildTable, keyof BcChildTableAttributes> & { [K in keyof BcChildTable & keyof BcChildTableAttributes]?: BcChildTable[K] } & { [K in keyof BcChildTable & keyof BcChildTableAttributes as `attr:${K}`]?: BcChildTableAttributes[K] } & { [K in keyof BcChildTable & keyof BcChildTableAttributes as `prop:${K}`]?: BcChildTable[K] };
         "bc-column": Omit<BcColumn, keyof BcColumnAttributes> & { [K in keyof BcColumn & keyof BcColumnAttributes]?: BcColumn[K] } & { [K in keyof BcColumn & keyof BcColumnAttributes as `attr:${K}`]?: BcColumnAttributes[K] } & { [K in keyof BcColumn & keyof BcColumnAttributes as `prop:${K}`]?: BcColumn[K] };
+        "bc-copy": Omit<BcCopy, keyof BcCopyAttributes> & { [K in keyof BcCopy & keyof BcCopyAttributes]?: BcCopy[K] } & { [K in keyof BcCopy & keyof BcCopyAttributes as `attr:${K}`]?: BcCopyAttributes[K] } & { [K in keyof BcCopy & keyof BcCopyAttributes as `prop:${K}`]?: BcCopy[K] };
         "bc-datatable": Omit<BcDatatable, keyof BcDatatableAttributes> & { [K in keyof BcDatatable & keyof BcDatatableAttributes]?: BcDatatable[K] } & { [K in keyof BcDatatable & keyof BcDatatableAttributes as `attr:${K}`]?: BcDatatableAttributes[K] } & { [K in keyof BcDatatable & keyof BcDatatableAttributes as `prop:${K}`]?: BcDatatable[K] };
+        "bc-dialog-alert": Omit<BcDialogAlert, keyof BcDialogAlertAttributes> & { [K in keyof BcDialogAlert & keyof BcDialogAlertAttributes]?: BcDialogAlert[K] } & { [K in keyof BcDialogAlert & keyof BcDialogAlertAttributes as `attr:${K}`]?: BcDialogAlertAttributes[K] } & { [K in keyof BcDialogAlert & keyof BcDialogAlertAttributes as `prop:${K}`]?: BcDialogAlert[K] };
         "bc-dialog-confirm": Omit<BcDialogConfirm, keyof BcDialogConfirmAttributes> & { [K in keyof BcDialogConfirm & keyof BcDialogConfirmAttributes]?: BcDialogConfirm[K] } & { [K in keyof BcDialogConfirm & keyof BcDialogConfirmAttributes as `attr:${K}`]?: BcDialogConfirmAttributes[K] } & { [K in keyof BcDialogConfirm & keyof BcDialogConfirmAttributes as `prop:${K}`]?: BcDialogConfirm[K] };
         "bc-dialog-modal": Omit<BcDialogModal, keyof BcDialogModalAttributes> & { [K in keyof BcDialogModal & keyof BcDialogModalAttributes]?: BcDialogModal[K] } & { [K in keyof BcDialogModal & keyof BcDialogModalAttributes as `attr:${K}`]?: BcDialogModalAttributes[K] } & { [K in keyof BcDialogModal & keyof BcDialogModalAttributes as `prop:${K}`]?: BcDialogModal[K] };
+        "bc-dialog-prompt": Omit<BcDialogPrompt, keyof BcDialogPromptAttributes> & { [K in keyof BcDialogPrompt & keyof BcDialogPromptAttributes]?: BcDialogPrompt[K] } & { [K in keyof BcDialogPrompt & keyof BcDialogPromptAttributes as `attr:${K}`]?: BcDialogPromptAttributes[K] } & { [K in keyof BcDialogPrompt & keyof BcDialogPromptAttributes as `prop:${K}`]?: BcDialogPrompt[K] };
         "bc-dialog-quickentry": Omit<BcDialogQuickentry, keyof BcDialogQuickentryAttributes> & { [K in keyof BcDialogQuickentry & keyof BcDialogQuickentryAttributes]?: BcDialogQuickentry[K] } & { [K in keyof BcDialogQuickentry & keyof BcDialogQuickentryAttributes as `attr:${K}`]?: BcDialogQuickentryAttributes[K] } & { [K in keyof BcDialogQuickentry & keyof BcDialogQuickentryAttributes as `prop:${K}`]?: BcDialogQuickentry[K] };
         "bc-dialog-wizard": Omit<BcDialogWizard, keyof BcDialogWizardAttributes> & { [K in keyof BcDialogWizard & keyof BcDialogWizardAttributes]?: BcDialogWizard[K] } & { [K in keyof BcDialogWizard & keyof BcDialogWizardAttributes as `attr:${K}`]?: BcDialogWizardAttributes[K] } & { [K in keyof BcDialogWizard & keyof BcDialogWizardAttributes as `prop:${K}`]?: BcDialogWizard[K] };
+        "bc-domain": Omit<BcDomain, keyof BcDomainAttributes> & { [K in keyof BcDomain & keyof BcDomainAttributes]?: BcDomain[K] } & { [K in keyof BcDomain & keyof BcDomainAttributes as `attr:${K}`]?: BcDomainAttributes[K] } & { [K in keyof BcDomain & keyof BcDomainAttributes as `prop:${K}`]?: BcDomain[K] };
+        "bc-email": Omit<BcEmail, keyof BcEmailAttributes> & { [K in keyof BcEmail & keyof BcEmailAttributes]?: BcEmail[K] } & { [K in keyof BcEmail & keyof BcEmailAttributes as `attr:${K}`]?: BcEmailAttributes[K] } & { [K in keyof BcEmail & keyof BcEmailAttributes as `prop:${K}`]?: BcEmail[K] };
         "bc-export": Omit<BcExport, keyof BcExportAttributes> & { [K in keyof BcExport & keyof BcExportAttributes]?: BcExport[K] } & { [K in keyof BcExport & keyof BcExportAttributes as `attr:${K}`]?: BcExportAttributes[K] } & { [K in keyof BcExport & keyof BcExportAttributes as `prop:${K}`]?: BcExport[K] };
         "bc-favorites": Omit<BcFavorites, keyof BcFavoritesAttributes> & { [K in keyof BcFavorites & keyof BcFavoritesAttributes]?: BcFavorites[K] } & { [K in keyof BcFavorites & keyof BcFavoritesAttributes as `attr:${K}`]?: BcFavoritesAttributes[K] } & { [K in keyof BcFavorites & keyof BcFavoritesAttributes as `prop:${K}`]?: BcFavorites[K] };
         "bc-field-barcode": Omit<BcFieldBarcode, keyof BcFieldBarcodeAttributes> & { [K in keyof BcFieldBarcode & keyof BcFieldBarcodeAttributes]?: BcFieldBarcode[K] } & { [K in keyof BcFieldBarcode & keyof BcFieldBarcodeAttributes as `attr:${K}`]?: BcFieldBarcodeAttributes[K] } & { [K in keyof BcFieldBarcode & keyof BcFieldBarcodeAttributes as `prop:${K}`]?: BcFieldBarcode[K] };
@@ -16128,22 +16386,28 @@ declare namespace LocalJSX {
         "bc-filter-bar": Omit<BcFilterBar, keyof BcFilterBarAttributes> & { [K in keyof BcFilterBar & keyof BcFilterBarAttributes]?: BcFilterBar[K] } & { [K in keyof BcFilterBar & keyof BcFilterBarAttributes as `attr:${K}`]?: BcFilterBarAttributes[K] } & { [K in keyof BcFilterBar & keyof BcFilterBarAttributes as `prop:${K}`]?: BcFilterBar[K] };
         "bc-filter-builder": Omit<BcFilterBuilder, keyof BcFilterBuilderAttributes> & { [K in keyof BcFilterBuilder & keyof BcFilterBuilderAttributes]?: BcFilterBuilder[K] } & { [K in keyof BcFilterBuilder & keyof BcFilterBuilderAttributes as `attr:${K}`]?: BcFilterBuilderAttributes[K] } & { [K in keyof BcFilterBuilder & keyof BcFilterBuilderAttributes as `prop:${K}`]?: BcFilterBuilder[K] };
         "bc-filter-panel": Omit<BcFilterPanel, keyof BcFilterPanelAttributes> & { [K in keyof BcFilterPanel & keyof BcFilterPanelAttributes]?: BcFilterPanel[K] } & { [K in keyof BcFilterPanel & keyof BcFilterPanelAttributes as `attr:${K}`]?: BcFilterPanelAttributes[K] } & { [K in keyof BcFilterPanel & keyof BcFilterPanelAttributes as `prop:${K}`]?: BcFilterPanel[K] };
+        "bc-handle": BcHandle;
         "bc-header": Omit<BcHeader, keyof BcHeaderAttributes> & { [K in keyof BcHeader & keyof BcHeaderAttributes]?: BcHeader[K] } & { [K in keyof BcHeader & keyof BcHeaderAttributes as `attr:${K}`]?: BcHeaderAttributes[K] } & { [K in keyof BcHeader & keyof BcHeaderAttributes as `prop:${K}`]?: BcHeader[K] };
         "bc-html-block": Omit<BcHtmlBlock, keyof BcHtmlBlockAttributes> & { [K in keyof BcHtmlBlock & keyof BcHtmlBlockAttributes]?: BcHtmlBlock[K] } & { [K in keyof BcHtmlBlock & keyof BcHtmlBlockAttributes as `attr:${K}`]?: BcHtmlBlockAttributes[K] } & { [K in keyof BcHtmlBlock & keyof BcHtmlBlockAttributes as `prop:${K}`]?: BcHtmlBlock[K] };
         "bc-lookup-modal": Omit<BcLookupModal, keyof BcLookupModalAttributes> & { [K in keyof BcLookupModal & keyof BcLookupModalAttributes]?: BcLookupModal[K] } & { [K in keyof BcLookupModal & keyof BcLookupModalAttributes as `attr:${K}`]?: BcLookupModalAttributes[K] } & { [K in keyof BcLookupModal & keyof BcLookupModalAttributes as `prop:${K}`]?: BcLookupModal[K] };
+        "bc-phone": Omit<BcPhone, keyof BcPhoneAttributes> & { [K in keyof BcPhone & keyof BcPhoneAttributes]?: BcPhone[K] } & { [K in keyof BcPhone & keyof BcPhoneAttributes as `attr:${K}`]?: BcPhoneAttributes[K] } & { [K in keyof BcPhone & keyof BcPhoneAttributes as `prop:${K}`]?: BcPhone[K] };
         "bc-placeholder": Omit<BcPlaceholder, keyof BcPlaceholderAttributes> & { [K in keyof BcPlaceholder & keyof BcPlaceholderAttributes]?: BcPlaceholder[K] } & { [K in keyof BcPlaceholder & keyof BcPlaceholderAttributes as `attr:${K}`]?: BcPlaceholderAttributes[K] } & { [K in keyof BcPlaceholder & keyof BcPlaceholderAttributes as `prop:${K}`]?: BcPlaceholder[K] };
         "bc-print": Omit<BcPrint, keyof BcPrintAttributes> & { [K in keyof BcPrint & keyof BcPrintAttributes]?: BcPrint[K] } & { [K in keyof BcPrint & keyof BcPrintAttributes as `attr:${K}`]?: BcPrintAttributes[K] } & { [K in keyof BcPrint & keyof BcPrintAttributes as `prop:${K}`]?: BcPrint[K] };
+        "bc-priority": Omit<BcPriority, keyof BcPriorityAttributes> & { [K in keyof BcPriority & keyof BcPriorityAttributes]?: BcPriority[K] } & { [K in keyof BcPriority & keyof BcPriorityAttributes as `attr:${K}`]?: BcPriorityAttributes[K] } & { [K in keyof BcPriority & keyof BcPriorityAttributes as `prop:${K}`]?: BcPriority[K] };
+        "bc-progress": Omit<BcProgress, keyof BcProgressAttributes> & { [K in keyof BcProgress & keyof BcProgressAttributes]?: BcProgress[K] } & { [K in keyof BcProgress & keyof BcProgressAttributes as `attr:${K}`]?: BcProgressAttributes[K] } & { [K in keyof BcProgress & keyof BcProgressAttributes as `prop:${K}`]?: BcProgress[K] };
         "bc-report-link": Omit<BcReportLink, keyof BcReportLinkAttributes> & { [K in keyof BcReportLink & keyof BcReportLinkAttributes]?: BcReportLink[K] } & { [K in keyof BcReportLink & keyof BcReportLinkAttributes as `attr:${K}`]?: BcReportLinkAttributes[K] } & { [K in keyof BcReportLink & keyof BcReportLinkAttributes as `prop:${K}`]?: BcReportLink[K] };
         "bc-row": Omit<BcRow, keyof BcRowAttributes> & { [K in keyof BcRow & keyof BcRowAttributes]?: BcRow[K] } & { [K in keyof BcRow & keyof BcRowAttributes as `attr:${K}`]?: BcRowAttributes[K] } & { [K in keyof BcRow & keyof BcRowAttributes as `prop:${K}`]?: BcRow[K] };
         "bc-search": Omit<BcSearch, keyof BcSearchAttributes> & { [K in keyof BcSearch & keyof BcSearchAttributes]?: BcSearch[K] } & { [K in keyof BcSearch & keyof BcSearchAttributes as `attr:${K}`]?: BcSearchAttributes[K] } & { [K in keyof BcSearch & keyof BcSearchAttributes as `prop:${K}`]?: BcSearch[K] };
         "bc-section": Omit<BcSection, keyof BcSectionAttributes> & { [K in keyof BcSection & keyof BcSectionAttributes]?: BcSection[K] } & { [K in keyof BcSection & keyof BcSectionAttributes as `attr:${K}`]?: BcSectionAttributes[K] } & { [K in keyof BcSection & keyof BcSectionAttributes as `prop:${K}`]?: BcSection[K] };
         "bc-separator": Omit<BcSeparator, keyof BcSeparatorAttributes> & { [K in keyof BcSeparator & keyof BcSeparatorAttributes]?: BcSeparator[K] } & { [K in keyof BcSeparator & keyof BcSeparatorAttributes as `attr:${K}`]?: BcSeparatorAttributes[K] } & { [K in keyof BcSeparator & keyof BcSeparatorAttributes as `prop:${K}`]?: BcSeparator[K] };
         "bc-sheet": BcSheet;
+        "bc-statusbar": Omit<BcStatusbar, keyof BcStatusbarAttributes> & { [K in keyof BcStatusbar & keyof BcStatusbarAttributes]?: BcStatusbar[K] } & { [K in keyof BcStatusbar & keyof BcStatusbarAttributes as `attr:${K}`]?: BcStatusbarAttributes[K] } & { [K in keyof BcStatusbar & keyof BcStatusbarAttributes as `prop:${K}`]?: BcStatusbar[K] };
         "bc-sync-status": Omit<BcSyncStatus, keyof BcSyncStatusAttributes> & { [K in keyof BcSyncStatus & keyof BcSyncStatusAttributes]?: BcSyncStatus[K] } & { [K in keyof BcSyncStatus & keyof BcSyncStatusAttributes as `attr:${K}`]?: BcSyncStatusAttributes[K] } & { [K in keyof BcSyncStatus & keyof BcSyncStatusAttributes as `prop:${K}`]?: BcSyncStatus[K] };
         "bc-tab": Omit<BcTab, keyof BcTabAttributes> & { [K in keyof BcTab & keyof BcTabAttributes]?: BcTab[K] } & { [K in keyof BcTab & keyof BcTabAttributes as `attr:${K}`]?: BcTabAttributes[K] } & { [K in keyof BcTab & keyof BcTabAttributes as `prop:${K}`]?: BcTab[K] };
         "bc-tabs": BcTabs;
         "bc-timeline": Omit<BcTimeline, keyof BcTimelineAttributes> & { [K in keyof BcTimeline & keyof BcTimelineAttributes]?: BcTimeline[K] } & { [K in keyof BcTimeline & keyof BcTimelineAttributes as `attr:${K}`]?: BcTimelineAttributes[K] } & { [K in keyof BcTimeline & keyof BcTimelineAttributes as `prop:${K}`]?: BcTimeline[K] };
         "bc-toast": Omit<BcToast, keyof BcToastAttributes> & { [K in keyof BcToast & keyof BcToastAttributes]?: BcToast[K] } & { [K in keyof BcToast & keyof BcToastAttributes as `attr:${K}`]?: BcToastAttributes[K] } & { [K in keyof BcToast & keyof BcToastAttributes as `prop:${K}`]?: BcToast[K] };
+        "bc-url": Omit<BcUrl, keyof BcUrlAttributes> & { [K in keyof BcUrl & keyof BcUrlAttributes]?: BcUrl[K] } & { [K in keyof BcUrl & keyof BcUrlAttributes as `attr:${K}`]?: BcUrlAttributes[K] } & { [K in keyof BcUrl & keyof BcUrlAttributes as `prop:${K}`]?: BcUrl[K] };
         "bc-view-activity": Omit<BcViewActivity, keyof BcViewActivityAttributes> & { [K in keyof BcViewActivity & keyof BcViewActivityAttributes]?: BcViewActivity[K] } & { [K in keyof BcViewActivity & keyof BcViewActivityAttributes as `attr:${K}`]?: BcViewActivityAttributes[K] } & { [K in keyof BcViewActivity & keyof BcViewActivityAttributes as `prop:${K}`]?: BcViewActivity[K] };
         "bc-view-calendar": Omit<BcViewCalendar, keyof BcViewCalendarAttributes> & { [K in keyof BcViewCalendar & keyof BcViewCalendarAttributes]?: BcViewCalendar[K] } & { [K in keyof BcViewCalendar & keyof BcViewCalendarAttributes as `attr:${K}`]?: BcViewCalendarAttributes[K] } & { [K in keyof BcViewCalendar & keyof BcViewCalendarAttributes as `prop:${K}`]?: BcViewCalendar[K] };
         "bc-view-editor": Omit<BcViewEditor, keyof BcViewEditorAttributes> & { [K in keyof BcViewEditor & keyof BcViewEditorAttributes]?: BcViewEditor[K] } & { [K in keyof BcViewEditor & keyof BcViewEditorAttributes as `attr:${K}`]?: BcViewEditorAttributes[K] } & { [K in keyof BcViewEditor & keyof BcViewEditorAttributes as `prop:${K}`]?: BcViewEditor[K] };
@@ -16162,16 +16426,6 @@ declare namespace LocalJSX {
         "bc-viewer-tiktok": Omit<BcViewerTiktok, keyof BcViewerTiktokAttributes> & { [K in keyof BcViewerTiktok & keyof BcViewerTiktokAttributes]?: BcViewerTiktok[K] } & { [K in keyof BcViewerTiktok & keyof BcViewerTiktokAttributes as `attr:${K}`]?: BcViewerTiktokAttributes[K] } & { [K in keyof BcViewerTiktok & keyof BcViewerTiktokAttributes as `prop:${K}`]?: BcViewerTiktok[K] };
         "bc-viewer-video": Omit<BcViewerVideo, keyof BcViewerVideoAttributes> & { [K in keyof BcViewerVideo & keyof BcViewerVideoAttributes]?: BcViewerVideo[K] } & { [K in keyof BcViewerVideo & keyof BcViewerVideoAttributes as `attr:${K}`]?: BcViewerVideoAttributes[K] } & { [K in keyof BcViewerVideo & keyof BcViewerVideoAttributes as `prop:${K}`]?: BcViewerVideo[K] };
         "bc-viewer-youtube": Omit<BcViewerYoutube, keyof BcViewerYoutubeAttributes> & { [K in keyof BcViewerYoutube & keyof BcViewerYoutubeAttributes]?: BcViewerYoutube[K] } & { [K in keyof BcViewerYoutube & keyof BcViewerYoutubeAttributes as `attr:${K}`]?: BcViewerYoutubeAttributes[K] } & { [K in keyof BcViewerYoutube & keyof BcViewerYoutubeAttributes as `prop:${K}`]?: BcViewerYoutube[K] };
-        "bc-widget-badge": Omit<BcWidgetBadge, keyof BcWidgetBadgeAttributes> & { [K in keyof BcWidgetBadge & keyof BcWidgetBadgeAttributes]?: BcWidgetBadge[K] } & { [K in keyof BcWidgetBadge & keyof BcWidgetBadgeAttributes as `attr:${K}`]?: BcWidgetBadgeAttributes[K] } & { [K in keyof BcWidgetBadge & keyof BcWidgetBadgeAttributes as `prop:${K}`]?: BcWidgetBadge[K] };
-        "bc-widget-copy": Omit<BcWidgetCopy, keyof BcWidgetCopyAttributes> & { [K in keyof BcWidgetCopy & keyof BcWidgetCopyAttributes]?: BcWidgetCopy[K] } & { [K in keyof BcWidgetCopy & keyof BcWidgetCopyAttributes as `attr:${K}`]?: BcWidgetCopyAttributes[K] } & { [K in keyof BcWidgetCopy & keyof BcWidgetCopyAttributes as `prop:${K}`]?: BcWidgetCopy[K] };
-        "bc-widget-domain": Omit<BcWidgetDomain, keyof BcWidgetDomainAttributes> & { [K in keyof BcWidgetDomain & keyof BcWidgetDomainAttributes]?: BcWidgetDomain[K] } & { [K in keyof BcWidgetDomain & keyof BcWidgetDomainAttributes as `attr:${K}`]?: BcWidgetDomainAttributes[K] } & { [K in keyof BcWidgetDomain & keyof BcWidgetDomainAttributes as `prop:${K}`]?: BcWidgetDomain[K] };
-        "bc-widget-email": Omit<BcWidgetEmail, keyof BcWidgetEmailAttributes> & { [K in keyof BcWidgetEmail & keyof BcWidgetEmailAttributes]?: BcWidgetEmail[K] } & { [K in keyof BcWidgetEmail & keyof BcWidgetEmailAttributes as `attr:${K}`]?: BcWidgetEmailAttributes[K] } & { [K in keyof BcWidgetEmail & keyof BcWidgetEmailAttributes as `prop:${K}`]?: BcWidgetEmail[K] };
-        "bc-widget-handle": BcWidgetHandle;
-        "bc-widget-phone": Omit<BcWidgetPhone, keyof BcWidgetPhoneAttributes> & { [K in keyof BcWidgetPhone & keyof BcWidgetPhoneAttributes]?: BcWidgetPhone[K] } & { [K in keyof BcWidgetPhone & keyof BcWidgetPhoneAttributes as `attr:${K}`]?: BcWidgetPhoneAttributes[K] } & { [K in keyof BcWidgetPhone & keyof BcWidgetPhoneAttributes as `prop:${K}`]?: BcWidgetPhone[K] };
-        "bc-widget-priority": Omit<BcWidgetPriority, keyof BcWidgetPriorityAttributes> & { [K in keyof BcWidgetPriority & keyof BcWidgetPriorityAttributes]?: BcWidgetPriority[K] } & { [K in keyof BcWidgetPriority & keyof BcWidgetPriorityAttributes as `attr:${K}`]?: BcWidgetPriorityAttributes[K] } & { [K in keyof BcWidgetPriority & keyof BcWidgetPriorityAttributes as `prop:${K}`]?: BcWidgetPriority[K] };
-        "bc-widget-progress": Omit<BcWidgetProgress, keyof BcWidgetProgressAttributes> & { [K in keyof BcWidgetProgress & keyof BcWidgetProgressAttributes]?: BcWidgetProgress[K] } & { [K in keyof BcWidgetProgress & keyof BcWidgetProgressAttributes as `attr:${K}`]?: BcWidgetProgressAttributes[K] } & { [K in keyof BcWidgetProgress & keyof BcWidgetProgressAttributes as `prop:${K}`]?: BcWidgetProgress[K] };
-        "bc-widget-statusbar": Omit<BcWidgetStatusbar, keyof BcWidgetStatusbarAttributes> & { [K in keyof BcWidgetStatusbar & keyof BcWidgetStatusbarAttributes]?: BcWidgetStatusbar[K] } & { [K in keyof BcWidgetStatusbar & keyof BcWidgetStatusbarAttributes as `attr:${K}`]?: BcWidgetStatusbarAttributes[K] } & { [K in keyof BcWidgetStatusbar & keyof BcWidgetStatusbarAttributes as `prop:${K}`]?: BcWidgetStatusbar[K] };
-        "bc-widget-url": Omit<BcWidgetUrl, keyof BcWidgetUrlAttributes> & { [K in keyof BcWidgetUrl & keyof BcWidgetUrlAttributes]?: BcWidgetUrl[K] } & { [K in keyof BcWidgetUrl & keyof BcWidgetUrlAttributes as `attr:${K}`]?: BcWidgetUrlAttributes[K] } & { [K in keyof BcWidgetUrl & keyof BcWidgetUrlAttributes as `prop:${K}`]?: BcWidgetUrl[K] };
     }
 }
 export { LocalJSX as JSX };
@@ -16179,6 +16433,7 @@ declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
             "bc-activity": LocalJSX.IntrinsicElements["bc-activity"] & JSXBase.HTMLAttributes<HTMLBcActivityElement>;
+            "bc-badge": LocalJSX.IntrinsicElements["bc-badge"] & JSXBase.HTMLAttributes<HTMLBcBadgeElement>;
             "bc-button-box": LocalJSX.IntrinsicElements["bc-button-box"] & JSXBase.HTMLAttributes<HTMLBcButtonBoxElement>;
             "bc-chart-area": LocalJSX.IntrinsicElements["bc-chart-area"] & JSXBase.HTMLAttributes<HTMLBcChartAreaElement>;
             "bc-chart-bar": LocalJSX.IntrinsicElements["bc-chart-bar"] & JSXBase.HTMLAttributes<HTMLBcChartBarElement>;
@@ -16209,11 +16464,16 @@ declare module "@stencil/core" {
             "bc-chatter": LocalJSX.IntrinsicElements["bc-chatter"] & JSXBase.HTMLAttributes<HTMLBcChatterElement>;
             "bc-child-table": LocalJSX.IntrinsicElements["bc-child-table"] & JSXBase.HTMLAttributes<HTMLBcChildTableElement>;
             "bc-column": LocalJSX.IntrinsicElements["bc-column"] & JSXBase.HTMLAttributes<HTMLBcColumnElement>;
+            "bc-copy": LocalJSX.IntrinsicElements["bc-copy"] & JSXBase.HTMLAttributes<HTMLBcCopyElement>;
             "bc-datatable": LocalJSX.IntrinsicElements["bc-datatable"] & JSXBase.HTMLAttributes<HTMLBcDatatableElement>;
+            "bc-dialog-alert": LocalJSX.IntrinsicElements["bc-dialog-alert"] & JSXBase.HTMLAttributes<HTMLBcDialogAlertElement>;
             "bc-dialog-confirm": LocalJSX.IntrinsicElements["bc-dialog-confirm"] & JSXBase.HTMLAttributes<HTMLBcDialogConfirmElement>;
             "bc-dialog-modal": LocalJSX.IntrinsicElements["bc-dialog-modal"] & JSXBase.HTMLAttributes<HTMLBcDialogModalElement>;
+            "bc-dialog-prompt": LocalJSX.IntrinsicElements["bc-dialog-prompt"] & JSXBase.HTMLAttributes<HTMLBcDialogPromptElement>;
             "bc-dialog-quickentry": LocalJSX.IntrinsicElements["bc-dialog-quickentry"] & JSXBase.HTMLAttributes<HTMLBcDialogQuickentryElement>;
             "bc-dialog-wizard": LocalJSX.IntrinsicElements["bc-dialog-wizard"] & JSXBase.HTMLAttributes<HTMLBcDialogWizardElement>;
+            "bc-domain": LocalJSX.IntrinsicElements["bc-domain"] & JSXBase.HTMLAttributes<HTMLBcDomainElement>;
+            "bc-email": LocalJSX.IntrinsicElements["bc-email"] & JSXBase.HTMLAttributes<HTMLBcEmailElement>;
             "bc-export": LocalJSX.IntrinsicElements["bc-export"] & JSXBase.HTMLAttributes<HTMLBcExportElement>;
             "bc-favorites": LocalJSX.IntrinsicElements["bc-favorites"] & JSXBase.HTMLAttributes<HTMLBcFavoritesElement>;
             "bc-field-barcode": LocalJSX.IntrinsicElements["bc-field-barcode"] & JSXBase.HTMLAttributes<HTMLBcFieldBarcodeElement>;
@@ -16254,22 +16514,28 @@ declare module "@stencil/core" {
             "bc-filter-bar": LocalJSX.IntrinsicElements["bc-filter-bar"] & JSXBase.HTMLAttributes<HTMLBcFilterBarElement>;
             "bc-filter-builder": LocalJSX.IntrinsicElements["bc-filter-builder"] & JSXBase.HTMLAttributes<HTMLBcFilterBuilderElement>;
             "bc-filter-panel": LocalJSX.IntrinsicElements["bc-filter-panel"] & JSXBase.HTMLAttributes<HTMLBcFilterPanelElement>;
+            "bc-handle": LocalJSX.IntrinsicElements["bc-handle"] & JSXBase.HTMLAttributes<HTMLBcHandleElement>;
             "bc-header": LocalJSX.IntrinsicElements["bc-header"] & JSXBase.HTMLAttributes<HTMLBcHeaderElement>;
             "bc-html-block": LocalJSX.IntrinsicElements["bc-html-block"] & JSXBase.HTMLAttributes<HTMLBcHtmlBlockElement>;
             "bc-lookup-modal": LocalJSX.IntrinsicElements["bc-lookup-modal"] & JSXBase.HTMLAttributes<HTMLBcLookupModalElement>;
+            "bc-phone": LocalJSX.IntrinsicElements["bc-phone"] & JSXBase.HTMLAttributes<HTMLBcPhoneElement>;
             "bc-placeholder": LocalJSX.IntrinsicElements["bc-placeholder"] & JSXBase.HTMLAttributes<HTMLBcPlaceholderElement>;
             "bc-print": LocalJSX.IntrinsicElements["bc-print"] & JSXBase.HTMLAttributes<HTMLBcPrintElement>;
+            "bc-priority": LocalJSX.IntrinsicElements["bc-priority"] & JSXBase.HTMLAttributes<HTMLBcPriorityElement>;
+            "bc-progress": LocalJSX.IntrinsicElements["bc-progress"] & JSXBase.HTMLAttributes<HTMLBcProgressElement>;
             "bc-report-link": LocalJSX.IntrinsicElements["bc-report-link"] & JSXBase.HTMLAttributes<HTMLBcReportLinkElement>;
             "bc-row": LocalJSX.IntrinsicElements["bc-row"] & JSXBase.HTMLAttributes<HTMLBcRowElement>;
             "bc-search": LocalJSX.IntrinsicElements["bc-search"] & JSXBase.HTMLAttributes<HTMLBcSearchElement>;
             "bc-section": LocalJSX.IntrinsicElements["bc-section"] & JSXBase.HTMLAttributes<HTMLBcSectionElement>;
             "bc-separator": LocalJSX.IntrinsicElements["bc-separator"] & JSXBase.HTMLAttributes<HTMLBcSeparatorElement>;
             "bc-sheet": LocalJSX.IntrinsicElements["bc-sheet"] & JSXBase.HTMLAttributes<HTMLBcSheetElement>;
+            "bc-statusbar": LocalJSX.IntrinsicElements["bc-statusbar"] & JSXBase.HTMLAttributes<HTMLBcStatusbarElement>;
             "bc-sync-status": LocalJSX.IntrinsicElements["bc-sync-status"] & JSXBase.HTMLAttributes<HTMLBcSyncStatusElement>;
             "bc-tab": LocalJSX.IntrinsicElements["bc-tab"] & JSXBase.HTMLAttributes<HTMLBcTabElement>;
             "bc-tabs": LocalJSX.IntrinsicElements["bc-tabs"] & JSXBase.HTMLAttributes<HTMLBcTabsElement>;
             "bc-timeline": LocalJSX.IntrinsicElements["bc-timeline"] & JSXBase.HTMLAttributes<HTMLBcTimelineElement>;
             "bc-toast": LocalJSX.IntrinsicElements["bc-toast"] & JSXBase.HTMLAttributes<HTMLBcToastElement>;
+            "bc-url": LocalJSX.IntrinsicElements["bc-url"] & JSXBase.HTMLAttributes<HTMLBcUrlElement>;
             "bc-view-activity": LocalJSX.IntrinsicElements["bc-view-activity"] & JSXBase.HTMLAttributes<HTMLBcViewActivityElement>;
             "bc-view-calendar": LocalJSX.IntrinsicElements["bc-view-calendar"] & JSXBase.HTMLAttributes<HTMLBcViewCalendarElement>;
             "bc-view-editor": LocalJSX.IntrinsicElements["bc-view-editor"] & JSXBase.HTMLAttributes<HTMLBcViewEditorElement>;
@@ -16288,16 +16554,6 @@ declare module "@stencil/core" {
             "bc-viewer-tiktok": LocalJSX.IntrinsicElements["bc-viewer-tiktok"] & JSXBase.HTMLAttributes<HTMLBcViewerTiktokElement>;
             "bc-viewer-video": LocalJSX.IntrinsicElements["bc-viewer-video"] & JSXBase.HTMLAttributes<HTMLBcViewerVideoElement>;
             "bc-viewer-youtube": LocalJSX.IntrinsicElements["bc-viewer-youtube"] & JSXBase.HTMLAttributes<HTMLBcViewerYoutubeElement>;
-            "bc-widget-badge": LocalJSX.IntrinsicElements["bc-widget-badge"] & JSXBase.HTMLAttributes<HTMLBcWidgetBadgeElement>;
-            "bc-widget-copy": LocalJSX.IntrinsicElements["bc-widget-copy"] & JSXBase.HTMLAttributes<HTMLBcWidgetCopyElement>;
-            "bc-widget-domain": LocalJSX.IntrinsicElements["bc-widget-domain"] & JSXBase.HTMLAttributes<HTMLBcWidgetDomainElement>;
-            "bc-widget-email": LocalJSX.IntrinsicElements["bc-widget-email"] & JSXBase.HTMLAttributes<HTMLBcWidgetEmailElement>;
-            "bc-widget-handle": LocalJSX.IntrinsicElements["bc-widget-handle"] & JSXBase.HTMLAttributes<HTMLBcWidgetHandleElement>;
-            "bc-widget-phone": LocalJSX.IntrinsicElements["bc-widget-phone"] & JSXBase.HTMLAttributes<HTMLBcWidgetPhoneElement>;
-            "bc-widget-priority": LocalJSX.IntrinsicElements["bc-widget-priority"] & JSXBase.HTMLAttributes<HTMLBcWidgetPriorityElement>;
-            "bc-widget-progress": LocalJSX.IntrinsicElements["bc-widget-progress"] & JSXBase.HTMLAttributes<HTMLBcWidgetProgressElement>;
-            "bc-widget-statusbar": LocalJSX.IntrinsicElements["bc-widget-statusbar"] & JSXBase.HTMLAttributes<HTMLBcWidgetStatusbarElement>;
-            "bc-widget-url": LocalJSX.IntrinsicElements["bc-widget-url"] & JSXBase.HTMLAttributes<HTMLBcWidgetUrlElement>;
         }
     }
 }

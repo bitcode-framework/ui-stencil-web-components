@@ -1,0 +1,1 @@
+function n(n,r){return n.type===r}export{n as i}

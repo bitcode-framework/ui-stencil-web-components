@@ -19,8 +19,8 @@ export class BcSyncStatus {
   @State() conflictCount: number = 0;
   @State() syncing: boolean = false;
 
-  @Event() bcSyncTriggered: EventEmitter<void>;
-  @Event() bcSyncCompleted: EventEmitter<{ synced: number; errors: number; applied: number; conflicts: number }>;
+  @Event() bcSyncTriggered!: EventEmitter<void>;
+  @Event() bcSyncCompleted!: EventEmitter<{ synced: number; errors: number; applied: number; conflicts: number }>;
 
   private _pollTimer: ReturnType<typeof setInterval> | null = null;
 

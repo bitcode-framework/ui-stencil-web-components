@@ -132,7 +132,7 @@ export class BcFieldMorph {
       <div class={{ ...fieldClasses, 'bc-morph-wrap': true }}>
         {this.label && <label class="bc-field-label">{this.label}{this.required && <span class="required">*</span>}{this.tooltip && <span class="bc-field-tooltip" title={this.tooltip}>?</span>}</label>}
         <div class="bc-morph-selectors">
-          <select class="bc-field-input bc-morph-type-select" disabled={this.disabled || this.readonly} value={this.morphType} onChange={(e) => this.handleTypeChange(e)}>
+          <select class="bc-field-input bc-morph-type-select" disabled={this.disabled || this.readonly} onChange={(e) => this.handleTypeChange(e)}>
             <option value="">Select type...</option>
             {modelList.map(m => <option value={m} selected={this.morphType === m}>{m}</option>)}
           </select>

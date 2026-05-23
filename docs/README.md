@@ -108,6 +108,10 @@ bc-row, bc-column, bc-section, bc-tabs, bc-tab, bc-sheet, bc-header, bc-separato
 
 bc-dialog-modal, bc-dialog-confirm, bc-dialog-quickentry, bc-dialog-wizard, bc-toast
 
-### Widgets (18)
+### Widgets (12)
 
-bc-widget-badge, bc-widget-copy, bc-widget-phone, bc-widget-email, bc-widget-url, bc-widget-progress, bc-widget-statusbar, bc-widget-priority, bc-widget-handle, bc-widget-domain, bc-viewer-pdf, bc-viewer-image, bc-viewer-document, bc-viewer-youtube, bc-viewer-instagram, bc-viewer-tiktok, bc-viewer-video, bc-viewer-audio
+bc-badge, bc-copy, bc-phone, bc-email, bc-url, bc-progress, bc-statusbar, bc-priority, bc-handle, bc-domain, bc-placeholder, bc-sync-status
+
+### Media (8)
+
+bc-viewer-pdf, bc-viewer-image, bc-viewer-document, bc-viewer-youtube, bc-viewer-instagram, bc-viewer-tiktok, bc-viewer-video, bc-viewer-audio
