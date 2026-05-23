@@ -342,16 +342,19 @@ Stencil.js Web Component library (`@bitcode/components`).
 ```
 packages/components/
 ├── package.json                                # @bitcode/components v0.1.0
-├── stencil.config.ts                           # Namespace: bc-components, output: dist + www
+├── stencil.config.ts                           # Namespace: bc-components, output: dist + dist-custom-elements + www
 ├── tsconfig.json
+│
+├── scripts/
+│   └── generate-exports.mjs                    # Post-build: generates group barrels in dist/, full.js, theme copy, package.json exports (151 paths)
 │
 └── src/
     ├── components.d.ts                         # Auto-generated type declarations
     ├── declarations.d.ts                       # Module declarations
     │
     ├── core/                                   # Shared infrastructure
-    │   ├── types.ts                            # FieldType (30+ types), WidgetType, event interfaces, FetchParams/FetchResult, ValidationResult, BcConfig
-    │   ├── bc-setup.ts                         # BcSetup singleton — global config (auth, headers, theme, validators, reactivity rules)
+    │   ├── types.ts                            # FieldType (30+ types), WidgetType, event interfaces, FetchParams/FetchResult, ValidationResult, BcConfig, BcTheme, BcRtl, ThemeChangeCallback
+    │   ├── bc-setup.ts                         # BcSetup singleton — global config (auth, headers, theme, RTL, validators, reactivity rules). setTheme/getTheme/onThemeChange/setRtl/isRtl
     │   ├── bc-native.ts                        # BcNative — bridge abstraction for native capabilities (camera, GPS, SQLite, barcode, biometrics). Detects Tauri vs browser.
     │   ├── bc-native.spec.ts                   # BcNative tests (10 tests — environment detection, browser fallbacks)
     │   ├── offline-store.ts                    # OfflineStore — CRUD routing layer. SQLite for offline models, fetch() for online. Outbox recording.
@@ -359,15 +362,21 @@ packages/components/
     │   ├── data-fetcher.ts                     # 4-level data fetching (local, URL, event intercept, custom fetcher). Standalone — uses native fetch()
     │   ├── validation-engine.ts                # 3-level validation pipeline (built-in, custom JS, server-side). Uses validators.ts
     │   ├── field-utils.ts                      # Shared field utilities (dirty/touched tracking, ARIA attrs, CSS classes, FormProxy, debounce)
+    │   ├── field-base.ts                      # FieldBase<V> helper class (composition pattern for field components)
+    │   ├── dialog-service.ts                  # Programmatic BcDialog service (SweetAlert-style: alert, confirm, prompt)
     │   ├── api-client.ts                       # HTTP client for engine REST APIs (BitCode-specific, optional fallback)
     │   ├── event-bus.ts                        # Cross-component event bus
     │   ├── form-engine.ts                      # Form state management, validation, submission (BitCode-specific)
     │   └── i18n.ts                             # Client-side i18n utilities
     │
+    ├── registry.ts                             # Component registry — 122 components, 11 groups, dependency graph, include/exclude selector
+    ├── full.ts                                 # Re-exports Registry + types. defineAll() generated post-build into dist/full.js
+    │
     ├── global/
-    │   ├── global.css                          # Global styles, CSS custom properties, size tokens, auto dark mode
+    │   ├── global.css                          # CSS custom properties (80+ tokens), reset styles, --bc-direction var, auto dark mode
     │   └── themes/
-    │       └── dark.css                        # Dark theme overrides (applied via data-bc-theme="dark")
+    │       ├── light.css                       # Explicit light theme (data-bc-theme="light")
+    │       └── dark.css                        # Dark theme overrides (data-bc-theme="dark")
     │
     ├── i18n/                                   # Translation files
     │   ├── index.ts                            # i18n initialization (global script)
@@ -389,8 +398,6 @@ packages/components/
     │   └── validators.ts                       # Field validation rules
     │
     └── components/                             # Web Components (each has .tsx + .css)
-        ├── bc-placeholder/                     # Placeholder component
-        │
         ├── fields/                             # 30+ field components
         │   ├── bc-field-string/                # Text input
         │   ├── bc-field-smalltext/             # Small textarea
@@ -480,33 +487,40 @@ packages/components/
         │
         ├── datatable/                          # Data table components
         │   ├── bc-datatable/                   # Full-featured data table
+        │   ├── bc-child-table/                 # Inline child table (one2many)
+        │   ├── bc-filter-bar/                  # Filter bar
+        │   ├── bc-filter-panel/                # Filter panel
         │   ├── bc-filter-builder/              # Advanced filter builder
         │   └── bc-lookup-modal/                # Record lookup modal
         │
         ├── dialogs/                            # Dialog components
         │   ├── bc-dialog-modal/                # Generic modal
         │   ├── bc-dialog-confirm/              # Confirmation dialog
+        │   ├── bc-dialog-alert/                # Alert dialog (OK only)
+        │   ├── bc-dialog-prompt/               # Prompt dialog (with input)
         │   ├── bc-dialog-quickentry/           # Quick record entry
         │   ├── bc-dialog-wizard/               # Multi-step wizard
         │   └── bc-toast/                       # Toast notifications
         │
         ├── search/                             # Search & filter components
         │   ├── bc-search/                      # Search bar
-        │   ├── bc-filter-bar/                  # Filter bar
-        │   ├── bc-filter-panel/                # Filter panel
         │   └── bc-favorites/                   # Saved filters
         │
         ├── widgets/                            # Widget components
-        │   ├── bc-widget-badge/                # Status badge
-        │   ├── bc-widget-copy/                 # Copy to clipboard
-        │   ├── bc-widget-phone/                # Phone link
-        │   ├── bc-widget-email/                # Email link
-        │   ├── bc-widget-url/                  # URL link
-        │   ├── bc-widget-progress/             # Progress bar
-        │   ├── bc-widget-statusbar/            # Status bar (workflow states)
-        │   ├── bc-widget-priority/             # Priority indicator
-        │   ├── bc-widget-handle/               # Drag handle
-        │   ├── bc-widget-domain/               # Domain filter widget
+        │   ├── bc-badge/                       # Status badge
+        │   ├── bc-copy/                        # Copy to clipboard
+        │   ├── bc-phone/                       # Phone link
+        │   ├── bc-email/                       # Email link
+        │   ├── bc-url/                         # URL link
+        │   ├── bc-progress/                    # Progress bar
+        │   ├── bc-statusbar/                   # Status bar (workflow states)
+        │   ├── bc-priority/                    # Priority indicator
+        │   ├── bc-handle/                      # Drag handle
+        │   ├── bc-domain/                      # Domain filter widget
+        │   ├── bc-placeholder/                 # Placeholder component
+        │   └── bc-sync-status/                 # Sync status indicator
+        │
+        ├── media/                              # Media viewer/player components
         │   ├── bc-viewer-pdf/                  # PDF viewer (iframe + object fallback)
         │   ├── bc-viewer-image/                # Image viewer (zoom, lightbox)
         │   ├── bc-viewer-document/             # Office doc viewer (Microsoft/Google iframe)
@@ -514,12 +528,9 @@ packages/components/
         │   ├── bc-viewer-instagram/            # Instagram post embed (oEmbed)
         │   ├── bc-viewer-tiktok/               # TikTok video embed (oEmbed)
         │   ├── bc-viewer-video/                # HTML5 video player (mp4, webm, ogg)
-        │   └── bc-viewer-audio/                # HTML5 audio player (mp3, m4a, aac, ogg, webm)
-        │
-        ├── table/                              # Table components
-        │   └── bc-child-table/                 # Inline child table (one2many)
-        │
-        ├── print/                              # Print & export
+         │   └── bc-viewer-audio/                # HTML5 audio player (mp3, m4a, aac, ogg, webm)
+         │
+         ├── print/                              # Print & export
         │   ├── bc-export/                      # Data export (XLSX)
         │   ├── bc-print/                       # Print view
         │   └── bc-report-link/                 # Report link

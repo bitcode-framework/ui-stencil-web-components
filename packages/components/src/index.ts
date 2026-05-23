@@ -1,9 +1,15 @@
 export { BcSetup } from './core/bc-setup';
 export { validateAllFields, resetAllFields, clearAllErrors, getFormData } from './core/bc-setup';
 
+export { Registry } from './registry';
+export type { ComponentMeta, RegistrySelector, RegistryResult } from './registry';
+
 export type {
   BcConfig,
   BcAuthConfig,
+  BcTheme,
+  BcRtl,
+  ThemeChangeCallback,
   ValidateOn,
   ValidationResult,
   ValidationRule,
