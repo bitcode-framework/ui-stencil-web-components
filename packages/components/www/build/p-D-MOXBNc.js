@@ -1,1 +1,0 @@
-import{a1 as a}from"./p-J26RXq7I.js";function r(r){var o=r.getData(),f={};o.tree.eachNode((function(o){for(var n=o;n&&n.depth>1;)n=n.parentNode;var t=a(r.ecModel,n.name||n.dataIndex+"",f);o.setVisual("decal",t)}))}export{r as e}

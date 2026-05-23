@@ -1,0 +1,1 @@
+import{r as a,h as s}from"./p-C42dVV6Y.js";const c=class{constructor(s){a(this,s),this.label=""}render(){return s("div",{key:"005c664d64ac26621b26ef5453a65b490d884bac",class:"bc-tab",role:"tabpanel"},s("slot",{key:"104937a96a5e62996aebf1799268586500ca93d4"}))}};c.style=":host{display:block}.bc-tab{padding:var(--bc-spacing-sm) 0}";export{c as bc_tab}
