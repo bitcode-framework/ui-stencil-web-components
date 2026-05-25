@@ -1,14 +1,14 @@
-# @bitcode/components
+# @bitcode-framework/ui-components
 
 Enterprise-grade Stencil Web Components for business applications. 127 components covering forms, charts, data tables, layout, dialogs, media viewers, kanban board, and widgets. Works in any HTML page, no framework required.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![npm version](https://img.shields.io/npm/v/@bitcode/components.svg)](https://www.npmjs.com/package/@bitcode/components)
+[![npm version](https://img.shields.io/npm/v/@bitcode-framework/ui-components.svg)](https://www.npmjs.com/package/@bitcode-framework/ui-components)
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://bitcode-framework.github.io/ui-stencil-web-components/demo/)
 
 **[Live Demo →](https://bitcode-framework.github.io/ui-stencil-web-components/demo/)** — interactive component gallery with all 127 components.
 
-## What is @bitcode/components?
+## What is @bitcode-framework/ui-components?
 
 127 Web Components built with [Stencil.js](https://stenciljs.com/). They compile to standard Custom Elements, so they run anywhere HTML runs: plain pages, React, Vue, Angular, Svelte, or any framework that renders to the DOM.
 
@@ -42,7 +42,7 @@ All 26 charts are powered by [Apache ECharts](https://echarts.apache.org/). Pass
 <!DOCTYPE html>
 <html>
 <head>
-  <script type="module" src="https://unpkg.com/@bitcode/components/dist/bc-components/bc-components.esm.js"></script>
+  <script type="module" src="https://unpkg.com/@bitcode-framework/ui-components/dist/bc-components/bc-components.esm.js"></script>
 </head>
 <body>
   <bc-field-string name="email" label="Email" required placeholder="you@example.com"></bc-field-string>
@@ -56,11 +56,11 @@ All 26 charts are powered by [Apache ECharts](https://echarts.apache.org/). Pass
 ### NPM
 
 ```bash
-npm install @bitcode/components
+npm install @bitcode-framework/ui-components
 ```
 
 ```javascript
-import { defineCustomElements } from '@bitcode/components/loader';
+import { defineCustomElements } from '@bitcode-framework/ui-components/loader';
 defineCustomElements();
 ```
 
@@ -69,7 +69,7 @@ defineCustomElements();
 Components work with zero config. When you need API integration, auth, or theming, configure once:
 
 ```javascript
-import { BcSetup } from '@bitcode/components';
+import { BcSetup } from '@bitcode-framework/ui-components';
 
 BcSetup.configure({
   baseUrl: '/api',
@@ -253,7 +253,7 @@ Stencil compiles to standard Custom Elements, so integration is straightforward 
 ### React
 
 ```jsx
-import { defineCustomElements } from '@bitcode/components/loader';
+import { defineCustomElements } from '@bitcode-framework/ui-components/loader';
 defineCustomElements();
 
 function ContactForm() {
@@ -275,7 +275,7 @@ function ContactForm() {
 ### Vue
 
 ```javascript
-import { defineCustomElements } from '@bitcode/components/loader';
+import { defineCustomElements } from '@bitcode-framework/ui-components/loader';
 defineCustomElements();
 
 // vite.config.js or vue.config.js
@@ -299,7 +299,7 @@ export default {
 // app.module.ts
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 
-import { defineCustomElements } from '@bitcode/components/loader';
+import { defineCustomElements } from '@bitcode-framework/ui-components/loader';
 defineCustomElements();
 
 @NgModule({

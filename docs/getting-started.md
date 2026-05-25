@@ -5,17 +5,17 @@
 ### CDN (no build step)
 
 ```html
-<script type="module" src="https://unpkg.com/@bitcode/components/dist/bc-components/bc-components.esm.js"></script>
+<script type="module" src="https://unpkg.com/@bitcode-framework/ui-components/dist/bc-components/bc-components.esm.js"></script>
 ```
 
 ### NPM
 
 ```bash
-npm install @bitcode/components
+npm install @bitcode-framework/ui-components
 ```
 
 ```javascript
-import { defineCustomElements } from '@bitcode/components/loader';
+import { defineCustomElements } from '@bitcode-framework/ui-components/loader';
 defineCustomElements();
 ```
 
@@ -60,7 +60,7 @@ BcSetup.configure({ theme: 'system' });
 ### React
 
 ```jsx
-import { defineCustomElements } from '@bitcode/components/loader';
+import { defineCustomElements } from '@bitcode-framework/ui-components/loader';
 defineCustomElements();
 
 function App() {
@@ -71,7 +71,7 @@ function App() {
 ### Vue
 
 ```javascript
-import { defineCustomElements } from '@bitcode/components/loader';
+import { defineCustomElements } from '@bitcode-framework/ui-components/loader';
 defineCustomElements();
 
 // vue.config.js or vite.config.js

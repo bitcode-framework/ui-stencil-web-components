@@ -1,5 +1,5 @@
 {
-  "name": "@bitcode/components",
+  "name": "@bitcode-framework/ui-components",
   "version": "0.1.1",
   "description": "BitCode ERP Web Components built with Stencil",
   "main": "dist/index.cjs.js",
