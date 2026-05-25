@@ -40,7 +40,21 @@ export class BcFieldGeo {
 
   componentWillLoad() { this._fieldState = createFieldState(this.value || this.defaultValue); if (!this.value && this.defaultValue) this.value = this.defaultValue; }
 
+  private static leafletCssLoaded = false;
+
+  private ensureLeafletCSS() {
+    if (BcFieldGeo.leafletCssLoaded) return;
+    if (document.querySelector('link[data-leaflet-css]')) { BcFieldGeo.leafletCssLoaded = true; return; }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    link.setAttribute('data-leaflet-css', 'true');
+    document.head.appendChild(link);
+    BcFieldGeo.leafletCssLoaded = true;
+  }
+
   componentDidLoad() {
+    this.ensureLeafletCSS();
     const container = this.el.querySelector('.bc-map-container') as HTMLElement;
     if (!container) return;
     let lat = -6.2088, lng = 106.8456;

@@ -1,25 +1,25 @@
-@import '../field-base.css';
+﻿@import '../field-base.css';
 
 .bc-field-inline {
   flex-direction: row;
   align-items: center;
-  gap: var(--bc-spacing-sm);
+  gap: var(--bc-spacing-sm, 0.5rem);
 }
 
 .bc-toggle {
   position: relative;
   width: 2.75rem;
   height: 1.5rem;
-  border-radius: var(--bc-radius-full);
+  border-radius: var(--bc-radius-full, 9999px);
   border: none;
-  background: var(--bc-border-color);
+  background: var(--bc-border-color, #e5e7eb);
   cursor: pointer;
-  transition: background var(--bc-transition);
+  transition: background var(--bc-transition, 150ms ease);
   padding: 0;
 }
 
 .bc-toggle.active {
-  background: var(--bc-primary);
+  background: var(--bc-primary, #4f46e5);
 }
 
 .bc-toggle:disabled {
@@ -35,8 +35,8 @@
   height: 1.25rem;
   border-radius: 50%;
   background: white;
-  box-shadow: var(--bc-shadow-sm);
-  transition: transform var(--bc-transition);
+  box-shadow: var(--bc-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+  transition: transform var(--bc-transition, 150ms ease);
 }
 
 .bc-toggle.active .bc-toggle-knob {

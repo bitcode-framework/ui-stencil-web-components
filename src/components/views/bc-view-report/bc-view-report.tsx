@@ -1,17 +1,26 @@
-import { Component, Method, Prop, State, Element, h } from '@stencil/core';
+import { Component, Method, Prop, State, Element, Watch, Event, EventEmitter, h } from '@stencil/core';
 import { getApiClient } from '../../../core/api-client';
+import { fetchData } from '../../../core/data-fetcher';
+import { BcSetup } from '../../../core/bc-setup';
+import { DataFetcher } from '../../../core/types';
 import { i18n } from '../../../core/i18n';
 
 @Component({ tag: 'bc-view-report', styleUrl: 'bc-view-report.css', shadow: false })
 export class BcViewReport {
   @Element() el!: HTMLElement;
   @Prop() model: string = '';
+  @Prop() localData?: string;
   @Prop() viewTitle: string = '';
   @Prop() fields: string = '[]';
   @Prop() config: string = '{}';
+  @Prop() dataSource: string = '';
+  @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
+  dataFetcher?: DataFetcher;
   @State() data: Array<Record<string, unknown>> = [];
   @State() loading: boolean = false;
   @State() visibleFields: string[] = [];
+  @Event() lcError!: EventEmitter<{message: string}>;
 
   private getFields(): string[] { try { return JSON.parse(this.fields); } catch { return []; } }
 
@@ -21,13 +30,43 @@ export class BcViewReport {
 
   async componentDidLoad() {
     this.visibleFields = this.getFields();
-    if (!this.model) return;
+    await this.fetchData();
+  }
+
+  @Watch('model') @Watch('dataSource')
+  onSourceChange() { this.fetchData(); }
+
+  private async fetchData() {
+    if (!this.model && !this.dataSource && !this.dataFetcher) return;
     this.loading = true;
     try {
-      const api = getApiClient();
-      const res = await api.list(this.model, { pageSize: 200 });
-      this.data = res.data;
-    } catch { this.data = []; }
+      if (this.dataFetcher) {
+        const result = await this.dataFetcher({ pageSize: 200 });
+        this.data = result.data as Array<Record<string, unknown>>;
+      } else if (this.dataSource) {
+        const baseUrl = BcSetup.getBaseUrl();
+        let url = this.dataSource;
+        if (url && !url.startsWith('http') && baseUrl) url = baseUrl + url;
+        const headers = { ...BcSetup.getHeaders(), ...(this.fetchHeaders ? JSON.parse(this.fetchHeaders) : {}) };
+        this.el.dispatchEvent(new CustomEvent('lcBeforeFetch', { detail: { url, headers, params: {} }, bubbles: true, cancelable: true }));
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        this.data = json.data || json;
+      } else if (this.model) {
+        try {
+          const result = await fetchData({ element: this.el, model: this.model, localData: this.localData, fetchOptions: this.fetchOptions ? JSON.parse(this.fetchOptions) : undefined, fetchHeaders: this.fetchHeaders, params: { pageSize: 200 } });
+          this.data = result.data as Array<Record<string, unknown>>;
+        } catch {
+          const api = getApiClient();
+          const res = await api.list(this.model, { pageSize: 200 });
+          this.data = res.data;
+        }
+      }
+    } catch (err) {
+      this.data = [];
+      this.lcError.emit({ message: String(err) });
+    }
     this.loading = false;
   }
 
@@ -44,7 +83,9 @@ export class BcViewReport {
   private computeAvg(field: string): number {
     if (this.data.length === 0) return 0;
     return this.computeTotal(field) / this.data.length;
-  }  @Method() async refresh(): Promise<void> { }
+  }
+
+  @Method() async refresh(): Promise<void> { await this.fetchData(); }
 
   render() {
     return (

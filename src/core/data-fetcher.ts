@@ -1,5 +1,6 @@
 import { FetchParams, FetchResult, DataFetcher, OptionsFetcher } from './types';
 import { BcSetup } from './bc-setup';
+import { resolveTemplate } from './template-resolver';
 
 export function resolveUrl(template: string, values: Record<string, unknown>): string {
   return template.replace(/\{(\w+)\}/g, (_match, key) => {
@@ -9,13 +10,22 @@ export function resolveUrl(template: string, values: Record<string, unknown>): s
   });
 }
 
-export function buildHeaders(customHeaders?: string | Record<string, string>): Record<string, string> {
+export function buildHeaders(
+  customHeaders?: string | Record<string, string>,
+  resolveTemplates = true,
+): Record<string, string> {
   const setupHeaders = BcSetup.getHeaders();
   let custom: Record<string, string> = {};
   if (typeof customHeaders === 'string' && customHeaders) {
-    try { custom = JSON.parse(customHeaders); } catch { /* ignore */ }
+    try { custom = JSON.parse(resolveTemplates ? resolveTemplate(customHeaders) : customHeaders); } catch { /* ignore */ }
   } else if (customHeaders && typeof customHeaders === 'object') {
-    custom = customHeaders;
+    if (resolveTemplates) {
+      for (const [k, v] of Object.entries(customHeaders)) {
+        custom[k] = resolveTemplate(v);
+      }
+    } else {
+      custom = { ...customHeaders };
+    }
   }
   return { ...setupHeaders, ...custom };
 }
@@ -71,7 +81,12 @@ function appendPaginationParams(url: string, params?: FetchParams): string {
   return parts.length > 0 ? `${url}${sep}${parts.join('&')}` : url;
 }
 
-async function doFetch(url: string, headers: Record<string, string>, element?: HTMLElement): Promise<FetchResult> {
+async function doFetch(
+  url: string,
+  headers: Record<string, string>,
+  element?: HTMLElement,
+  fetchOptions?: RequestInit,
+): Promise<FetchResult> {
   let resolvedUrl = url;
   let resolvedHeaders = { ...headers };
 
@@ -86,7 +101,12 @@ async function doFetch(url: string, headers: Record<string, string>, element?: H
     resolvedHeaders = beforeEvent.detail.headers;
   }
 
-  const res = await fetch(resolvedUrl, { headers: resolvedHeaders });
+  const opts: RequestInit = {
+    ...fetchOptions,
+    headers: { ...resolvedHeaders, ...(fetchOptions?.headers as Record<string, string> || {}) },
+  };
+
+  const res = await fetch(resolvedUrl, opts);
   if (!res.ok) {
     throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
   }
@@ -107,35 +127,41 @@ async function doFetch(url: string, headers: Record<string, string>, element?: H
 }
 
 export async function fetchData(opts: {
+  localData?: string | unknown[];
   fetcher?: DataFetcher;
   element?: HTMLElement;
   dataSource?: string;
-  localData?: string | unknown[];
   model?: string;
   fetchHeaders?: string | Record<string, string>;
+  fetchOptions?: RequestInit;
   params?: FetchParams;
 }): Promise<FetchResult> {
-  if (opts.fetcher) {
-    return opts.fetcher(opts.params || {});
-  }
-
-  if (opts.dataSource) {
-    const baseUrl = BcSetup.getBaseUrl();
-    const dependValues = opts.params?.dependValues || {};
-    let url = resolveUrl(opts.dataSource, dependValues);
-    if (url && !url.startsWith('http') && baseUrl) {
-      url = baseUrl + url;
-    }
-    url = appendPaginationParams(url, opts.params);
-    const headers = buildHeaders(opts.fetchHeaders);
-    return doFetch(url, headers, opts.element);
-  }
-
+  // Layer 1: localData — cheapest, 0 network (through pipeline for normalization)
   if (opts.localData) {
     const data = typeof opts.localData === 'string' ? JSON.parse(opts.localData) : opts.localData;
     return { data: Array.isArray(data) ? data : [], total: Array.isArray(data) ? data.length : 0 };
   }
 
+  // Layer 2: fetcher — custom function, full consumer control
+  if (opts.fetcher) {
+    return opts.fetcher(opts.params || {});
+  }
+
+  // Layer 3: dataSource — URL fetch with BcSetup + template resolution + fetchOptions
+  if (opts.dataSource) {
+    const resolvedSource = resolveTemplate(opts.dataSource);
+    const baseUrl = BcSetup.getBaseUrl();
+    const dependValues = opts.params?.dependValues || {};
+    let url = resolveUrl(resolvedSource, dependValues);
+    if (url && !url.startsWith('http') && baseUrl) {
+      url = baseUrl + url;
+    }
+    url = appendPaginationParams(url, opts.params);
+    const headers = buildHeaders(opts.fetchHeaders);
+    return doFetch(url, headers, opts.element, opts.fetchOptions);
+  }
+
+  // Layer 4: model — BitCode engine integration (offline-aware)
   if (opts.model) {
     if (BcSetup.isModelOffline(opts.model)) {
       try {
@@ -174,6 +200,7 @@ export async function fetchOptions(opts: {
   model?: string;
   query?: string;
   fetchHeaders?: string | Record<string, string>;
+  fetchOptions?: RequestInit;
   params?: FetchParams;
 }): Promise<unknown[]> {
   if (opts.fetcher) {
@@ -181,9 +208,10 @@ export async function fetchOptions(opts: {
   }
 
   if (opts.dataSource) {
+    const resolvedSource = resolveTemplate(opts.dataSource);
     const baseUrl = BcSetup.getBaseUrl();
     const dependValues = opts.params?.dependValues || {};
-    let url = resolveUrl(opts.dataSource, dependValues);
+    let url = resolveUrl(resolvedSource, dependValues);
     if (url && !url.startsWith('http') && baseUrl) {
       url = baseUrl + url;
     }
@@ -192,7 +220,7 @@ export async function fetchOptions(opts: {
       url = `${url}${sep}q=${encodeURIComponent(opts.query)}`;
     }
     const headers = buildHeaders(opts.fetchHeaders);
-    const result = await doFetch(url, headers, opts.element);
+    const result = await doFetch(url, headers, opts.element, opts.fetchOptions);
     return result.data;
   }
 

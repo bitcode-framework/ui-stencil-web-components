@@ -1,7 +1,116 @@
-.bc-field { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:var(--bc-spacing-sm); font-family:var(--bc-font-family,system-ui,sans-serif); }
-.bc-field-label { font-size:var(--bc-font-size-sm); font-weight:500; color:var(--bc-text); }
-.bc-field-label .required { color:var(--bc-danger); }
-.cm-container { border:1px solid var(--bc-border-color); border-radius:var(--bc-radius-md); overflow:hidden; min-height:10rem; }
-.cm-container:focus-within { border-color:var(--bc-border-color-focus); box-shadow:var(--bc-input-focus-ring); }
-.cm-container .cm-editor { height:100%; min-height:10rem; }
+.bc-field { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:var(--bc-spacing-sm, 0.5rem); font-family:var(--bc-font-family,system-ui,sans-serif); }
+.bc-field-label { font-size:var(--bc-font-size-sm, 0.875rem); font-weight:500; color:var(--bc-text, #111827); }
+.bc-field-label .required { color:var(--bc-danger, #ef4444); }
+
+.bc-code-wrap {
+  --bc-editor-bg: #fcfcfd;
+  --bc-editor-fg: #1f2937;
+  --bc-editor-gutter-bg: #f5f7fb;
+  --bc-editor-gutter-fg: #94a3b8;
+  --bc-editor-gutter-border: #e2e8f0;
+  --bc-editor-active-line: rgba(59, 130, 246, 0.07);
+  --bc-editor-active-gutter: rgba(59, 130, 246, 0.12);
+  --bc-editor-active-gutter-fg: #334155;
+  --bc-editor-selection: rgba(59, 130, 246, 0.18);
+  --bc-editor-caret: #2563eb;
+  --bc-editor-keyword: #7c3aed;
+  --bc-editor-string: #b45309;
+  --bc-editor-number: #c2410c;
+  --bc-editor-comment: #94a3b8;
+  --bc-editor-property: #2563eb;
+  --bc-editor-type: #0f766e;
+  --bc-editor-function: #1d4ed8;
+  --bc-editor-punctuation: #475569;
+  --bc-editor-regex: #15803d;
+  --bc-editor-error: #dc2626;
+  --bc-editor-panel-bg: #f8fafc;
+  --bc-editor-panel-fg: #1e293b;
+  --bc-editor-tooltip-bg: #ffffff;
+  --bc-editor-tooltip-fg: #0f172a;
+  --bc-editor-tooltip-border: #dbe3f0;
+  --bc-editor-fold-bg: rgba(148, 163, 184, 0.12);
+  position: relative;
+}
+
+.cm-container {
+  border: 1px solid color-mix(in srgb, var(--bc-border-color, #e5e7eb) 88%, #94a3b8);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 10rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0)) 0 0 / 100% 42px no-repeat,
+    var(--bc-editor-bg);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    0 10px 30px rgba(15, 23, 42, 0.06);
+  transition: border-color var(--bc-transition, 150ms ease), box-shadow var(--bc-transition, 150ms ease), transform var(--bc-transition, 150ms ease);
+}
+
+.cm-container:focus-within {
+  border-color: color-mix(in srgb, var(--bc-primary, #4f46e5) 70%, white);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    0 0 0 3px rgba(59, 130, 246, 0.12),
+    0 18px 45px rgba(37, 99, 235, 0.14);
+  transform: translateY(-1px);
+}
+
+.cm-container .cm-editor {
+  height: 100%;
+  min-height: 10rem;
+  background: transparent;
+}
+
 .cm-container .cm-scroller { overflow:auto; }
+
+.cm-container .cm-editor .cm-placeholder {
+  color: var(--bc-text-placeholder, #9ca3af);
+  font-style: italic;
+}
+
+[data-bc-theme="dark"] .bc-code-wrap {
+  --bc-editor-bg: #0b1220;
+  --bc-editor-fg: #d6deeb;
+  --bc-editor-gutter-bg: #0f1a2d;
+  --bc-editor-gutter-fg: #63718a;
+  --bc-editor-gutter-border: #1f2f49;
+  --bc-editor-active-line: rgba(99, 179, 237, 0.08);
+  --bc-editor-active-gutter: rgba(99, 179, 237, 0.14);
+  --bc-editor-active-gutter-fg: #cdd9e5;
+  --bc-editor-selection: rgba(99, 179, 237, 0.22);
+  --bc-editor-caret: #7dd3fc;
+  --bc-editor-keyword: #c792ea;
+  --bc-editor-string: #ecc48d;
+  --bc-editor-number: #f78c6c;
+  --bc-editor-comment: #63718a;
+  --bc-editor-property: #82aaff;
+  --bc-editor-type: #4ec9b0;
+  --bc-editor-function: #82aaff;
+  --bc-editor-punctuation: #89ddff;
+  --bc-editor-regex: #addb67;
+  --bc-editor-error: #ff5370;
+  --bc-editor-panel-bg: #111b2e;
+  --bc-editor-panel-fg: #d6deeb;
+  --bc-editor-tooltip-bg: #111b2e;
+  --bc-editor-tooltip-fg: #d6deeb;
+  --bc-editor-tooltip-border: #22314b;
+  --bc-editor-fold-bg: rgba(129, 140, 248, 0.14);
+}
+
+[data-bc-theme="dark"] .cm-container {
+  border-color: #22314b;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)) 0 0 / 100% 42px no-repeat,
+    var(--bc-editor-bg);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.03),
+    0 18px 38px rgba(2, 6, 23, 0.35);
+}
+
+[data-bc-theme="dark"] .cm-container:focus-within {
+  border-color: #3b82f6;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.03),
+    0 0 0 3px rgba(59, 130, 246, 0.16),
+    0 24px 50px rgba(2, 6, 23, 0.42);
+}

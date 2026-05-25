@@ -1,0 +1,41 @@
+<!-- FIELDS — NUMBER -->
+  <div class="demo-section" id="integer">
+    <h2><code>bc-field-integer</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-integer name="d-int" label="Quantity" min="0" max="100" step="1" hint="0-100" clearable></bc-field-integer>
+        <bc-field-integer name="d-int-req" label="Age" required min="0" max="150" suffix-text="years"></bc-field-integer>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="float">
+    <h2><code>bc-field-float</code></h2>
+    <div class="demo-box">
+      <bc-field-float name="d-float" label="Weight" placeholder="0.00" precision="2" suffix-text="kg" clearable></bc-field-float>
+    </div>
+  </div>
+
+  <div class="demo-section" id="decimal">
+    <h2><code>bc-field-decimal</code></h2>
+    <div class="demo-box">
+      <bc-field-decimal name="d-dec" label="Price" placeholder="0.00" precision="2" prefix-text="$" clearable></bc-field-decimal>
+    </div>
+  </div>
+
+  <div class="demo-section" id="currency">
+    <h2><code>bc-field-currency</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-currency name="d-usd" label="USD" currency="USD" clearable></bc-field-currency>
+        <bc-field-currency name="d-idr" label="IDR" currency="IDR" clearable></bc-field-currency>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="percent">
+    <h2><code>bc-field-percent</code></h2>
+    <div class="demo-box">
+      <bc-field-percent name="d-pct" label="Discount" min="0" max="100" hint="0-100%" clearable></bc-field-percent>
+    </div>
+  </div>

@@ -1,5 +1,6 @@
 import { Component, Prop, State, Event, EventEmitter, Element, Method, h } from '@stencil/core';
 import { getApiClient } from '../../../core/api-client';
+import { BcSetup } from '../../../core/bc-setup';
 import { i18n } from '../../../core/i18n';
 
 @Component({ tag: 'bc-dialog-quickentry', styleUrl: 'bc-dialog-quickentry.css', shadow: false })
@@ -8,10 +9,15 @@ export class BcDialogQuickentry {
   @Prop({ mutable: true }) open: boolean = false;
   @Prop() dialogTitle: string = '';
   @Prop() model: string = '';
+  @Prop() localData?: string;
   @Prop() fields: string = '[]';
+  @Prop() dataSource: string = '';
+  @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
   @State() formData: Record<string, string> = {};
   @State() saving: boolean = false;
   @Event() lcDialogClose!: EventEmitter<{type: string; data?: Record<string, string>}>;
+  @Event() lcError!: EventEmitter<{message: string}>;
 
   private getFields(): string[] { try { return JSON.parse(this.fields); } catch { return []; } }
 
@@ -23,15 +29,26 @@ export class BcDialogQuickentry {
   private _close() { this.open = false; this.formData = {}; this.lcDialogClose.emit({ type: 'quickentry' }); }
 
   private async save() {
-    if (!this.model) return;
+    if (!this.model && !this.dataSource) return;
     this.saving = true;
     try {
-      const api = getApiClient();
-      await api.create(this.model, this.formData);
+      if (this.dataSource) {
+        const baseUrl = BcSetup.getBaseUrl();
+        let url = this.dataSource;
+        if (url && !url.startsWith('http') && baseUrl) url = baseUrl + url;
+        const headers = { ...BcSetup.getHeaders(), ...(this.fetchHeaders ? JSON.parse(this.fetchHeaders) : {}), 'Content-Type': 'application/json' };
+        const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(this.formData) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      } else {
+        const api = getApiClient();
+        await api.create(this.model, this.formData);
+      }
       this.lcDialogClose.emit({ type: 'quickentry', data: this.formData });
       this.formData = {};
       this.open = false;
-    } catch (e) { console.error('Quick create failed:', e); }
+    } catch (e) {
+      this.lcError.emit({ message: String(e) });
+    }
     this.saving = false;
   }
 

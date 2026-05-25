@@ -1,4 +1,4 @@
-@import '../field-base.css';
+﻿@import '../field-base.css';
 
 .bc-field-inline {
   flex-direction: row;
@@ -8,15 +8,15 @@
 .bc-checkbox-label {
   display: flex;
   align-items: center;
-  gap: var(--bc-spacing-sm);
+  gap: var(--bc-spacing-sm, 0.5rem);
   cursor: pointer;
-  font-size: var(--bc-font-size-base);
-  color: var(--bc-text);
+  font-size: var(--bc-font-size-base, 1rem);
+  color: var(--bc-text, #111827);
 }
 
 input[type="checkbox"] {
   width: 1.125rem;
   height: 1.125rem;
-  accent-color: var(--bc-primary);
+  accent-color: var(--bc-primary, #4f46e5);
   cursor: pointer;
 }

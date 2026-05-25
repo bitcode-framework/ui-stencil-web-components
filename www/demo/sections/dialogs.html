@@ -1,0 +1,93 @@
+<div class="group-heading">Dialogs</div>
+
+  <div class="demo-section" id="dialog-modal">
+    <h2><code>bc-dialog-modal</code></h2>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-modal').open=true">Open Modal</button>
+      <bc-dialog-modal id="d-modal" dialog-title="Demo Modal">
+        <p style="padding:1rem">Modal content. Click X or overlay to close.</p>
+      </bc-dialog-modal>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-confirm">
+    <h2><code>bc-dialog-confirm</code></h2>
+    <p class="desc">Confirmation dialog with 4 variants: default, danger, warning, info.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <button type="button" class="demo-btn" onclick="document.getElementById('d-confirm').open=true">Default</button>
+        <button type="button" class="demo-btn" style="border-color:#ef4444;color:#ef4444" onclick="document.getElementById('d-confirm-d').open=true">Danger</button>
+        <button type="button" class="demo-btn" style="border-color:#f59e0b;color:#f59e0b" onclick="document.getElementById('d-confirm-w').open=true">Warning</button>
+        <button type="button" class="demo-btn" style="border-color:#3b82f6;color:#3b82f6" onclick="document.getElementById('d-confirm-i').open=true">Info</button>
+      </div>
+      <bc-dialog-confirm id="d-confirm" dialog-title="Confirm" message="Are you sure?" confirm-text="Yes" cancel-text="No"></bc-dialog-confirm>
+      <bc-dialog-confirm id="d-confirm-d" dialog-title="Delete?" message="This cannot be undone." variant="danger" confirm-text="Delete" cancel-text="Cancel"></bc-dialog-confirm>
+      <bc-dialog-confirm id="d-confirm-w" dialog-title="Warning" message="Proceed with caution." variant="warning" confirm-text="Continue" cancel-text="Go Back"></bc-dialog-confirm>
+      <bc-dialog-confirm id="d-confirm-i" dialog-title="Information" message="This action requires confirmation." variant="info" confirm-text="Got it" cancel-text="Cancel"></bc-dialog-confirm>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-alert">
+    <h2><code>bc-dialog-alert</code></h2>
+    <p class="desc">Alert dialog with 5 variants: default, success, danger, warning, info.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <button type="button" class="demo-btn" onclick="document.getElementById('d-alert').open=true">Default</button>
+        <button type="button" class="demo-btn" style="border-color:#10b981;color:#10b981" onclick="document.getElementById('d-alert-s').open=true">Success</button>
+        <button type="button" class="demo-btn" style="border-color:#ef4444;color:#ef4444" onclick="document.getElementById('d-alert-d').open=true">Danger</button>
+        <button type="button" class="demo-btn" style="border-color:#f59e0b;color:#f59e0b" onclick="document.getElementById('d-alert-w').open=true">Warning</button>
+        <button type="button" class="demo-btn" style="border-color:#3b82f6;color:#3b82f6" onclick="document.getElementById('d-alert-i').open=true">Info</button>
+      </div>
+      <bc-dialog-alert id="d-alert" dialog-title="Notice" message="This is a default alert."></bc-dialog-alert>
+      <bc-dialog-alert id="d-alert-s" dialog-title="Success!" message="Operation completed successfully." variant="success"></bc-dialog-alert>
+      <bc-dialog-alert id="d-alert-d" dialog-title="Error" message="Something went wrong." variant="danger"></bc-dialog-alert>
+      <bc-dialog-alert id="d-alert-w" dialog-title="Warning" message="Please review before proceeding." variant="warning"></bc-dialog-alert>
+      <bc-dialog-alert id="d-alert-i" dialog-title="Information" message="Here is some useful information." variant="info"></bc-dialog-alert>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-prompt">
+    <h2><code>bc-dialog-prompt</code></h2>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-prompt').open=true">Open Prompt</button>
+      <bc-dialog-prompt id="d-prompt" dialog-title="Enter Name" message="What is your name?" placeholder="John Doe"></bc-dialog-prompt>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-wizard">
+    <h2><code>bc-dialog-wizard</code></h2>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-wizard').open=true">Open Wizard</button>
+      <bc-dialog-wizard id="d-wizard" dialog-title="Setup Wizard" steps='["Account","Profile","Confirm"]'>
+        <div data-step="0" style="padding:1rem">Step 1: Account details</div>
+        <div data-step="1" style="padding:1rem">Step 2: Profile info</div>
+        <div data-step="2" style="padding:1rem">Step 3: Confirm</div>
+      </bc-dialog-wizard>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-quickentry">
+    <h2><code>bc-dialog-quickentry</code></h2>
+    <p class="desc">Quick record creation dialog with auto-generated form.</p>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-quick').open=true">Quick Entry</button>
+      <bc-dialog-quickentry id="d-quick" dialog-title="New Contact" model="contact" fields='["name","email","phone","company","city"]'></bc-dialog-quickentry>
+    </div>
+  </div>
+
+  <div class="demo-section" id="toast">
+    <h2><code>bc-toast</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <button type="button" class="demo-btn" style="border-color:#10b981;color:#10b981" onclick="showToast('success','Done!')">Success</button>
+        <button type="button" class="demo-btn" style="border-color:#ef4444;color:#ef4444" onclick="showToast('error','Failed!')">Error</button>
+        <button type="button" class="demo-btn" style="border-color:#f59e0b;color:#f59e0b" onclick="showToast('warning','Check input')">Warning</button>
+        <button type="button" class="demo-btn" style="border-color:#3b82f6;color:#3b82f6" onclick="showToast('info','FYI')">Info</button>
+      </div>
+      <bc-toast id="d-toast" duration="3000"></bc-toast>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- LAYOUT -->
+  <!-- ═══════════════════════════════════════════ -->

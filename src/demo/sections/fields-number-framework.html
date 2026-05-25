@@ -1,0 +1,97 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (5 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 5 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-integer --&gt;
+&lt;bc-field-integer name=&quot;qty&quot; label=&quot;Quantity&quot; min=&quot;0&quot; max=&quot;999&quot; step=&quot;1&quot;&gt;&lt;/bc-field-integer&gt;
+
+&lt;!-- bc-field-float --&gt;
+&lt;bc-field-float name=&quot;weight&quot; label=&quot;Weight&quot; precision=&quot;2&quot; suffix-text=&quot;kg&quot;&gt;&lt;/bc-field-float&gt;
+
+&lt;!-- bc-field-decimal --&gt;
+&lt;bc-field-decimal name=&quot;price&quot; label=&quot;Price&quot; precision=&quot;2&quot; prefix-text=&quot;$&quot;&gt;&lt;/bc-field-decimal&gt;
+
+&lt;!-- bc-field-currency --&gt;
+&lt;bc-field-currency name=&quot;amount&quot; label=&quot;Amount&quot; currency=&quot;USD&quot;&gt;&lt;/bc-field-currency&gt;
+
+&lt;!-- bc-field-percent --&gt;
+&lt;bc-field-percent name=&quot;discount&quot; label=&quot;Discount&quot; min=&quot;0&quot; max=&quot;100&quot;&gt;&lt;/bc-field-percent&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-integer, @bitcode/components/bc-field-float, @bitcode/components/bc-field-decimal, @bitcode/components/bc-field-currency, @bitcode/components/bc-field-percent';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-integer */}
+      &lt;bc-field-integer name=&quot;qty&quot; label=&quot;Quantity&quot; min=&quot;0&quot; max=&quot;999&quot; step=&quot;1&quot;&gt;&lt;/bc-field-integer&gt;
+
+      {/* bc-field-float */}
+      &lt;bc-field-float name=&quot;weight&quot; label=&quot;Weight&quot; precision=&quot;2&quot; suffix-text=&quot;kg&quot;&gt;&lt;/bc-field-float&gt;
+
+      {/* bc-field-decimal */}
+      &lt;bc-field-decimal name=&quot;price&quot; label=&quot;Price&quot; precision=&quot;2&quot; prefix-text=&quot;$&quot;&gt;&lt;/bc-field-decimal&gt;
+
+      {/* bc-field-currency */}
+      &lt;bc-field-currency name=&quot;amount&quot; label=&quot;Amount&quot; currency=&quot;USD&quot;&gt;&lt;/bc-field-currency&gt;
+
+      {/* bc-field-percent */}
+      &lt;bc-field-percent name=&quot;discount&quot; label=&quot;Discount&quot; min=&quot;0&quot; max=&quot;100&quot;&gt;&lt;/bc-field-percent&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-integer --&gt;
+  &lt;bc-field-integer name=&quot;qty&quot; label=&quot;Quantity&quot; min=&quot;0&quot; max=&quot;999&quot; step=&quot;1&quot;&gt;&lt;/bc-field-integer&gt;
+
+  &lt;!-- bc-field-float --&gt;
+  &lt;bc-field-float name=&quot;weight&quot; label=&quot;Weight&quot; precision=&quot;2&quot; suffix-text=&quot;kg&quot;&gt;&lt;/bc-field-float&gt;
+
+  &lt;!-- bc-field-decimal --&gt;
+  &lt;bc-field-decimal name=&quot;price&quot; label=&quot;Price&quot; precision=&quot;2&quot; prefix-text=&quot;$&quot;&gt;&lt;/bc-field-decimal&gt;
+
+  &lt;!-- bc-field-currency --&gt;
+  &lt;bc-field-currency name=&quot;amount&quot; label=&quot;Amount&quot; currency=&quot;USD&quot;&gt;&lt;/bc-field-currency&gt;
+
+  &lt;!-- bc-field-percent --&gt;
+  &lt;bc-field-percent name=&quot;discount&quot; label=&quot;Discount&quot; min=&quot;0&quot; max=&quot;100&quot;&gt;&lt;/bc-field-percent&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-integer --&gt;
+&lt;bc-field-integer name=&quot;qty&quot; label=&quot;Quantity&quot; min=&quot;0&quot; max=&quot;999&quot; step=&quot;1&quot;&gt;&lt;/bc-field-integer&gt;
+
+&lt;!-- bc-field-float --&gt;
+&lt;bc-field-float name=&quot;weight&quot; label=&quot;Weight&quot; precision=&quot;2&quot; suffix-text=&quot;kg&quot;&gt;&lt;/bc-field-float&gt;
+
+&lt;!-- bc-field-decimal --&gt;
+&lt;bc-field-decimal name=&quot;price&quot; label=&quot;Price&quot; precision=&quot;2&quot; prefix-text=&quot;$&quot;&gt;&lt;/bc-field-decimal&gt;
+
+&lt;!-- bc-field-currency --&gt;
+&lt;bc-field-currency name=&quot;amount&quot; label=&quot;Amount&quot; currency=&quot;USD&quot;&gt;&lt;/bc-field-currency&gt;
+
+&lt;!-- bc-field-percent --&gt;
+&lt;bc-field-percent name=&quot;discount&quot; label=&quot;Discount&quot; min=&quot;0&quot; max=&quot;100&quot;&gt;&lt;/bc-field-percent&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

@@ -2,4 +2,99 @@
   display: block;
   font-family: var(--bc-font-family, system-ui, sans-serif);
 }
-.bc-statusbar { display: flex; gap: 0; } .step { padding: 0.25rem 0.75rem; font-size: var(--bc-font-size-xs); background: var(--bc-bg-tertiary); border: 1px solid var(--bc-border-color); text-transform: capitalize; } .step:first-child { border-radius: var(--bc-radius-full) 0 0 var(--bc-radius-full); } .step:last-child { border-radius: 0 var(--bc-radius-full) var(--bc-radius-full) 0; } .step + .step { border-inline-start: none; } .step.done { background: var(--bc-primary-light); color: var(--bc-primary); } .step.active { background: var(--bc-primary); color: white; font-weight: 600; }
+
+.bc-statusbar {
+  display: flex;
+  gap: 0;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--bc-radius-full, 9999px);
+  background: var(--bc-bg-tertiary, #f3f4f6);
+  border: 1px solid var(--bc-border-color, #e5e7eb);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.step {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.375rem 0.875rem;
+  font-size: var(--bc-font-size-xs, 0.75rem);
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--bc-text-secondary, #6b7280);
+  background: transparent;
+  transition:
+    background var(--bc-transition, 150ms ease),
+    color var(--bc-transition, 150ms ease),
+    box-shadow var(--bc-transition, 150ms ease);
+}
+
+.step + .step::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.2rem;
+  inset-inline-start: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--bc-border-color, #e5e7eb) 78%, transparent);
+}
+
+.step.done {
+  background: color-mix(in srgb, var(--bc-primary, #4f46e5) 18%, transparent);
+  color: var(--bc-primary, #4f46e5);
+}
+
+.step.active {
+  background: var(--bc-primary, #4f46e5);
+  color: var(--bc-primary-text, #ffffff);
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+.step.active::before,
+.step.active + .step::before,
+.step.done + .step.active::before {
+  background: color-mix(in srgb, var(--bc-primary, #4f46e5) 56%, rgba(255,255,255,0.35));
+}
+
+[data-bc-theme="dark"] .bc-statusbar {
+  background: #334155;
+  border-color: #41526b;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 8px 24px rgba(2, 6, 23, 0.16);
+}
+
+[data-bc-theme="dark"] .step {
+  color: #818cf8;
+}
+
+[data-bc-theme="dark"] .step + .step::before {
+  background: #4f46e5;
+}
+
+[data-bc-theme="dark"] .step.done {
+  background: color-mix(in srgb, var(--bc-primary, #818cf8) 42%, #334155);
+  color: #ffffff;
+}
+
+[data-bc-theme="dark"] .step.active {
+  background: var(--bc-primary, #818cf8);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    0 0 0 1px rgba(129, 140, 248, 0.34),
+    0 0 14px rgba(129, 140, 248, 0.28);
+}
+
+[data-bc-theme="dark"] .step.active::before,
+[data-bc-theme="dark"] .step.active + .step::before,
+[data-bc-theme="dark"] .step.done + .step.active::before {
+  background: #4f46e5;
+}

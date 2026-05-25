@@ -37,6 +37,10 @@ BcSetup.configure({ theme: 'system' });  // auto-detect OS
 BcSetup.configure({ theme: 'light' });
 ```
 
+Canvas-based chart components follow the active theme too. When `BcSetup.configure({ theme: ... })` or the root `data-bc-theme` attribute changes, ECharts text, axis labels, legends, and toolbox icons are re-colored from the current `--bc-*` CSS variables.
+
+Code editors such as `bc-field-code` and `bc-field-json` also inherit the active theme. Their CodeMirror surface, gutter, caret, selection, and syntax colors are driven from the same theme system, with an editor-focused mono font stack and IDE-style contrast.
+
 ### Meta Tag
 
 ```html
@@ -110,4 +114,4 @@ See `src/global/global.css` for the complete list. Key categories:
 - **Validation**: `--bc-field-valid-color`, `--bc-field-invalid-color`
 - **Dropdown**: `--bc-dropdown-bg`, `--bc-dropdown-shadow`
 - **Table**: `--bc-table-header-bg`, `--bc-table-row-hover`
-- **Chart**: `--bc-chart-bg`, `--bc-chart-colors`
+- **Chart**: `--bc-chart-bg`, `--bc-chart-colors`, plus chart canvas text inherits `--bc-text`, `--bc-text-secondary`, `--bc-border-color`, `--bc-bg-tertiary`, and `--bc-primary`

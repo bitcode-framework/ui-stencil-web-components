@@ -1,0 +1,86 @@
+<div class="group-heading">Layout</div>
+
+  <div class="demo-section" id="section">
+    <h2><code>bc-section</code></h2>
+    <div class="demo-box">
+      <bc-section section-title="Collapsible" description="Click to toggle" collapsible>
+        <p style="padding:1rem">Collapsible content.</p>
+      </bc-section>
+    </div>
+  </div>
+
+  <div class="demo-section" id="tabs">
+    <h2><code>bc-tabs</code></h2>
+    <div class="demo-box">
+      <bc-tabs>
+        <bc-tab label="Tab 1"><div style="padding:1rem">Tab 1 content</div></bc-tab>
+        <bc-tab label="Tab 2"><div style="padding:1rem">Tab 2 content</div></bc-tab>
+        <bc-tab label="Tab 3"><div style="padding:1rem">Tab 3 content</div></bc-tab>
+      </bc-tabs>
+    </div>
+  </div>
+
+  <div class="demo-section" id="row">
+    <h2><code>bc-row</code></h2>
+    <div class="demo-box">
+      <bc-row gap="md">
+        <div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">Col 1</div>
+        <div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">Col 2</div>
+        <div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">Col 3</div>
+      </bc-row>
+    </div>
+  </div>
+
+  <div class="demo-section" id="column">
+    <h2><code>bc-column</code></h2>
+    <div class="demo-box">
+      <bc-row gap="md">
+        <bc-column width="4"><div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">4/12</div></bc-column>
+        <bc-column width="8"><div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">8/12</div></bc-column>
+      </bc-row>
+    </div>
+  </div>
+
+  <div class="demo-section" id="header">
+    <h2><code>bc-header</code></h2>
+    <div class="demo-box">
+      <bc-header buttons='[{"label":"Edit","icon":"edit"},{"label":"Delete","icon":"delete"}]' states='[{"label":"Draft","value":"draft"},{"label":"Confirmed","value":"confirmed"},{"label":"Done","value":"done"}]' status-value="confirmed"></bc-header>
+    </div>
+  </div>
+
+  <div class="demo-section" id="sheet">
+    <h2><code>bc-sheet</code></h2>
+    <div class="demo-box">
+      <bc-sheet>
+        <p style="padding:1rem">Card-like container with slot content.</p>
+      </bc-sheet>
+    </div>
+  </div>
+
+  <div class="demo-section" id="separator">
+    <h2><code>bc-separator</code></h2>
+    <div class="demo-box">
+      <p>Content above</p>
+      <bc-separator label="OR"></bc-separator>
+      <p>Content below</p>
+    </div>
+  </div>
+
+  <div class="demo-section" id="html-block">
+    <h2><code>bc-html-block</code></h2>
+    <div class="demo-box">
+      <bc-html-block content="<h4 style='color:var(--bc-primary)'>Dynamic HTML</h4><p>Rendered from string.</p>"></bc-html-block>
+    </div>
+  </div>
+
+  <div class="demo-section" id="button-box">
+    <h2><code>bc-button-box</code></h2>
+    <p class="desc">Odoo-style smart buttons with count badges.</p>
+    <div class="demo-box">
+      <bc-button-box buttons='[{"label":"Contacts","icon":"person","count":42},{"label":"Opportunities","icon":"star","count":7},{"label":"Meetings","icon":"calendar","count":3}]'></bc-button-box>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- MEDIA -->
+  <!-- ═══════════════════════════════════════════ -->

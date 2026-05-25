@@ -1,37 +1,37 @@
-:host {
+﻿:host {
   display: block;
-  margin-bottom: var(--bc-spacing-lg);
+  margin-bottom: var(--bc-spacing-lg, 1.5rem);
 }
 
 .bc-tabs-nav {
   display: flex;
-  border-bottom: 2px solid var(--bc-border-color);
+  border-bottom: 2px solid var(--bc-border-color, #e5e7eb);
   gap: 0;
 }
 
 .bc-tab-btn {
-  padding: var(--bc-spacing-sm) var(--bc-spacing-md);
+  padding: var(--bc-spacing-sm, 0.5rem) var(--bc-spacing-md, 1rem);
   border: none;
   background: none;
-  font-family: var(--bc-font-family);
-  font-size: var(--bc-font-size-sm);
-  font-weight: var(--bc-font-weight-medium);
-  color: var(--bc-text-secondary);
+  font-family: var(--bc-font-family, system-ui, sans-serif);
+  font-size: var(--bc-font-size-sm, 0.875rem);
+  font-weight: var(--bc-font-weight-medium, 500);
+  color: var(--bc-text-secondary, #6b7280);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
-  transition: color var(--bc-transition), border-color var(--bc-transition);
+  transition: color var(--bc-transition, 150ms ease), border-color var(--bc-transition, 150ms ease);
 }
 
 .bc-tab-btn:hover {
-  color: var(--bc-text);
+  color: var(--bc-text, #111827);
 }
 
 .bc-tab-btn.active {
-  color: var(--bc-primary);
-  border-bottom-color: var(--bc-primary);
+  color: var(--bc-primary, #4f46e5);
+  border-bottom-color: var(--bc-primary, #4f46e5);
 }
 
 .bc-tabs-content {
-  padding: var(--bc-spacing-md) 0;
+  padding: var(--bc-spacing-md, 1rem) 0;
 }

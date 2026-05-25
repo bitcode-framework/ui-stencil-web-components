@@ -1,6 +1,6 @@
 {
   "name": "@bitcode/components",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "BitCode ERP Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
@@ -475,9 +475,12 @@
     "scripts/"
   ],
   "scripts": {
-    "build": "stencil build && node scripts/generate-exports.mjs",
+    "build": "stencil build && node scripts/generate-exports.mjs && node src/demo/build-demo.js",
     "build:stencil": "stencil build",
+    "build:demo": "node src/demo/build-demo.js",
     "start": "stencil build --dev --watch --serve",
+    "demo": "node scripts/kill-demo.js && stencil build && node src/demo/build-demo.js && npx -y http-server www -p 3333 -c-1 --cors -o /demo/",
+    "demo:kill": "node scripts/kill-demo.js",
     "test": "stencil test --spec",
     "test:watch": "stencil test --spec --watchAll",
     "test:e2e": "stencil test --e2e",
@@ -501,7 +504,6 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@codemirror/basic-setup": "^0.20.0",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-html": "^6.4.11",
     "@codemirror/lang-javascript": "^6.2.5",
@@ -518,8 +520,8 @@
     "@tiptap/core": "^3.22.3",
     "@tiptap/extension-placeholder": "^3.22.3",
     "@tiptap/starter-kit": "^3.22.3",
+    "codemirror": "^6.0.2",
     "echarts": "^6.0.0",
-    "frappe-gantt": "^1.2.2",
     "jsbarcode": "^3.12.3",
     "leaflet": "^1.9.4",
     "markdown-it": "^14.1.1",

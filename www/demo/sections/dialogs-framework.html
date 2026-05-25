@@ -1,0 +1,121 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (7 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 7 components — Vanilla HTML --&gt;
+&lt;!-- bc-dialog-modal --&gt;
+&lt;bc-dialog-modal dialog-title=&quot;Confirm&quot; open&gt;Content here&lt;/bc-dialog-modal&gt;
+
+&lt;!-- bc-dialog-confirm --&gt;
+&lt;bc-dialog-confirm dialog-title=&quot;Delete?&quot; message=&quot;Are you sure?&quot;&gt;&lt;/bc-dialog-confirm&gt;
+
+&lt;!-- bc-dialog-alert --&gt;
+&lt;bc-dialog-alert dialog-title=&quot;Info&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-dialog-alert&gt;
+
+&lt;!-- bc-dialog-prompt --&gt;
+&lt;bc-dialog-prompt dialog-title=&quot;Name&quot; message=&quot;Enter name:&quot; value=&quot;&quot;&gt;&lt;/bc-dialog-prompt&gt;
+
+&lt;!-- bc-dialog-wizard --&gt;
+&lt;bc-dialog-wizard dialog-title=&quot;Setup&quot; steps='[{&quot;title&quot;:&quot;Step 1&quot;},{&quot;title&quot;:&quot;Step 2&quot;}]'&gt;&lt;/bc-dialog-wizard&gt;
+
+&lt;!-- bc-dialog-quickentry --&gt;
+&lt;bc-dialog-quickentry dialog-title=&quot;New&quot; model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-dialog-quickentry&gt;
+
+&lt;!-- bc-toast --&gt;
+&lt;bc-toast variant=&quot;success&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-toast&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-dialog-modal, @bitcode/components/bc-dialog-confirm, @bitcode/components/bc-dialog-alert, @bitcode/components/bc-dialog-prompt, @bitcode/components/bc-dialog-wizard, @bitcode/components/bc-dialog-quickentry, @bitcode/components/bc-toast';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-dialog-modal */}
+      &lt;bc-dialog-modal dialogTitle=&quot;Confirm&quot; open={true}&gt;Content here&lt;/bc-dialog-modal&gt;
+
+      {/* bc-dialog-confirm */}
+      &lt;bc-dialog-confirm dialogTitle=&quot;Delete?&quot; message=&quot;Are you sure?&quot;&gt;&lt;/bc-dialog-confirm&gt;
+
+      {/* bc-dialog-alert */}
+      &lt;bc-dialog-alert dialogTitle=&quot;Info&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-dialog-alert&gt;
+
+      {/* bc-dialog-prompt */}
+      &lt;bc-dialog-prompt dialogTitle=&quot;Name&quot; message=&quot;Enter name:&quot; value=&quot;&quot;&gt;&lt;/bc-dialog-prompt&gt;
+
+      {/* bc-dialog-wizard */}
+      &lt;bc-dialog-wizard dialogTitle=&quot;Setup&quot; steps={[{&quot;title&quot;:&quot;Step 1&quot;},{&quot;title&quot;:&quot;Step 2&quot;}]}&gt;&lt;/bc-dialog-wizard&gt;
+
+      {/* bc-dialog-quickentry */}
+      &lt;bc-dialog-quickentry dialogTitle=&quot;New&quot; model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;email&quot;]}&gt;&lt;/bc-dialog-quickentry&gt;
+
+      {/* bc-toast */}
+      &lt;bc-toast variant=&quot;success&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-toast&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-dialog-modal --&gt;
+  &lt;bc-dialog-modal dialog-title=&quot;Confirm&quot; open&gt;Content here&lt;/bc-dialog-modal&gt;
+
+  &lt;!-- bc-dialog-confirm --&gt;
+  &lt;bc-dialog-confirm dialog-title=&quot;Delete?&quot; message=&quot;Are you sure?&quot;&gt;&lt;/bc-dialog-confirm&gt;
+
+  &lt;!-- bc-dialog-alert --&gt;
+  &lt;bc-dialog-alert dialog-title=&quot;Info&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-dialog-alert&gt;
+
+  &lt;!-- bc-dialog-prompt --&gt;
+  &lt;bc-dialog-prompt dialog-title=&quot;Name&quot; message=&quot;Enter name:&quot; value=&quot;&quot;&gt;&lt;/bc-dialog-prompt&gt;
+
+  &lt;!-- bc-dialog-wizard --&gt;
+  &lt;bc-dialog-wizard dialog-title=&quot;Setup&quot; steps='[{&quot;title&quot;:&quot;Step 1&quot;},{&quot;title&quot;:&quot;Step 2&quot;}]'&gt;&lt;/bc-dialog-wizard&gt;
+
+  &lt;!-- bc-dialog-quickentry --&gt;
+  &lt;bc-dialog-quickentry dialog-title=&quot;New&quot; model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-dialog-quickentry&gt;
+
+  &lt;!-- bc-toast --&gt;
+  &lt;bc-toast variant=&quot;success&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-toast&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-dialog-modal --&gt;
+&lt;bc-dialog-modal dialog-title=&quot;Confirm&quot; open&gt;Content here&lt;/bc-dialog-modal&gt;
+
+&lt;!-- bc-dialog-confirm --&gt;
+&lt;bc-dialog-confirm dialog-title=&quot;Delete?&quot; message=&quot;Are you sure?&quot;&gt;&lt;/bc-dialog-confirm&gt;
+
+&lt;!-- bc-dialog-alert --&gt;
+&lt;bc-dialog-alert dialog-title=&quot;Info&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-dialog-alert&gt;
+
+&lt;!-- bc-dialog-prompt --&gt;
+&lt;bc-dialog-prompt dialog-title=&quot;Name&quot; message=&quot;Enter name:&quot; value=&quot;&quot;&gt;&lt;/bc-dialog-prompt&gt;
+
+&lt;!-- bc-dialog-wizard --&gt;
+&lt;bc-dialog-wizard dialog-title=&quot;Setup&quot; steps='[{&quot;title&quot;:&quot;Step 1&quot;},{&quot;title&quot;:&quot;Step 2&quot;}]'&gt;&lt;/bc-dialog-wizard&gt;
+
+&lt;!-- bc-dialog-quickentry --&gt;
+&lt;bc-dialog-quickentry dialog-title=&quot;New&quot; model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-dialog-quickentry&gt;
+
+&lt;!-- bc-toast --&gt;
+&lt;bc-toast variant=&quot;success&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-toast&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

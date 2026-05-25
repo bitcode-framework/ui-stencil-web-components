@@ -1,4 +1,4 @@
-@import '../field-base.css';
+﻿@import '../field-base.css';
 
 .bc-select-wrapper {
   position: relative;
@@ -53,7 +53,7 @@
   background: var(--bc-dropdown-bg, var(--bc-bg, #fff));
   border: 1px solid var(--bc-dropdown-border, var(--bc-border-color, #e5e7eb));
   border-radius: var(--bc-dropdown-radius, var(--bc-radius-lg, 0.5rem));
-  box-shadow: var(--bc-dropdown-shadow, var(--bc-shadow-lg));
+  box-shadow: var(--bc-dropdown-shadow, var(--bc-shadow-lg, 0 10px 15px rgba(0,0,0,0.1)));
   overflow: hidden;
 }
 

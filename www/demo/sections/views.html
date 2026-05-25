@@ -1,0 +1,112 @@
+<div class="group-heading">Views</div>
+
+  <div class="demo-section" id="view-list">
+    <h2><code>bc-view-list</code></h2>
+    <p class="desc">Paginated list/table view with sorting and search.</p>
+    <div class="demo-box">
+      <bc-view-list model="contact" view-title="Contacts" fields='["name","email","company","city","status"]'></bc-view-list>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-form">
+    <h2><code>bc-view-form</code></h2>
+    <p class="desc">Auto-generated form with CRUD and permissions.</p>
+    <div class="demo-box">
+      <bc-view-form model="contact" view-title="Contact" fields='["name","email","phone","company","city","status"]'></bc-view-form>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-kanban">
+    <h2><code>bc-view-kanban</code></h2>
+    <p class="desc">Simple kanban view. Drag cards between columns.</p>
+    <div class="demo-box">
+      <bc-view-kanban model="lead" view-title="Sales Pipeline" fields='["name","partner","expected_revenue","probability","user"]' config='{"group_by":"stage"}'></bc-view-kanban>
+    </div>
+  </div>
+
+  <div class="demo-section" id="kanban-board">
+    <h2><code>bc-kanban-board</code> <span class="badge">Enterprise</span></h2>
+    <p class="desc">Full-featured kanban board with Trello/Jira-level features. Click cards to see detail panel with comments, subtasks, attachments, and activity. Drag cards and columns to reorder. Add new cards and columns.</p>
+    <div class="demo-box">
+      <bc-kanban-board
+        model="kb_card"
+        board-title="Project Alpha — Sprint Board"
+        group-by="stage"
+        card-title-field="name"
+        card-description-field="description"
+        card-priority-field="priority"
+        card-assignees-field="assignees"
+        card-due-date-field="due_date"
+        card-labels-field="labels"
+        columns-config='[{"id":"todo","name":"To Do","color":"#6b7280"},{"id":"in_progress","name":"In Progress","color":"#f59e0b"},{"id":"review","name":"Review","color":"#3b82f6"},{"id":"done","name":"Done","color":"#10b981"}]'
+        comment-model="kb_comment"
+        activity-model="kb_activity"
+        mention-model="kb_user"
+        allow-add-column="true"
+        allow-add-card="true"
+        allow-rename-column="true"
+        allow-delete-column="true"
+        allow-reorder-columns="true"
+      ></bc-kanban-board>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-calendar">
+    <h2><code>bc-view-calendar</code></h2>
+    <p class="desc">Calendar view using FullCalendar.</p>
+    <div class="demo-box">
+      <bc-view-calendar model="event" view-title="Events" fields='["name","start","end"]' date-field="start" title-field="name"></bc-view-calendar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-gantt">
+    <h2><code>bc-view-gantt</code></h2>
+    <p class="desc">Full-featured Gantt chart with tree hierarchy, drag-and-drop, dependencies, and multi-scale timeline.</p>
+    <div class="demo-box">
+      <bc-view-gantt view-title="Project Timeline" height="420px" config='{"open_tree_initially":true,"show_progress":true,"drag_move":true,"drag_resize":true,"drag_progress":true,"grid_width":280,"row_height":34}' tasks='[{"id":"p1","text":"Phase 1 — Planning","start_date":"2025-12-01","end_date":"2025-12-10","progress":1,"parent":"0","type":"project"},{"id":"t1","text":"Requirements Gathering","start_date":"2025-12-01","end_date":"2025-12-05","progress":1,"parent":"p1"},{"id":"t2","text":"System Design","start_date":"2025-12-04","end_date":"2025-12-10","progress":1,"parent":"p1"},{"id":"p2","text":"Phase 2 — Development","start_date":"2025-12-08","end_date":"2025-12-22","progress":0.45,"parent":"0","type":"project","color":"#3b82f6"},{"id":"t3","text":"Backend Development","start_date":"2025-12-08","end_date":"2025-12-20","progress":0.65,"parent":"p2"},{"id":"t4","text":"Frontend Development","start_date":"2025-12-10","end_date":"2025-12-22","progress":0.4,"parent":"p2"},{"id":"t5","text":"API Integration","start_date":"2025-12-15","end_date":"2025-12-22","progress":0.2,"parent":"p2"},{"id":"p3","text":"Phase 3 — Delivery","start_date":"2025-12-20","end_date":"2026-01-05","progress":0,"parent":"0","type":"project","color":"#10b981"},{"id":"t6","text":"Testing & QA","start_date":"2025-12-20","end_date":"2025-12-28","progress":0,"parent":"p3"},{"id":"t7","text":"Go Live","start_date":"2025-12-31","end_date":"2025-12-31","progress":0,"parent":"p3","type":"milestone"},{"id":"t8","text":"User Training","start_date":"2026-01-02","end_date":"2026-01-05","progress":0,"parent":"p3"}]' links='[{"id":"l1","source":"t1","target":"t2","type":"0"},{"id":"l2","source":"t2","target":"t3","type":"0"},{"id":"l3","source":"t3","target":"t5","type":"0"},{"id":"l4","source":"t4","target":"t6","type":"0"},{"id":"l5","source":"t5","target":"t6","type":"0"},{"id":"l6","source":"t6","target":"t7","type":"0"}]' columns='[{"name":"text","label":"Task","tree":true,"width":180},{"name":"start_date","label":"Start","align":"center","width":90},{"name":"duration","label":"Days","align":"center","width":60}]' scales='[{"unit":"month","step":1,"format":"%M %Y"},{"unit":"day","step":1,"format":"%d"}]'></bc-view-gantt>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-map">
+    <h2><code>bc-view-map</code></h2>
+    <p class="desc">Map view using Leaflet markers.</p>
+    <div class="demo-box">
+      <bc-view-map model="branch" view-title="Office Locations" fields='["name","location","address","manager"]' geo-field="location" name-field="name"></bc-view-map>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-tree">
+    <h2><code>bc-view-tree</code></h2>
+    <p class="desc">Hierarchical tree view.</p>
+    <div class="demo-box">
+      <bc-view-tree model="category" view-title="Product Categories" fields='["name","parent_id"]' parent-field="parent_id"></bc-view-tree>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-report">
+    <h2><code>bc-view-report</code></h2>
+    <p class="desc">Report view with totals and grouping.</p>
+    <div class="demo-box">
+      <bc-view-report model="sale" view-title="Sales Report" fields='["name","product","customer","region","quantity","unit_price","amount","date"]'></bc-view-report>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-editor">
+    <h2><code>bc-view-editor</code></h2>
+    <p class="desc">Visual drag-and-drop view editor for building form layouts.</p>
+    <div class="demo-box">
+      <bc-view-editor model-fields='[{"name":"name","type":"string"},{"name":"email","type":"string"},{"name":"phone","type":"string"},{"name":"company","type":"string"},{"name":"city","type":"string"},{"name":"status","type":"select"},{"name":"notes","type":"text"},{"name":"revenue","type":"number"},{"name":"active","type":"boolean"},{"name":"birthday","type":"date"}]' view-json='{"layout":[{"section":{"title":"Contact Info","collapsible":true},"rows":[{"row":[{"field":"name","width":6},{"field":"email","width":6}]},{"row":[{"field":"phone","width":4},{"field":"company","width":4},{"field":"city","width":4}]}]},{"section":{"title":"Details","collapsible":true},"rows":[{"row":[{"field":"status","width":3},{"field":"revenue","width":3},{"field":"active","width":3},{"field":"birthday","width":3}]}]},{"rows":[{"row":[{"field":"notes","width":12}]}]}]}'></bc-view-editor>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-activity">
+    <h2><code>bc-view-activity</code></h2>
+    <p class="desc">Activity log for a model.</p>
+    <div class="demo-box">
+      <bc-view-activity model="contact" view-title="Activity Log" fields='["name","description","user","created_at"]'></bc-view-activity>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- WIDGETS -->
+  <!-- ═══════════════════════════════════════════ -->

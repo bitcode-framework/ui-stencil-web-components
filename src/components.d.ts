@@ -5,8 +5,14 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
-import { ChartClickEvent, ChartDataZoomEvent, ChartHoverEvent, ChartLegendSelectEvent, FieldBlurEvent, FieldChangeEvent, FieldClearEvent, FieldFocusEvent, FieldValidationEvent, FieldValidEvent, FilterChangeEvent as FilterChangeEventType, OptionCreateEvent, OptionsErrorEvent, OptionsLoadEvent, PageChangeEvent, SortChangeEvent as SortChangeEventType, ValidateOn, ValidationResult } from "./core/types";
-export { ChartClickEvent, ChartDataZoomEvent, ChartHoverEvent, ChartLegendSelectEvent, FieldBlurEvent, FieldChangeEvent, FieldClearEvent, FieldFocusEvent, FieldValidationEvent, FieldValidEvent, FilterChangeEvent as FilterChangeEventType, OptionCreateEvent, OptionsErrorEvent, OptionsLoadEvent, PageChangeEvent, SortChangeEvent as SortChangeEventType, ValidateOn, ValidationResult } from "./core/types";
+import { ChartClickEvent, ChartDataZoomEvent, ChartHoverEvent, ChartLegendSelectEvent, DataFetcher, FieldBlurEvent, FieldChangeEvent, FieldClearEvent, FieldFocusEvent, FieldValidationEvent, FieldValidEvent, FilterChangeEvent as FilterChangeEventType, OptionCreateEvent, OptionsErrorEvent, OptionsLoadEvent, PageChangeEvent, SortChangeEvent as SortChangeEventType, ValidateOn, ValidationResult } from "./core/types";
+import { KanbanAttachmentDeleteEvent, KanbanAttachmentUploadEvent, KanbanCardCreateEvent, KanbanCardDeleteEvent, KanbanCardMoveEvent, KanbanCardUpdateEvent, KanbanColumnAddEvent, KanbanColumnDeleteEvent, KanbanColumnRenameEvent, KanbanColumnReorderEvent, KanbanCommentCreateEvent, KanbanCommentDeleteEvent, KanbanSubtaskCreateEvent, KanbanSubtaskDeleteEvent, KanbanSubtaskToggleEvent } from "./components/kanban/core/kanban-types";
+import { GanttColumnResizeEvent, GanttContextMenuEvent, GanttErrorEvent, GanttLink, GanttLinkDragEvent, GanttLinkEvent, GanttMarker, GanttRowResizeEvent, GanttScaleClickEvent, GanttScrollEvent, GanttTask, GanttTaskAddEvent, GanttTaskDeleteEvent, GanttTaskDragEvent, GanttTaskMoveEvent, GanttTaskSelectEvent, GanttTaskUpdateEvent } from "./components/views/bc-view-gantt/bc-view-gantt";
+import { Event } from "@stencil/core";
+export { ChartClickEvent, ChartDataZoomEvent, ChartHoverEvent, ChartLegendSelectEvent, DataFetcher, FieldBlurEvent, FieldChangeEvent, FieldClearEvent, FieldFocusEvent, FieldValidationEvent, FieldValidEvent, FilterChangeEvent as FilterChangeEventType, OptionCreateEvent, OptionsErrorEvent, OptionsLoadEvent, PageChangeEvent, SortChangeEvent as SortChangeEventType, ValidateOn, ValidationResult } from "./core/types";
+export { KanbanAttachmentDeleteEvent, KanbanAttachmentUploadEvent, KanbanCardCreateEvent, KanbanCardDeleteEvent, KanbanCardMoveEvent, KanbanCardUpdateEvent, KanbanColumnAddEvent, KanbanColumnDeleteEvent, KanbanColumnRenameEvent, KanbanColumnReorderEvent, KanbanCommentCreateEvent, KanbanCommentDeleteEvent, KanbanSubtaskCreateEvent, KanbanSubtaskDeleteEvent, KanbanSubtaskToggleEvent } from "./components/kanban/core/kanban-types";
+export { GanttColumnResizeEvent, GanttContextMenuEvent, GanttErrorEvent, GanttLink, GanttLinkDragEvent, GanttLinkEvent, GanttMarker, GanttRowResizeEvent, GanttScaleClickEvent, GanttScrollEvent, GanttTask, GanttTaskAddEvent, GanttTaskDeleteEvent, GanttTaskDragEvent, GanttTaskMoveEvent, GanttTaskSelectEvent, GanttTaskUpdateEvent } from "./components/views/bc-view-gantt/bc-view-gantt";
+export { Event } from "@stencil/core";
 export namespace Components {
     interface BcActivity {
         /**
@@ -53,6 +59,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -66,6 +73,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -79,10 +87,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -137,6 +150,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -150,6 +164,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -167,10 +182,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -221,6 +241,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -234,6 +255,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -247,10 +269,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -297,6 +324,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -310,6 +338,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -323,6 +352,7 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -331,6 +361,10 @@ export namespace Components {
           * @default 5
          */
         "maPeriod": number;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -365,6 +399,7 @@ export namespace Components {
         "width": string;
     }
     interface BcChartCustom {
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -374,6 +409,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '400px'
@@ -383,6 +419,11 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "model": string;
         /**
           * @default '{}'
          */
@@ -426,6 +467,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -435,6 +477,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -448,10 +491,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -566,6 +614,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -579,6 +628,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -596,10 +646,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -650,6 +705,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -663,6 +719,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -676,10 +733,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -766,6 +828,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -779,6 +842,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -792,10 +856,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -850,6 +919,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -867,6 +937,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -880,10 +951,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -934,6 +1010,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -943,6 +1020,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -956,10 +1034,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -1006,6 +1089,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1019,6 +1103,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1032,10 +1117,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -1086,6 +1176,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1099,6 +1190,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1112,10 +1204,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -1190,6 +1287,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1199,6 +1297,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1212,10 +1311,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         /**
           * @default 'bar'
          */
@@ -1294,6 +1398,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1307,6 +1412,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         /**
           * @default false
          */
@@ -1324,10 +1430,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -1378,6 +1489,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1391,6 +1503,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1404,10 +1517,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         /**
           * @default 'horizontal'
          */
@@ -1462,6 +1580,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1479,6 +1598,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1492,10 +1612,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -1594,6 +1719,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1603,6 +1729,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1620,10 +1747,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         /**
           * @default '90%'
          */
@@ -1674,6 +1806,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1683,6 +1816,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1696,10 +1830,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -1746,6 +1885,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1755,6 +1895,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1772,10 +1913,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         /**
           * @default 'LR'
          */
@@ -1826,6 +1972,7 @@ export namespace Components {
           * @default '[]'
          */
         "data": string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -1839,6 +1986,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         "getChartInstance": () => Promise<unknown>;
         /**
           * @default '300px'
@@ -1856,10 +2004,15 @@ export namespace Components {
           * @default false
          */
         "loading": boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale": string;
+        /**
+          * @default ''
+         */
+        "model": string;
         "refresh": () => Promise<void>;
         /**
           * @default 0
@@ -1986,6 +2139,7 @@ export namespace Components {
           * @default ''
          */
         "fetchHeaders": string;
+        "fetchOptions"?: string;
         /**
           * @default '[]'
          */
@@ -2177,11 +2331,21 @@ export namespace Components {
         /**
           * @default ''
          */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
         "dialogTitle": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
         /**
           * @default '[]'
          */
         "fields": string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -5558,6 +5722,260 @@ export namespace Components {
          */
         "content": string;
     }
+    interface BcKanbanBoard {
+        /**
+          * @default ''
+         */
+        "activityDataSource": string;
+        "activityLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "activityModel": string;
+        /**
+          * @default true
+         */
+        "allowAddCard": boolean;
+        /**
+          * @default true
+         */
+        "allowAddColumn": boolean;
+        /**
+          * @default false
+         */
+        "allowDeleteColumn": boolean;
+        /**
+          * @default true
+         */
+        "allowRenameColumn": boolean;
+        /**
+          * @default true
+         */
+        "allowReorderColumns": boolean;
+        /**
+          * @default ''
+         */
+        "attachmentDataSource": string;
+        "attachmentLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "attachmentModel": string;
+        /**
+          * @default ''
+         */
+        "boardTitle": string;
+        /**
+          * @default 'assignees'
+         */
+        "cardAssigneesField": string;
+        /**
+          * @default ''
+         */
+        "cardCoverField": string;
+        /**
+          * @default 'description'
+         */
+        "cardDescriptionField": string;
+        /**
+          * @default ''
+         */
+        "cardDetailDataSource": string;
+        /**
+          * @default ''
+         */
+        "cardDetailModel": string;
+        /**
+          * @default 'due_date'
+         */
+        "cardDueDateField": string;
+        /**
+          * @default 'labels'
+         */
+        "cardLabelsField": string;
+        /**
+          * @default 'position'
+         */
+        "cardPositionField": string;
+        /**
+          * @default 'priority'
+         */
+        "cardPriorityField": string;
+        /**
+          * @default 'start_date'
+         */
+        "cardStartDateField": string;
+        /**
+          * @default 'name'
+         */
+        "cardTitleField": string;
+        /**
+          * @default ''
+         */
+        "columnDataSource": string;
+        "columnLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "columnModel": string;
+        "columnsConfig"?: string;
+        /**
+          * @default ''
+         */
+        "commentDataSource": string;
+        "commentLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "commentModel": string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
+          * @default 'stage'
+         */
+        "groupBy": string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "mentionDataSource": string;
+        "mentionLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "mentionModel": string;
+        /**
+          * @default ''
+         */
+        "model": string;
+        "refresh": () => Promise<void>;
+        /**
+          * @default ''
+         */
+        "subtaskDataSource": string;
+        "subtaskLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "subtaskModel": string;
+    }
+    interface BcKanbanCardActivity {
+        /**
+          * @default ''
+         */
+        "cardId": string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        /**
+          * @default 'card_id'
+         */
+        "filterBy": string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "model": string;
+        "refresh": () => Promise<void>;
+    }
+    interface BcKanbanCardAttachments {
+        /**
+          * @default ''
+         */
+        "cardId": string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        /**
+          * @default 'card_id'
+         */
+        "filterBy": string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "model": string;
+        "refresh": () => Promise<void>;
+    }
+    interface BcKanbanCardComments {
+        /**
+          * @default ''
+         */
+        "cardId": string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        /**
+          * @default 'card_id'
+         */
+        "filterBy": string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "mentionDataSource": string;
+        "mentionLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "mentionModel": string;
+        /**
+          * @default ''
+         */
+        "model": string;
+        "refresh": () => Promise<void>;
+    }
+    interface BcKanbanCardSubtasks {
+        /**
+          * @default ''
+         */
+        "cardId": string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        /**
+          * @default 'card_id'
+         */
+        "filterBy": string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "model": string;
+        "refresh": () => Promise<void>;
+    }
     interface BcLookupModal {
         /**
           * @default ''
@@ -5568,9 +5986,19 @@ export namespace Components {
          */
         "columns": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
           * @default 'name'
          */
         "displayField": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -5662,6 +6090,16 @@ export namespace Components {
         /**
           * @default ''
          */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
         "model": string;
         /**
           * @default ''
@@ -5743,11 +6181,22 @@ export namespace Components {
         /**
           * @default ''
          */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
         "model": string;
         /**
           * @default ''
          */
         "recordId": string;
+        "refresh": () => Promise<void>;
     }
     interface BcToast {
         /**
@@ -5791,9 +6240,19 @@ export namespace Components {
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields": string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -5810,13 +6269,23 @@ export namespace Components {
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
           * @default 'date'
          */
         "dateField": string;
         /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields": string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -5852,9 +6321,19 @@ export namespace Components {
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields": string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -5878,19 +6357,133 @@ export namespace Components {
         "viewTitle": string;
     }
     interface BcViewGantt {
+        "addLink": (link: GanttLink) => Promise<string | number>;
+        "addMarker": (m: GanttMarker) => Promise<string | number>;
+        "addTask": (task: GanttTask, parent?: string | number, index?: number) => Promise<string | number>;
+        "calculateDuration": (cfg: { start_date: Date; end_date?: Date; }) => Promise<number>;
+        "calculateEndDate": (cfg: { start_date: Date; duration: number; }) => Promise<Date>;
+        "clearAll": () => Promise<void>;
+        "clearRedoStack": () => Promise<void>;
+        "clearUndoStack": () => Promise<void>;
+        "close": (id: string | number) => Promise<void>;
+        "closeAll": () => Promise<void>;
+        "collapse": () => Promise<void>;
+        /**
+          * @default ''
+         */
+        "columns": string;
         /**
           * @default '{}'
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        "dateFromPos": (pos: number) => Promise<Date | null>;
+        "deleteLink": (id: string | number) => Promise<void>;
+        "deleteMarker": (id: string | number) => Promise<void>;
+        "deleteTask": (id: string | number) => Promise<void>;
+        "eachTask": (cb: (task: GanttTask) => void) => Promise<void>;
+        "expand": () => Promise<void>;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
+          * @default ''
+         */
+        "fieldMapping": string;
+        /**
           * @default '[]'
          */
         "fields": string;
+        "getChildren": (id: string | number) => Promise<GanttTask[]>;
+        "getGlobalTaskIndex": (id: string | number) => Promise<number>;
+        "getLink": (id: string | number) => Promise<GanttLink | undefined>;
+        "getLinkCount": () => Promise<number>;
+        "getLinks": () => Promise<GanttLink[]>;
+        "getMarker": (id: string | number) => Promise<GanttMarker | undefined>;
+        "getNext": (id: string | number) => Promise<string | number | null>;
+        "getParent": (id: string | number) => Promise<string | number | undefined>;
+        "getPrev": (id: string | number) => Promise<string | number | null>;
+        "getRedoStack": () => Promise<Array<{ type: string; data: unknown; }>>;
+        "getScrollState": () => Promise<GanttScrollEvent>;
+        "getSelectedId": () => Promise<string | number | null>;
+        "getSiblings": (id: string | number) => Promise<GanttTask[]>;
+        "getState": () => Promise<{ selectedIndex: string | number | null; scrollTop: number; scrollLeft: number; }>;
+        "getTask": (id: string | number) => Promise<GanttTask | undefined>;
+        "getTaskCount": () => Promise<number>;
+        "getTaskIndex": (id: string | number) => Promise<number>;
+        "getTasks": () => Promise<GanttTask[]>;
+        "getUndoStack": () => Promise<Array<{ type: string; data: unknown; }>>;
+        "getVisibleTaskCount": () => Promise<number>;
+        "hasChild": (id: string | number) => Promise<number>;
+        /**
+          * @default '500px'
+         */
+        "height": string;
+        "isSelected": (id: string | number) => Promise<boolean>;
+        "isTaskExists": (id: string | number) => Promise<boolean>;
+        "isTaskVisible": (id: string | number) => Promise<boolean>;
+        /**
+          * @default '[]'
+         */
+        "links": string;
+        /**
+          * @default false
+         */
+        "loading": boolean;
+        "localData"?: string;
+        /**
+          * @default '[]'
+         */
+        "markers": string;
         /**
           * @default ''
          */
         "model": string;
+        "moveTask": (id: string | number, index: number, parent?: string | number) => Promise<void>;
+        "open": (id: string | number) => Promise<void>;
+        "openAll": () => Promise<void>;
+        "parseData": (data: { tasks?: GanttTask[]; links?: GanttLink[]; }) => Promise<void>;
+        "posFromDate": (date: Date) => Promise<number>;
+        /**
+          * @default false
+         */
+        "readonly": boolean;
+        "redo": () => Promise<boolean>;
         "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
+        "rerender": () => Promise<void>;
+        /**
+          * @default ''
+         */
+        "scales": string;
+        "scrollTo": (x?: number, y?: number) => Promise<void>;
+        "selectTask": (id: string | number) => Promise<void>;
+        "serialize": () => Promise<{ tasks: GanttTask[]; links: GanttLink[]; }>;
+        "setData": (data: { tasks?: GanttTask[]; links?: GanttLink[]; }) => Promise<void>;
+        "setSizes": () => Promise<void>;
+        "showDate": (date: Date) => Promise<void>;
+        "showTask": (id: string | number) => Promise<void>;
+        "sortBy": (field: string, desc?: boolean) => Promise<void>;
+        /**
+          * @default '[]'
+         */
+        "tasks": string;
+        /**
+          * @default '{}'
+         */
+        "templates": string;
+        "undo": () => Promise<boolean>;
+        "unselectTask": () => Promise<void>;
+        "updateLink": (id: string | number, ns?: Partial<GanttLink>) => Promise<void>;
+        "updateTask": (id: string | number, ns?: Partial<GanttTask>) => Promise<void>;
         /**
           * @default ''
          */
@@ -5902,9 +6495,19 @@ export namespace Components {
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields": string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -5921,14 +6524,28 @@ export namespace Components {
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields": string;
+        "localData"?: string;
         /**
           * @default ''
          */
         "model": string;
         "refresh": () => Promise<void>;
+        /**
+          * @default 0
+         */
+        "refreshInterval": number;
         /**
           * @default ''
          */
@@ -5940,6 +6557,15 @@ export namespace Components {
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields": string;
@@ -5947,6 +6573,7 @@ export namespace Components {
           * @default 'location'
          */
         "geoField": string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -5967,9 +6594,19 @@ export namespace Components {
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields": string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -5986,9 +6623,19 @@ export namespace Components {
          */
         "config": string;
         /**
+          * @default ''
+         */
+        "dataSource": string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders": string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields": string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -6584,6 +7231,22 @@ export interface BcHeaderCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcHeaderElement;
 }
+export interface BcKanbanBoardCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcKanbanBoardElement;
+}
+export interface BcKanbanCardAttachmentsCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcKanbanCardAttachmentsElement;
+}
+export interface BcKanbanCardCommentsCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcKanbanCardCommentsElement;
+}
+export interface BcKanbanCardSubtasksCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcKanbanCardSubtasksElement;
+}
 export interface BcLookupModalCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcLookupModalElement;
@@ -6600,9 +7263,21 @@ export interface BcSyncStatusCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcSyncStatusElement;
 }
+export interface BcTimelineCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcTimelineElement;
+}
 export interface BcToastCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcToastElement;
+}
+export interface BcViewActivityCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcViewActivityElement;
+}
+export interface BcViewCalendarCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcViewCalendarElement;
 }
 export interface BcViewEditorCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -6612,6 +7287,10 @@ export interface BcViewFormCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcViewFormElement;
 }
+export interface BcViewGanttCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcViewGanttElement;
+}
 export interface BcViewKanbanCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcViewKanbanElement;
@@ -6619,6 +7298,18 @@ export interface BcViewKanbanCustomEvent<T> extends CustomEvent<T> {
 export interface BcViewListCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLBcViewListElement;
+}
+export interface BcViewMapCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcViewMapElement;
+}
+export interface BcViewReportCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcViewReportElement;
+}
+export interface BcViewTreeCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLBcViewTreeElement;
 }
 declare global {
     interface HTMLBcActivityElementEventMap {
@@ -6656,6 +7347,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartAreaElement extends Components.BcChartArea, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartAreaElementEventMap>(type: K, listener: (this: HTMLBcChartAreaElement, ev: BcChartAreaCustomEvent<HTMLBcChartAreaElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6677,6 +7369,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartBarElement extends Components.BcChartBar, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartBarElementEventMap>(type: K, listener: (this: HTMLBcChartBarElement, ev: BcChartBarCustomEvent<HTMLBcChartBarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6698,6 +7391,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartBoxplotElement extends Components.BcChartBoxplot, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartBoxplotElementEventMap>(type: K, listener: (this: HTMLBcChartBoxplotElement, ev: BcChartBoxplotCustomEvent<HTMLBcChartBoxplotElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6719,6 +7413,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartCandlestickElement extends Components.BcChartCandlestick, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartCandlestickElementEventMap>(type: K, listener: (this: HTMLBcChartCandlestickElement, ev: BcChartCandlestickCustomEvent<HTMLBcChartCandlestickElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6738,6 +7433,7 @@ declare global {
         "lcChartClick": ChartClickEvent;
         "lcChartHover": ChartHoverEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartCustomElement extends Components.BcChartCustom, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartCustomElementEventMap>(type: K, listener: (this: HTMLBcChartCustomElement, ev: BcChartCustomCustomEvent<HTMLBcChartCustomElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6759,6 +7455,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartFunnelElement extends Components.BcChartFunnel, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartFunnelElementEventMap>(type: K, listener: (this: HTMLBcChartFunnelElement, ev: BcChartFunnelCustomEvent<HTMLBcChartFunnelElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6801,6 +7498,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartGraphElement extends Components.BcChartGraph, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartGraphElementEventMap>(type: K, listener: (this: HTMLBcChartGraphElement, ev: BcChartGraphCustomEvent<HTMLBcChartGraphElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6822,6 +7520,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartHeatmapElement extends Components.BcChartHeatmap, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartHeatmapElementEventMap>(type: K, listener: (this: HTMLBcChartHeatmapElement, ev: BcChartHeatmapCustomEvent<HTMLBcChartHeatmapElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6849,6 +7548,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartLineElement extends Components.BcChartLine, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartLineElementEventMap>(type: K, listener: (this: HTMLBcChartLineElement, ev: BcChartLineCustomEvent<HTMLBcChartLineElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6870,6 +7570,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartMixedElement extends Components.BcChartMixed, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartMixedElementEventMap>(type: K, listener: (this: HTMLBcChartMixedElement, ev: BcChartMixedCustomEvent<HTMLBcChartMixedElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6889,6 +7590,7 @@ declare global {
         "lcChartClick": ChartClickEvent;
         "lcChartHover": ChartHoverEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartParallelElement extends Components.BcChartParallel, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartParallelElementEventMap>(type: K, listener: (this: HTMLBcChartParallelElement, ev: BcChartParallelCustomEvent<HTMLBcChartParallelElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6910,6 +7612,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartPictorialbarElement extends Components.BcChartPictorialbar, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartPictorialbarElementEventMap>(type: K, listener: (this: HTMLBcChartPictorialbarElement, ev: BcChartPictorialbarCustomEvent<HTMLBcChartPictorialbarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6931,6 +7634,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartPieElement extends Components.BcChartPie, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartPieElementEventMap>(type: K, listener: (this: HTMLBcChartPieElement, ev: BcChartPieCustomEvent<HTMLBcChartPieElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6958,6 +7662,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartPolarElement extends Components.BcChartPolar, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartPolarElementEventMap>(type: K, listener: (this: HTMLBcChartPolarElement, ev: BcChartPolarCustomEvent<HTMLBcChartPolarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -6985,6 +7690,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartRadarElement extends Components.BcChartRadar, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartRadarElementEventMap>(type: K, listener: (this: HTMLBcChartRadarElement, ev: BcChartRadarCustomEvent<HTMLBcChartRadarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -7006,6 +7712,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartSankeyElement extends Components.BcChartSankey, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartSankeyElementEventMap>(type: K, listener: (this: HTMLBcChartSankeyElement, ev: BcChartSankeyCustomEvent<HTMLBcChartSankeyElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -7027,6 +7734,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartScatterElement extends Components.BcChartScatter, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartScatterElementEventMap>(type: K, listener: (this: HTMLBcChartScatterElement, ev: BcChartScatterCustomEvent<HTMLBcChartScatterElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -7069,6 +7777,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartSunburstElement extends Components.BcChartSunburst, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartSunburstElementEventMap>(type: K, listener: (this: HTMLBcChartSunburstElement, ev: BcChartSunburstCustomEvent<HTMLBcChartSunburstElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -7089,6 +7798,7 @@ declare global {
         "lcChartHover": ChartHoverEvent;
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartThemeriverElement extends Components.BcChartThemeriver, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartThemeriverElementEventMap>(type: K, listener: (this: HTMLBcChartThemeriverElement, ev: BcChartThemeriverCustomEvent<HTMLBcChartThemeriverElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -7110,6 +7820,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartTreeElement extends Components.BcChartTree, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartTreeElementEventMap>(type: K, listener: (this: HTMLBcChartTreeElement, ev: BcChartTreeCustomEvent<HTMLBcChartTreeElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -7131,6 +7842,7 @@ declare global {
         "lcChartLegendSelect": ChartLegendSelectEvent;
         "lcChartDataZoom": ChartDataZoomEvent;
         "lcChartReady": void;
+        "lcError": string;
     }
     interface HTMLBcChartTreemapElement extends Components.BcChartTreemap, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcChartTreemapElementEventMap>(type: K, listener: (this: HTMLBcChartTreemapElement, ev: BcChartTreemapCustomEvent<HTMLBcChartTreemapElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -7289,6 +8001,7 @@ declare global {
     };
     interface HTMLBcDialogQuickentryElementEventMap {
         "lcDialogClose": {type: string; data?: Record<string, string>};
+        "lcError": {message: string};
     }
     interface HTMLBcDialogQuickentryElement extends Components.BcDialogQuickentry, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcDialogQuickentryElementEventMap>(type: K, listener: (this: HTMLBcDialogQuickentryElement, ev: BcDialogQuickentryCustomEvent<HTMLBcDialogQuickentryElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -8215,9 +8928,96 @@ declare global {
         prototype: HTMLBcHtmlBlockElement;
         new (): HTMLBcHtmlBlockElement;
     };
+    interface HTMLBcKanbanBoardElementEventMap {
+        "kanbanCardMove": KanbanCardMoveEvent;
+        "kanbanColumnReorder": KanbanColumnReorderEvent;
+        "kanbanCardCreate": KanbanCardCreateEvent;
+        "kanbanCardUpdate": KanbanCardUpdateEvent;
+        "kanbanCardDelete": KanbanCardDeleteEvent;
+        "kanbanColumnAdd": KanbanColumnAddEvent;
+        "kanbanColumnRename": KanbanColumnRenameEvent;
+        "kanbanColumnDelete": KanbanColumnDeleteEvent;
+        "kanbanError": { message: string };
+    }
+    interface HTMLBcKanbanBoardElement extends Components.BcKanbanBoard, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcKanbanBoardElementEventMap>(type: K, listener: (this: HTMLBcKanbanBoardElement, ev: BcKanbanBoardCustomEvent<HTMLBcKanbanBoardElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcKanbanBoardElementEventMap>(type: K, listener: (this: HTMLBcKanbanBoardElement, ev: BcKanbanBoardCustomEvent<HTMLBcKanbanBoardElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcKanbanBoardElement: {
+        prototype: HTMLBcKanbanBoardElement;
+        new (): HTMLBcKanbanBoardElement;
+    };
+    interface HTMLBcKanbanCardActivityElement extends Components.BcKanbanCardActivity, HTMLStencilElement {
+    }
+    var HTMLBcKanbanCardActivityElement: {
+        prototype: HTMLBcKanbanCardActivityElement;
+        new (): HTMLBcKanbanCardActivityElement;
+    };
+    interface HTMLBcKanbanCardAttachmentsElementEventMap {
+        "kanbanAttachmentUpload": KanbanAttachmentUploadEvent;
+        "kanbanAttachmentDelete": KanbanAttachmentDeleteEvent;
+    }
+    interface HTMLBcKanbanCardAttachmentsElement extends Components.BcKanbanCardAttachments, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcKanbanCardAttachmentsElementEventMap>(type: K, listener: (this: HTMLBcKanbanCardAttachmentsElement, ev: BcKanbanCardAttachmentsCustomEvent<HTMLBcKanbanCardAttachmentsElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcKanbanCardAttachmentsElementEventMap>(type: K, listener: (this: HTMLBcKanbanCardAttachmentsElement, ev: BcKanbanCardAttachmentsCustomEvent<HTMLBcKanbanCardAttachmentsElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcKanbanCardAttachmentsElement: {
+        prototype: HTMLBcKanbanCardAttachmentsElement;
+        new (): HTMLBcKanbanCardAttachmentsElement;
+    };
+    interface HTMLBcKanbanCardCommentsElementEventMap {
+        "kanbanCommentCreate": KanbanCommentCreateEvent;
+        "kanbanCommentDelete": KanbanCommentDeleteEvent;
+    }
+    interface HTMLBcKanbanCardCommentsElement extends Components.BcKanbanCardComments, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcKanbanCardCommentsElementEventMap>(type: K, listener: (this: HTMLBcKanbanCardCommentsElement, ev: BcKanbanCardCommentsCustomEvent<HTMLBcKanbanCardCommentsElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcKanbanCardCommentsElementEventMap>(type: K, listener: (this: HTMLBcKanbanCardCommentsElement, ev: BcKanbanCardCommentsCustomEvent<HTMLBcKanbanCardCommentsElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcKanbanCardCommentsElement: {
+        prototype: HTMLBcKanbanCardCommentsElement;
+        new (): HTMLBcKanbanCardCommentsElement;
+    };
+    interface HTMLBcKanbanCardSubtasksElementEventMap {
+        "kanbanSubtaskToggle": KanbanSubtaskToggleEvent;
+        "kanbanSubtaskCreate": KanbanSubtaskCreateEvent;
+        "kanbanSubtaskDelete": KanbanSubtaskDeleteEvent;
+    }
+    interface HTMLBcKanbanCardSubtasksElement extends Components.BcKanbanCardSubtasks, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcKanbanCardSubtasksElementEventMap>(type: K, listener: (this: HTMLBcKanbanCardSubtasksElement, ev: BcKanbanCardSubtasksCustomEvent<HTMLBcKanbanCardSubtasksElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcKanbanCardSubtasksElementEventMap>(type: K, listener: (this: HTMLBcKanbanCardSubtasksElement, ev: BcKanbanCardSubtasksCustomEvent<HTMLBcKanbanCardSubtasksElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLBcKanbanCardSubtasksElement: {
+        prototype: HTMLBcKanbanCardSubtasksElement;
+        new (): HTMLBcKanbanCardSubtasksElement;
+    };
     interface HTMLBcLookupModalElementEventMap {
         "lcLookupSelect": { records: Array<Record<string, unknown>> };
         "lcLookupClose": void;
+        "lcError": {message: string};
     }
     interface HTMLBcLookupModalElement extends Components.BcLookupModal, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcLookupModalElementEventMap>(type: K, listener: (this: HTMLBcLookupModalElement, ev: BcLookupModalCustomEvent<HTMLBcLookupModalElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -8288,6 +9088,7 @@ declare global {
     };
     interface HTMLBcSearchElementEventMap {
         "lcSearch": {query: string};
+        "lcError": {message: string};
     }
     interface HTMLBcSearchElement extends Components.BcSearch, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcSearchElementEventMap>(type: K, listener: (this: HTMLBcSearchElement, ev: BcSearchCustomEvent<HTMLBcSearchElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -8357,7 +9158,18 @@ declare global {
         prototype: HTMLBcTabsElement;
         new (): HTMLBcTabsElement;
     };
+    interface HTMLBcTimelineElementEventMap {
+        "lcError": {message: string};
+    }
     interface HTMLBcTimelineElement extends Components.BcTimeline, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcTimelineElementEventMap>(type: K, listener: (this: HTMLBcTimelineElement, ev: BcTimelineCustomEvent<HTMLBcTimelineElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcTimelineElementEventMap>(type: K, listener: (this: HTMLBcTimelineElement, ev: BcTimelineCustomEvent<HTMLBcTimelineElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLBcTimelineElement: {
         prototype: HTMLBcTimelineElement;
@@ -8386,13 +9198,35 @@ declare global {
         prototype: HTMLBcUrlElement;
         new (): HTMLBcUrlElement;
     };
+    interface HTMLBcViewActivityElementEventMap {
+        "lcError": {message: string};
+    }
     interface HTMLBcViewActivityElement extends Components.BcViewActivity, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcViewActivityElementEventMap>(type: K, listener: (this: HTMLBcViewActivityElement, ev: BcViewActivityCustomEvent<HTMLBcViewActivityElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcViewActivityElementEventMap>(type: K, listener: (this: HTMLBcViewActivityElement, ev: BcViewActivityCustomEvent<HTMLBcViewActivityElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLBcViewActivityElement: {
         prototype: HTMLBcViewActivityElement;
         new (): HTMLBcViewActivityElement;
     };
+    interface HTMLBcViewCalendarElementEventMap {
+        "lcError": {message: string};
+    }
     interface HTMLBcViewCalendarElement extends Components.BcViewCalendar, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcViewCalendarElementEventMap>(type: K, listener: (this: HTMLBcViewCalendarElement, ev: BcViewCalendarCustomEvent<HTMLBcViewCalendarElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcViewCalendarElementEventMap>(type: K, listener: (this: HTMLBcViewCalendarElement, ev: BcViewCalendarCustomEvent<HTMLBcViewCalendarElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLBcViewCalendarElement: {
         prototype: HTMLBcViewCalendarElement;
@@ -8417,6 +9251,7 @@ declare global {
     };
     interface HTMLBcViewFormElementEventMap {
         "lcFormSubmit": {model: string; data: Record<string, unknown>; id?: string};
+        "lcError": {message: string};
     }
     interface HTMLBcViewFormElement extends Components.BcViewForm, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcViewFormElementEventMap>(type: K, listener: (this: HTMLBcViewFormElement, ev: BcViewFormCustomEvent<HTMLBcViewFormElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -8432,7 +9267,55 @@ declare global {
         prototype: HTMLBcViewFormElement;
         new (): HTMLBcViewFormElement;
     };
-    interface HTMLBcViewGanttElement extends Components.BcViewGantt, HTMLStencilElement {
+    interface HTMLBcViewGanttElementEventMap {
+        "lcGanttTaskClick": { id: string | number; task: GanttTask };
+        "lcGanttTaskDblClick": { id: string | number; task: GanttTask };
+        "lcGanttTaskDrag": GanttTaskDragEvent;
+        "lcGanttTaskAdd": GanttTaskAddEvent;
+        "lcGanttTaskUpdate": GanttTaskUpdateEvent;
+        "lcGanttTaskDelete": GanttTaskDeleteEvent;
+        "lcGanttTaskSelect": GanttTaskSelectEvent;
+        "lcGanttTaskUnselect": { id: string | number };
+        "lcGanttTaskMove": GanttTaskMoveEvent;
+        "lcGanttTaskRowClick": { id: string | number; task: GanttTask };
+        "lcGanttLinkClick": { id: string | number; link: GanttLink };
+        "lcGanttLinkDblClick": { id: string | number; link: GanttLink };
+        "lcGanttLinkAdd": GanttLinkEvent;
+        "lcGanttLinkUpdate": GanttLinkEvent;
+        "lcGanttLinkDelete": GanttLinkEvent;
+        "lcGanttLinkDrag": GanttLinkDragEvent;
+        "lcGanttScaleClick": GanttScaleClickEvent;
+        "lcGanttScroll": GanttScrollEvent;
+        "lcGanttColumnResize": GanttColumnResizeEvent;
+        "lcGanttRowResize": GanttRowResizeEvent;
+        "lcGanttContextMenu": GanttContextMenuEvent;
+        "lcGanttEmptyClick": { nativeEvent: MouseEvent };
+        "lcGanttReady": void;
+        "lcGanttRendered": void;
+        "lcGanttParsed": void;
+        "lcGanttError": GanttErrorEvent;
+        "lcGanttTaskOpened": { id: string | number };
+        "lcGanttTaskClosed": { id: string | number };
+        "lcGanttBeforeTaskDrag": { id: string | number; mode: string; nativeEvent: Event };
+        "lcGanttAfterTaskDrag": { id: string | number; mode: string; nativeEvent: Event };
+        "lcGanttBeforeTaskAdd": { id: string | number; task: GanttTask };
+        "lcGanttBeforeTaskDelete": { id: string | number; task: GanttTask };
+        "lcGanttBeforeTaskUpdate": { id: string | number; task: GanttTask };
+        "lcGanttBeforeTaskMove": { id: string | number; parent: string | number; index: number };
+        "lcGanttBeforeLinkAdd": { id: string | number; link: GanttLink };
+        "lcGanttBeforeLinkDelete": { id: string | number; link: GanttLink };
+        "lcGanttBeforeLinkUpdate": { id: string | number; link: GanttLink };
+    }
+    interface HTMLBcViewGanttElement extends Omit<Components.BcViewGantt, "scrollTo">, HTMLStencilElement {
+        "scrollTo": (x?: number, y?: number) => Promise<void>;
+        addEventListener<K extends keyof HTMLBcViewGanttElementEventMap>(type: K, listener: (this: HTMLBcViewGanttElement, ev: BcViewGanttCustomEvent<HTMLBcViewGanttElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcViewGanttElementEventMap>(type: K, listener: (this: HTMLBcViewGanttElement, ev: BcViewGanttCustomEvent<HTMLBcViewGanttElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLBcViewGanttElement: {
         prototype: HTMLBcViewGanttElement;
@@ -8440,6 +9323,8 @@ declare global {
     };
     interface HTMLBcViewKanbanElementEventMap {
         "lcKanbanMove": {id: string; from: string; to: string};
+        "lcKanbanColumnReorder": {columns: string[]};
+        "lcError": {message: string};
     }
     interface HTMLBcViewKanbanElement extends Components.BcViewKanban, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcViewKanbanElementEventMap>(type: K, listener: (this: HTMLBcViewKanbanElement, ev: BcViewKanbanCustomEvent<HTMLBcViewKanbanElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -8457,6 +9342,7 @@ declare global {
     };
     interface HTMLBcViewListElementEventMap {
         "lcRowSelect": {ids: string[]};
+        "lcError": {message: string};
     }
     interface HTMLBcViewListElement extends Components.BcViewList, HTMLStencilElement {
         addEventListener<K extends keyof HTMLBcViewListElementEventMap>(type: K, listener: (this: HTMLBcViewListElement, ev: BcViewListCustomEvent<HTMLBcViewListElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -8472,19 +9358,52 @@ declare global {
         prototype: HTMLBcViewListElement;
         new (): HTMLBcViewListElement;
     };
+    interface HTMLBcViewMapElementEventMap {
+        "lcError": {message: string};
+    }
     interface HTMLBcViewMapElement extends Components.BcViewMap, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcViewMapElementEventMap>(type: K, listener: (this: HTMLBcViewMapElement, ev: BcViewMapCustomEvent<HTMLBcViewMapElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcViewMapElementEventMap>(type: K, listener: (this: HTMLBcViewMapElement, ev: BcViewMapCustomEvent<HTMLBcViewMapElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLBcViewMapElement: {
         prototype: HTMLBcViewMapElement;
         new (): HTMLBcViewMapElement;
     };
+    interface HTMLBcViewReportElementEventMap {
+        "lcError": {message: string};
+    }
     interface HTMLBcViewReportElement extends Components.BcViewReport, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcViewReportElementEventMap>(type: K, listener: (this: HTMLBcViewReportElement, ev: BcViewReportCustomEvent<HTMLBcViewReportElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcViewReportElementEventMap>(type: K, listener: (this: HTMLBcViewReportElement, ev: BcViewReportCustomEvent<HTMLBcViewReportElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLBcViewReportElement: {
         prototype: HTMLBcViewReportElement;
         new (): HTMLBcViewReportElement;
     };
+    interface HTMLBcViewTreeElementEventMap {
+        "lcError": {message: string};
+    }
     interface HTMLBcViewTreeElement extends Components.BcViewTree, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLBcViewTreeElementEventMap>(type: K, listener: (this: HTMLBcViewTreeElement, ev: BcViewTreeCustomEvent<HTMLBcViewTreeElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLBcViewTreeElementEventMap>(type: K, listener: (this: HTMLBcViewTreeElement, ev: BcViewTreeCustomEvent<HTMLBcViewTreeElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLBcViewTreeElement: {
         prototype: HTMLBcViewTreeElement;
@@ -8624,6 +9543,11 @@ declare global {
         "bc-handle": HTMLBcHandleElement;
         "bc-header": HTMLBcHeaderElement;
         "bc-html-block": HTMLBcHtmlBlockElement;
+        "bc-kanban-board": HTMLBcKanbanBoardElement;
+        "bc-kanban-card-activity": HTMLBcKanbanCardActivityElement;
+        "bc-kanban-card-attachments": HTMLBcKanbanCardAttachmentsElement;
+        "bc-kanban-card-comments": HTMLBcKanbanCardCommentsElement;
+        "bc-kanban-card-subtasks": HTMLBcKanbanCardSubtasksElement;
         "bc-lookup-modal": HTMLBcLookupModalElement;
         "bc-phone": HTMLBcPhoneElement;
         "bc-placeholder": HTMLBcPlaceholderElement;
@@ -8708,6 +9632,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -8720,6 +9645,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -8732,15 +9658,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartAreaCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartAreaCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartAreaCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartAreaCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartAreaCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartAreaCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -8791,6 +9723,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -8803,6 +9736,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -8819,15 +9753,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartBarCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartBarCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartBarCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartBarCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartBarCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartBarCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -8874,6 +9814,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -8886,6 +9827,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -8898,15 +9840,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartBoxplotCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartBoxplotCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartBoxplotCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartBoxplotCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartBoxplotCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartBoxplotCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -8949,6 +9897,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -8961,6 +9910,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -8973,6 +9923,7 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -8981,11 +9932,16 @@ declare namespace LocalJSX {
           * @default 5
          */
         "maPeriod"?: number;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartCandlestickCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartCandlestickCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartCandlestickCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartCandlestickCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartCandlestickCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartCandlestickCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9016,6 +9972,7 @@ declare namespace LocalJSX {
         "width"?: string;
     }
     interface BcChartCustom {
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9024,6 +9981,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '400px'
          */
@@ -9032,9 +9990,15 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartCustomCustomEvent<ChartClickEvent>) => void;
         "onLcChartHover"?: (event: BcChartCustomCustomEvent<ChartHoverEvent>) => void;
         "onLcChartReady"?: (event: BcChartCustomCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartCustomCustomEvent<string>) => void;
         /**
           * @default '{}'
          */
@@ -9073,6 +10037,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9081,6 +10046,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9093,15 +10059,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartFunnelCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartFunnelCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartFunnelCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartFunnelCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartFunnelCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartFunnelCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9211,6 +10183,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9223,6 +10196,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9239,15 +10213,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartGraphCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartGraphCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartGraphCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartGraphCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartGraphCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartGraphCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9294,6 +10274,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9306,6 +10287,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9318,15 +10300,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartHeatmapCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartHeatmapCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartHeatmapCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartHeatmapCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartHeatmapCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartHeatmapCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9407,6 +10395,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9419,6 +10408,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9431,15 +10421,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartLineCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartLineCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartLineCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartLineCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartLineCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartLineCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9490,6 +10486,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9506,6 +10503,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9518,15 +10516,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartMixedCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartMixedCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartMixedCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartMixedCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartMixedCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartMixedCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9573,6 +10577,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9581,6 +10586,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9593,13 +10599,19 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartParallelCustomEvent<ChartClickEvent>) => void;
         "onLcChartHover"?: (event: BcChartParallelCustomEvent<ChartHoverEvent>) => void;
         "onLcChartReady"?: (event: BcChartParallelCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartParallelCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9642,6 +10654,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9654,6 +10667,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9666,15 +10680,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartPictorialbarCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartPictorialbarCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartPictorialbarCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartPictorialbarCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartPictorialbarCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartPictorialbarCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9721,6 +10741,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9733,6 +10754,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9745,15 +10767,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartPieCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartPieCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartPieCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartPieCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartPieCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartPieCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -9822,6 +10850,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9830,6 +10859,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -9842,15 +10872,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartPolarCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartPolarCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartPolarCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartPolarCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartPolarCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartPolarCustomEvent<string>) => void;
         /**
           * @default 'bar'
          */
@@ -9923,6 +10959,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -9935,6 +10972,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default false
          */
@@ -9951,15 +10989,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartRadarCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartRadarCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartRadarCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartRadarCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartRadarCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartRadarCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -10006,6 +11050,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -10018,6 +11063,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -10030,15 +11076,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartSankeyCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartSankeyCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartSankeyCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartSankeyCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartSankeyCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartSankeyCustomEvent<string>) => void;
         /**
           * @default 'horizontal'
          */
@@ -10089,6 +11141,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -10105,6 +11158,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -10117,15 +11171,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartScatterCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartScatterCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartScatterCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartScatterCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartScatterCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartScatterCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -10219,6 +11279,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -10227,6 +11288,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -10243,15 +11305,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartSunburstCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartSunburstCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartSunburstCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartSunburstCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartSunburstCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartSunburstCustomEvent<string>) => void;
         /**
           * @default '90%'
          */
@@ -10298,6 +11366,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -10306,6 +11375,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -10318,14 +11388,20 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartThemeriverCustomEvent<ChartClickEvent>) => void;
         "onLcChartHover"?: (event: BcChartThemeriverCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartThemeriverCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartThemeriverCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartThemeriverCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -10368,6 +11444,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -10376,6 +11453,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -10392,15 +11470,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartTreeCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartTreeCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartTreeCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartTreeCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartTreeCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartTreeCustomEvent<string>) => void;
         /**
           * @default 'LR'
          */
@@ -10447,6 +11531,7 @@ declare namespace LocalJSX {
           * @default '[]'
          */
         "data"?: string;
+        "dataFetcher"?: DataFetcher;
         /**
           * @default ''
          */
@@ -10459,6 +11544,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '300px'
          */
@@ -10475,15 +11561,21 @@ declare namespace LocalJSX {
           * @default false
          */
         "loading"?: boolean;
+        "localData"?: string;
         /**
           * @default ''
          */
         "locale"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
         "onLcChartClick"?: (event: BcChartTreemapCustomEvent<ChartClickEvent>) => void;
         "onLcChartDataZoom"?: (event: BcChartTreemapCustomEvent<ChartDataZoomEvent>) => void;
         "onLcChartHover"?: (event: BcChartTreemapCustomEvent<ChartHoverEvent>) => void;
         "onLcChartLegendSelect"?: (event: BcChartTreemapCustomEvent<ChartLegendSelectEvent>) => void;
         "onLcChartReady"?: (event: BcChartTreemapCustomEvent<void>) => void;
+        "onLcError"?: (event: BcChartTreemapCustomEvent<string>) => void;
         /**
           * @default 0
          */
@@ -10604,6 +11696,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '[]'
          */
@@ -10792,16 +11885,27 @@ declare namespace LocalJSX {
         /**
           * @default ''
          */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
         "dialogTitle"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
         /**
           * @default '[]'
          */
         "fields"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
         "model"?: string;
         "onLcDialogClose"?: (event: BcDialogQuickentryCustomEvent<{type: string; data?: Record<string, string>}>) => void;
+        "onLcError"?: (event: BcDialogQuickentryCustomEvent<{message: string}>) => void;
         /**
           * @default false
          */
@@ -13996,6 +15100,271 @@ declare namespace LocalJSX {
          */
         "content"?: string;
     }
+    interface BcKanbanBoard {
+        /**
+          * @default ''
+         */
+        "activityDataSource"?: string;
+        "activityLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "activityModel"?: string;
+        /**
+          * @default true
+         */
+        "allowAddCard"?: boolean;
+        /**
+          * @default true
+         */
+        "allowAddColumn"?: boolean;
+        /**
+          * @default false
+         */
+        "allowDeleteColumn"?: boolean;
+        /**
+          * @default true
+         */
+        "allowRenameColumn"?: boolean;
+        /**
+          * @default true
+         */
+        "allowReorderColumns"?: boolean;
+        /**
+          * @default ''
+         */
+        "attachmentDataSource"?: string;
+        "attachmentLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "attachmentModel"?: string;
+        /**
+          * @default ''
+         */
+        "boardTitle"?: string;
+        /**
+          * @default 'assignees'
+         */
+        "cardAssigneesField"?: string;
+        /**
+          * @default ''
+         */
+        "cardCoverField"?: string;
+        /**
+          * @default 'description'
+         */
+        "cardDescriptionField"?: string;
+        /**
+          * @default ''
+         */
+        "cardDetailDataSource"?: string;
+        /**
+          * @default ''
+         */
+        "cardDetailModel"?: string;
+        /**
+          * @default 'due_date'
+         */
+        "cardDueDateField"?: string;
+        /**
+          * @default 'labels'
+         */
+        "cardLabelsField"?: string;
+        /**
+          * @default 'position'
+         */
+        "cardPositionField"?: string;
+        /**
+          * @default 'priority'
+         */
+        "cardPriorityField"?: string;
+        /**
+          * @default 'start_date'
+         */
+        "cardStartDateField"?: string;
+        /**
+          * @default 'name'
+         */
+        "cardTitleField"?: string;
+        /**
+          * @default ''
+         */
+        "columnDataSource"?: string;
+        "columnLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "columnModel"?: string;
+        "columnsConfig"?: string;
+        /**
+          * @default ''
+         */
+        "commentDataSource"?: string;
+        "commentLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "commentModel"?: string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
+          * @default 'stage'
+         */
+        "groupBy"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "mentionDataSource"?: string;
+        "mentionLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "mentionModel"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
+        "onKanbanCardCreate"?: (event: BcKanbanBoardCustomEvent<KanbanCardCreateEvent>) => void;
+        "onKanbanCardDelete"?: (event: BcKanbanBoardCustomEvent<KanbanCardDeleteEvent>) => void;
+        "onKanbanCardMove"?: (event: BcKanbanBoardCustomEvent<KanbanCardMoveEvent>) => void;
+        "onKanbanCardUpdate"?: (event: BcKanbanBoardCustomEvent<KanbanCardUpdateEvent>) => void;
+        "onKanbanColumnAdd"?: (event: BcKanbanBoardCustomEvent<KanbanColumnAddEvent>) => void;
+        "onKanbanColumnDelete"?: (event: BcKanbanBoardCustomEvent<KanbanColumnDeleteEvent>) => void;
+        "onKanbanColumnRename"?: (event: BcKanbanBoardCustomEvent<KanbanColumnRenameEvent>) => void;
+        "onKanbanColumnReorder"?: (event: BcKanbanBoardCustomEvent<KanbanColumnReorderEvent>) => void;
+        "onKanbanError"?: (event: BcKanbanBoardCustomEvent<{ message: string }>) => void;
+        /**
+          * @default ''
+         */
+        "subtaskDataSource"?: string;
+        "subtaskLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "subtaskModel"?: string;
+    }
+    interface BcKanbanCardActivity {
+        /**
+          * @default ''
+         */
+        "cardId"?: string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default 'card_id'
+         */
+        "filterBy"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
+    }
+    interface BcKanbanCardAttachments {
+        /**
+          * @default ''
+         */
+        "cardId"?: string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default 'card_id'
+         */
+        "filterBy"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
+        "onKanbanAttachmentDelete"?: (event: BcKanbanCardAttachmentsCustomEvent<KanbanAttachmentDeleteEvent>) => void;
+        "onKanbanAttachmentUpload"?: (event: BcKanbanCardAttachmentsCustomEvent<KanbanAttachmentUploadEvent>) => void;
+    }
+    interface BcKanbanCardComments {
+        /**
+          * @default ''
+         */
+        "cardId"?: string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default 'card_id'
+         */
+        "filterBy"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "mentionDataSource"?: string;
+        "mentionLocalData"?: string;
+        /**
+          * @default ''
+         */
+        "mentionModel"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
+        "onKanbanCommentCreate"?: (event: BcKanbanCardCommentsCustomEvent<KanbanCommentCreateEvent>) => void;
+        "onKanbanCommentDelete"?: (event: BcKanbanCardCommentsCustomEvent<KanbanCommentDeleteEvent>) => void;
+    }
+    interface BcKanbanCardSubtasks {
+        /**
+          * @default ''
+         */
+        "cardId"?: string;
+        "dataFetcher"?: DataFetcher;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        /**
+          * @default 'card_id'
+         */
+        "filterBy"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
+        "model"?: string;
+        "onKanbanSubtaskCreate"?: (event: BcKanbanCardSubtasksCustomEvent<KanbanSubtaskCreateEvent>) => void;
+        "onKanbanSubtaskDelete"?: (event: BcKanbanCardSubtasksCustomEvent<KanbanSubtaskDeleteEvent>) => void;
+        "onKanbanSubtaskToggle"?: (event: BcKanbanCardSubtasksCustomEvent<KanbanSubtaskToggleEvent>) => void;
+    }
     interface BcLookupModal {
         /**
           * @default ''
@@ -14006,9 +15375,19 @@ declare namespace LocalJSX {
          */
         "columns"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
           * @default 'name'
          */
         "displayField"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -14021,6 +15400,7 @@ declare namespace LocalJSX {
           * @default false
          */
         "multiple"?: boolean;
+        "onLcError"?: (event: BcLookupModalCustomEvent<{message: string}>) => void;
         "onLcLookupClose"?: (event: BcLookupModalCustomEvent<void>) => void;
         "onLcLookupSelect"?: (event: BcLookupModalCustomEvent<{ records: Array<Record<string, unknown>> }>) => void;
         /**
@@ -14099,7 +15479,18 @@ declare namespace LocalJSX {
         /**
           * @default ''
          */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
         "model"?: string;
+        "onLcError"?: (event: BcSearchCustomEvent<{message: string}>) => void;
         "onLcSearch"?: (event: BcSearchCustomEvent<{query: string}>) => void;
         /**
           * @default ''
@@ -14174,7 +15565,18 @@ declare namespace LocalJSX {
         /**
           * @default ''
          */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        "localData"?: string;
+        /**
+          * @default ''
+         */
         "model"?: string;
+        "onLcError"?: (event: BcTimelineCustomEvent<{message: string}>) => void;
         /**
           * @default ''
          */
@@ -14219,13 +15621,24 @@ declare namespace LocalJSX {
          */
         "config"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
         "model"?: string;
+        "onLcError"?: (event: BcViewActivityCustomEvent<{message: string}>) => void;
         /**
           * @default ''
          */
@@ -14237,17 +15650,28 @@ declare namespace LocalJSX {
          */
         "config"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
           * @default 'date'
          */
         "dateField"?: string;
         /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
         "model"?: string;
+        "onLcError"?: (event: BcViewCalendarCustomEvent<{message: string}>) => void;
         /**
           * @default 'name'
          */
@@ -14278,9 +15702,19 @@ declare namespace LocalJSX {
          */
         "config"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -14289,6 +15723,7 @@ declare namespace LocalJSX {
           * @default ''
          */
         "moduleName"?: string;
+        "onLcError"?: (event: BcViewFormCustomEvent<{message: string}>) => void;
         "onLcFormSubmit"?: (event: BcViewFormCustomEvent<{model: string; data: Record<string, unknown>; id?: string}>) => void;
         /**
           * @default '{}'
@@ -14305,17 +15740,108 @@ declare namespace LocalJSX {
     }
     interface BcViewGantt {
         /**
+          * @default ''
+         */
+        "columns"?: string;
+        /**
           * @default '{}'
          */
         "config"?: string;
+        /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
+          * @default ''
+         */
+        "fieldMapping"?: string;
         /**
           * @default '[]'
          */
         "fields"?: string;
         /**
+          * @default '500px'
+         */
+        "height"?: string;
+        /**
+          * @default '[]'
+         */
+        "links"?: string;
+        /**
+          * @default false
+         */
+        "loading"?: boolean;
+        "localData"?: string;
+        /**
+          * @default '[]'
+         */
+        "markers"?: string;
+        /**
           * @default ''
          */
         "model"?: string;
+        "onLcGanttAfterTaskDrag"?: (event: BcViewGanttCustomEvent<{ id: string | number; mode: string; nativeEvent: Event }>) => void;
+        "onLcGanttBeforeLinkAdd"?: (event: BcViewGanttCustomEvent<{ id: string | number; link: GanttLink }>) => void;
+        "onLcGanttBeforeLinkDelete"?: (event: BcViewGanttCustomEvent<{ id: string | number; link: GanttLink }>) => void;
+        "onLcGanttBeforeLinkUpdate"?: (event: BcViewGanttCustomEvent<{ id: string | number; link: GanttLink }>) => void;
+        "onLcGanttBeforeTaskAdd"?: (event: BcViewGanttCustomEvent<{ id: string | number; task: GanttTask }>) => void;
+        "onLcGanttBeforeTaskDelete"?: (event: BcViewGanttCustomEvent<{ id: string | number; task: GanttTask }>) => void;
+        "onLcGanttBeforeTaskDrag"?: (event: BcViewGanttCustomEvent<{ id: string | number; mode: string; nativeEvent: Event }>) => void;
+        "onLcGanttBeforeTaskMove"?: (event: BcViewGanttCustomEvent<{ id: string | number; parent: string | number; index: number }>) => void;
+        "onLcGanttBeforeTaskUpdate"?: (event: BcViewGanttCustomEvent<{ id: string | number; task: GanttTask }>) => void;
+        "onLcGanttColumnResize"?: (event: BcViewGanttCustomEvent<GanttColumnResizeEvent>) => void;
+        "onLcGanttContextMenu"?: (event: BcViewGanttCustomEvent<GanttContextMenuEvent>) => void;
+        "onLcGanttEmptyClick"?: (event: BcViewGanttCustomEvent<{ nativeEvent: MouseEvent }>) => void;
+        "onLcGanttError"?: (event: BcViewGanttCustomEvent<GanttErrorEvent>) => void;
+        "onLcGanttLinkAdd"?: (event: BcViewGanttCustomEvent<GanttLinkEvent>) => void;
+        "onLcGanttLinkClick"?: (event: BcViewGanttCustomEvent<{ id: string | number; link: GanttLink }>) => void;
+        "onLcGanttLinkDblClick"?: (event: BcViewGanttCustomEvent<{ id: string | number; link: GanttLink }>) => void;
+        "onLcGanttLinkDelete"?: (event: BcViewGanttCustomEvent<GanttLinkEvent>) => void;
+        "onLcGanttLinkDrag"?: (event: BcViewGanttCustomEvent<GanttLinkDragEvent>) => void;
+        "onLcGanttLinkUpdate"?: (event: BcViewGanttCustomEvent<GanttLinkEvent>) => void;
+        "onLcGanttParsed"?: (event: BcViewGanttCustomEvent<void>) => void;
+        "onLcGanttReady"?: (event: BcViewGanttCustomEvent<void>) => void;
+        "onLcGanttRendered"?: (event: BcViewGanttCustomEvent<void>) => void;
+        "onLcGanttRowResize"?: (event: BcViewGanttCustomEvent<GanttRowResizeEvent>) => void;
+        "onLcGanttScaleClick"?: (event: BcViewGanttCustomEvent<GanttScaleClickEvent>) => void;
+        "onLcGanttScroll"?: (event: BcViewGanttCustomEvent<GanttScrollEvent>) => void;
+        "onLcGanttTaskAdd"?: (event: BcViewGanttCustomEvent<GanttTaskAddEvent>) => void;
+        "onLcGanttTaskClick"?: (event: BcViewGanttCustomEvent<{ id: string | number; task: GanttTask }>) => void;
+        "onLcGanttTaskClosed"?: (event: BcViewGanttCustomEvent<{ id: string | number }>) => void;
+        "onLcGanttTaskDblClick"?: (event: BcViewGanttCustomEvent<{ id: string | number; task: GanttTask }>) => void;
+        "onLcGanttTaskDelete"?: (event: BcViewGanttCustomEvent<GanttTaskDeleteEvent>) => void;
+        "onLcGanttTaskDrag"?: (event: BcViewGanttCustomEvent<GanttTaskDragEvent>) => void;
+        "onLcGanttTaskMove"?: (event: BcViewGanttCustomEvent<GanttTaskMoveEvent>) => void;
+        "onLcGanttTaskOpened"?: (event: BcViewGanttCustomEvent<{ id: string | number }>) => void;
+        "onLcGanttTaskRowClick"?: (event: BcViewGanttCustomEvent<{ id: string | number; task: GanttTask }>) => void;
+        "onLcGanttTaskSelect"?: (event: BcViewGanttCustomEvent<GanttTaskSelectEvent>) => void;
+        "onLcGanttTaskUnselect"?: (event: BcViewGanttCustomEvent<{ id: string | number }>) => void;
+        "onLcGanttTaskUpdate"?: (event: BcViewGanttCustomEvent<GanttTaskUpdateEvent>) => void;
+        /**
+          * @default false
+         */
+        "readonly"?: boolean;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
+        /**
+          * @default ''
+         */
+        "scales"?: string;
+        /**
+          * @default '[]'
+         */
+        "tasks"?: string;
+        /**
+          * @default '{}'
+         */
+        "templates"?: string;
         /**
           * @default ''
          */
@@ -14327,13 +15853,25 @@ declare namespace LocalJSX {
          */
         "config"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
         "model"?: string;
+        "onLcError"?: (event: BcViewKanbanCustomEvent<{message: string}>) => void;
+        "onLcKanbanColumnReorder"?: (event: BcViewKanbanCustomEvent<{columns: string[]}>) => void;
         "onLcKanbanMove"?: (event: BcViewKanbanCustomEvent<{id: string; from: string; to: string}>) => void;
         /**
           * @default ''
@@ -14346,14 +15884,29 @@ declare namespace LocalJSX {
          */
         "config"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
         "model"?: string;
+        "onLcError"?: (event: BcViewListCustomEvent<{message: string}>) => void;
         "onLcRowSelect"?: (event: BcViewListCustomEvent<{ids: string[]}>) => void;
+        /**
+          * @default 0
+         */
+        "refreshInterval"?: number;
         /**
           * @default ''
          */
@@ -14365,6 +15918,15 @@ declare namespace LocalJSX {
          */
         "config"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields"?: string;
@@ -14372,6 +15934,7 @@ declare namespace LocalJSX {
           * @default 'location'
          */
         "geoField"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
@@ -14380,6 +15943,7 @@ declare namespace LocalJSX {
           * @default 'name'
          */
         "nameField"?: string;
+        "onLcError"?: (event: BcViewMapCustomEvent<{message: string}>) => void;
         /**
           * @default ''
          */
@@ -14391,13 +15955,24 @@ declare namespace LocalJSX {
          */
         "config"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
         "model"?: string;
+        "onLcError"?: (event: BcViewReportCustomEvent<{message: string}>) => void;
         /**
           * @default ''
          */
@@ -14409,13 +15984,24 @@ declare namespace LocalJSX {
          */
         "config"?: string;
         /**
+          * @default ''
+         */
+        "dataSource"?: string;
+        /**
+          * @default ''
+         */
+        "fetchHeaders"?: string;
+        "fetchOptions"?: string;
+        /**
           * @default '[]'
          */
         "fields"?: string;
+        "localData"?: string;
         /**
           * @default ''
          */
         "model"?: string;
+        "onLcError"?: (event: BcViewTreeCustomEvent<{message: string}>) => void;
         /**
           * @default 'parent_id'
          */
@@ -14729,7 +16315,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14750,7 +16339,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14771,7 +16363,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14790,7 +16385,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14808,7 +16406,10 @@ declare namespace LocalJSX {
         "renderer": string;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
     }
     interface BcChartFunnelAttributes {
         "data": string;
@@ -14822,7 +16423,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14857,7 +16461,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14878,7 +16485,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14908,7 +16518,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14929,7 +16542,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14950,7 +16566,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14968,7 +16587,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -14988,7 +16610,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15015,7 +16640,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15042,7 +16670,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15063,7 +16694,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15083,7 +16717,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15117,7 +16754,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15137,7 +16777,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15155,7 +16798,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15175,7 +16821,10 @@ declare namespace LocalJSX {
         "loading": boolean;
         "dataSource": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "refreshInterval": number;
+        "model": string;
+        "localData": string;
         "theme": string;
         "renderer": string;
         "toolbox": boolean;
@@ -15225,6 +16874,7 @@ declare namespace LocalJSX {
         "dataSource": string;
         "localData": string;
         "fetchHeaders": string;
+        "fetchOptions": string;
         "emptyText": string;
     }
     interface BcDialogAlertAttributes {
@@ -15266,7 +16916,11 @@ declare namespace LocalJSX {
         "open": boolean;
         "dialogTitle": string;
         "model": string;
+        "localData": string;
         "fields": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcDialogWizardAttributes {
         "open": boolean;
@@ -16076,14 +17730,97 @@ declare namespace LocalJSX {
     interface BcHtmlBlockAttributes {
         "content": string;
     }
+    interface BcKanbanBoardAttributes {
+        "model": string;
+        "localData": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
+        "boardTitle": string;
+        "groupBy": string;
+        "cardTitleField": string;
+        "cardDescriptionField": string;
+        "cardCoverField": string;
+        "cardAssigneesField": string;
+        "cardDueDateField": string;
+        "cardStartDateField": string;
+        "cardPriorityField": string;
+        "cardLabelsField": string;
+        "cardPositionField": string;
+        "columnsConfig": string;
+        "columnModel": string;
+        "columnDataSource": string;
+        "columnLocalData": string;
+        "allowAddColumn": boolean;
+        "allowAddCard": boolean;
+        "allowRenameColumn": boolean;
+        "allowDeleteColumn": boolean;
+        "allowReorderColumns": boolean;
+        "cardDetailModel": string;
+        "cardDetailDataSource": string;
+        "commentModel": string;
+        "commentDataSource": string;
+        "commentLocalData": string;
+        "subtaskModel": string;
+        "subtaskDataSource": string;
+        "subtaskLocalData": string;
+        "attachmentModel": string;
+        "attachmentDataSource": string;
+        "attachmentLocalData": string;
+        "activityModel": string;
+        "activityDataSource": string;
+        "activityLocalData": string;
+        "mentionModel": string;
+        "mentionDataSource": string;
+        "mentionLocalData": string;
+    }
+    interface BcKanbanCardActivityAttributes {
+        "cardId": string;
+        "localData": string;
+        "dataSource": string;
+        "model": string;
+        "fetchHeaders": string;
+        "filterBy": string;
+    }
+    interface BcKanbanCardAttachmentsAttributes {
+        "cardId": string;
+        "localData": string;
+        "dataSource": string;
+        "model": string;
+        "fetchHeaders": string;
+        "filterBy": string;
+    }
+    interface BcKanbanCardCommentsAttributes {
+        "cardId": string;
+        "localData": string;
+        "dataSource": string;
+        "model": string;
+        "fetchHeaders": string;
+        "filterBy": string;
+        "mentionModel": string;
+        "mentionDataSource": string;
+        "mentionLocalData": string;
+    }
+    interface BcKanbanCardSubtasksAttributes {
+        "cardId": string;
+        "localData": string;
+        "dataSource": string;
+        "model": string;
+        "fetchHeaders": string;
+        "filterBy": string;
+    }
     interface BcLookupModalAttributes {
         "open": boolean;
         "model": string;
+        "localData": string;
         "displayField": string;
         "columns": string;
         "multiple": boolean;
         "apiUrl": string;
         "modalTitle": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcPhoneAttributes {
         "value": string;
@@ -16116,6 +17853,10 @@ declare namespace LocalJSX {
         "value": string;
         "placeholder": string;
         "model": string;
+        "localData": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcSectionAttributes {
         "sectionTitle": string;
@@ -16141,6 +17882,10 @@ declare namespace LocalJSX {
     interface BcTimelineAttributes {
         "recordId": string;
         "model": string;
+        "localData": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcToastAttributes {
         "open": boolean;
@@ -16155,17 +17900,25 @@ declare namespace LocalJSX {
     }
     interface BcViewActivityAttributes {
         "model": string;
+        "localData": string;
         "viewTitle": string;
         "fields": string;
         "config": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcViewCalendarAttributes {
         "model": string;
+        "localData": string;
         "viewTitle": string;
         "fields": string;
         "config": string;
         "dateField": string;
         "titleField": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcViewEditorAttributes {
         "viewJson": string;
@@ -16174,51 +17927,91 @@ declare namespace LocalJSX {
     }
     interface BcViewFormAttributes {
         "model": string;
+        "localData": string;
         "viewTitle": string;
         "recordId": string;
         "fields": string;
         "config": string;
         "permissions": string;
         "moduleName": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcViewGanttAttributes {
-        "model": string;
-        "viewTitle": string;
-        "fields": string;
+        "tasks": string;
+        "links": string;
+        "columns": string;
+        "scales": string;
+        "markers": string;
         "config": string;
+        "templates": string;
+        "viewTitle": string;
+        "height": string;
+        "model": string;
+        "localData": string;
+        "fields": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
+        "refreshInterval": number;
+        "loading": boolean;
+        "readonly": boolean;
+        "fieldMapping": string;
     }
     interface BcViewKanbanAttributes {
         "model": string;
+        "localData": string;
         "viewTitle": string;
         "fields": string;
         "config": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcViewListAttributes {
         "model": string;
+        "localData": string;
         "viewTitle": string;
         "fields": string;
         "config": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
+        "refreshInterval": number;
     }
     interface BcViewMapAttributes {
         "model": string;
+        "localData": string;
         "viewTitle": string;
         "fields": string;
         "config": string;
         "geoField": string;
         "nameField": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcViewReportAttributes {
         "model": string;
+        "localData": string;
         "viewTitle": string;
         "fields": string;
         "config": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcViewTreeAttributes {
         "model": string;
+        "localData": string;
         "viewTitle": string;
         "fields": string;
         "config": string;
         "parentField": string;
+        "dataSource": string;
+        "fetchHeaders": string;
+        "fetchOptions": string;
     }
     interface BcViewerAudioAttributes {
         "src": string;
@@ -16389,6 +18182,11 @@ declare namespace LocalJSX {
         "bc-handle": BcHandle;
         "bc-header": Omit<BcHeader, keyof BcHeaderAttributes> & { [K in keyof BcHeader & keyof BcHeaderAttributes]?: BcHeader[K] } & { [K in keyof BcHeader & keyof BcHeaderAttributes as `attr:${K}`]?: BcHeaderAttributes[K] } & { [K in keyof BcHeader & keyof BcHeaderAttributes as `prop:${K}`]?: BcHeader[K] };
         "bc-html-block": Omit<BcHtmlBlock, keyof BcHtmlBlockAttributes> & { [K in keyof BcHtmlBlock & keyof BcHtmlBlockAttributes]?: BcHtmlBlock[K] } & { [K in keyof BcHtmlBlock & keyof BcHtmlBlockAttributes as `attr:${K}`]?: BcHtmlBlockAttributes[K] } & { [K in keyof BcHtmlBlock & keyof BcHtmlBlockAttributes as `prop:${K}`]?: BcHtmlBlock[K] };
+        "bc-kanban-board": Omit<BcKanbanBoard, keyof BcKanbanBoardAttributes> & { [K in keyof BcKanbanBoard & keyof BcKanbanBoardAttributes]?: BcKanbanBoard[K] } & { [K in keyof BcKanbanBoard & keyof BcKanbanBoardAttributes as `attr:${K}`]?: BcKanbanBoardAttributes[K] } & { [K in keyof BcKanbanBoard & keyof BcKanbanBoardAttributes as `prop:${K}`]?: BcKanbanBoard[K] };
+        "bc-kanban-card-activity": Omit<BcKanbanCardActivity, keyof BcKanbanCardActivityAttributes> & { [K in keyof BcKanbanCardActivity & keyof BcKanbanCardActivityAttributes]?: BcKanbanCardActivity[K] } & { [K in keyof BcKanbanCardActivity & keyof BcKanbanCardActivityAttributes as `attr:${K}`]?: BcKanbanCardActivityAttributes[K] } & { [K in keyof BcKanbanCardActivity & keyof BcKanbanCardActivityAttributes as `prop:${K}`]?: BcKanbanCardActivity[K] };
+        "bc-kanban-card-attachments": Omit<BcKanbanCardAttachments, keyof BcKanbanCardAttachmentsAttributes> & { [K in keyof BcKanbanCardAttachments & keyof BcKanbanCardAttachmentsAttributes]?: BcKanbanCardAttachments[K] } & { [K in keyof BcKanbanCardAttachments & keyof BcKanbanCardAttachmentsAttributes as `attr:${K}`]?: BcKanbanCardAttachmentsAttributes[K] } & { [K in keyof BcKanbanCardAttachments & keyof BcKanbanCardAttachmentsAttributes as `prop:${K}`]?: BcKanbanCardAttachments[K] };
+        "bc-kanban-card-comments": Omit<BcKanbanCardComments, keyof BcKanbanCardCommentsAttributes> & { [K in keyof BcKanbanCardComments & keyof BcKanbanCardCommentsAttributes]?: BcKanbanCardComments[K] } & { [K in keyof BcKanbanCardComments & keyof BcKanbanCardCommentsAttributes as `attr:${K}`]?: BcKanbanCardCommentsAttributes[K] } & { [K in keyof BcKanbanCardComments & keyof BcKanbanCardCommentsAttributes as `prop:${K}`]?: BcKanbanCardComments[K] };
+        "bc-kanban-card-subtasks": Omit<BcKanbanCardSubtasks, keyof BcKanbanCardSubtasksAttributes> & { [K in keyof BcKanbanCardSubtasks & keyof BcKanbanCardSubtasksAttributes]?: BcKanbanCardSubtasks[K] } & { [K in keyof BcKanbanCardSubtasks & keyof BcKanbanCardSubtasksAttributes as `attr:${K}`]?: BcKanbanCardSubtasksAttributes[K] } & { [K in keyof BcKanbanCardSubtasks & keyof BcKanbanCardSubtasksAttributes as `prop:${K}`]?: BcKanbanCardSubtasks[K] };
         "bc-lookup-modal": Omit<BcLookupModal, keyof BcLookupModalAttributes> & { [K in keyof BcLookupModal & keyof BcLookupModalAttributes]?: BcLookupModal[K] } & { [K in keyof BcLookupModal & keyof BcLookupModalAttributes as `attr:${K}`]?: BcLookupModalAttributes[K] } & { [K in keyof BcLookupModal & keyof BcLookupModalAttributes as `prop:${K}`]?: BcLookupModal[K] };
         "bc-phone": Omit<BcPhone, keyof BcPhoneAttributes> & { [K in keyof BcPhone & keyof BcPhoneAttributes]?: BcPhone[K] } & { [K in keyof BcPhone & keyof BcPhoneAttributes as `attr:${K}`]?: BcPhoneAttributes[K] } & { [K in keyof BcPhone & keyof BcPhoneAttributes as `prop:${K}`]?: BcPhone[K] };
         "bc-placeholder": Omit<BcPlaceholder, keyof BcPlaceholderAttributes> & { [K in keyof BcPlaceholder & keyof BcPlaceholderAttributes]?: BcPlaceholder[K] } & { [K in keyof BcPlaceholder & keyof BcPlaceholderAttributes as `attr:${K}`]?: BcPlaceholderAttributes[K] } & { [K in keyof BcPlaceholder & keyof BcPlaceholderAttributes as `prop:${K}`]?: BcPlaceholder[K] };
@@ -16517,6 +18315,11 @@ declare module "@stencil/core" {
             "bc-handle": LocalJSX.IntrinsicElements["bc-handle"] & JSXBase.HTMLAttributes<HTMLBcHandleElement>;
             "bc-header": LocalJSX.IntrinsicElements["bc-header"] & JSXBase.HTMLAttributes<HTMLBcHeaderElement>;
             "bc-html-block": LocalJSX.IntrinsicElements["bc-html-block"] & JSXBase.HTMLAttributes<HTMLBcHtmlBlockElement>;
+            "bc-kanban-board": LocalJSX.IntrinsicElements["bc-kanban-board"] & JSXBase.HTMLAttributes<HTMLBcKanbanBoardElement>;
+            "bc-kanban-card-activity": LocalJSX.IntrinsicElements["bc-kanban-card-activity"] & JSXBase.HTMLAttributes<HTMLBcKanbanCardActivityElement>;
+            "bc-kanban-card-attachments": LocalJSX.IntrinsicElements["bc-kanban-card-attachments"] & JSXBase.HTMLAttributes<HTMLBcKanbanCardAttachmentsElement>;
+            "bc-kanban-card-comments": LocalJSX.IntrinsicElements["bc-kanban-card-comments"] & JSXBase.HTMLAttributes<HTMLBcKanbanCardCommentsElement>;
+            "bc-kanban-card-subtasks": LocalJSX.IntrinsicElements["bc-kanban-card-subtasks"] & JSXBase.HTMLAttributes<HTMLBcKanbanCardSubtasksElement>;
             "bc-lookup-modal": LocalJSX.IntrinsicElements["bc-lookup-modal"] & JSXBase.HTMLAttributes<HTMLBcLookupModalElement>;
             "bc-phone": LocalJSX.IntrinsicElements["bc-phone"] & JSXBase.HTMLAttributes<HTMLBcPhoneElement>;
             "bc-placeholder": LocalJSX.IntrinsicElements["bc-placeholder"] & JSXBase.HTMLAttributes<HTMLBcPlaceholderElement>;

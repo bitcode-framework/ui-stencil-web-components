@@ -1,5 +1,5 @@
-:host {
+﻿:host {
   display: block;
   font-family: var(--bc-font-family, system-ui, sans-serif);
 }
-.bc-link { color: var(--bc-primary); text-decoration: none; } .bc-link:hover { text-decoration: underline; }
+.bc-link { color: var(--bc-primary, #4f46e5); text-decoration: none; } .bc-link:hover { text-decoration: underline; }

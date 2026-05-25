@@ -1,0 +1,157 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (10 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 10 components — Vanilla HTML --&gt;
+&lt;!-- bc-section --&gt;
+&lt;bc-section title=&quot;Section Title&quot;&gt;Content&lt;/bc-section&gt;
+
+&lt;!-- bc-tabs --&gt;
+&lt;bc-tabs&gt;&lt;bc-tab label=&quot;Tab 1&quot;&gt;Content 1&lt;/bc-tab&gt;&lt;bc-tab label=&quot;Tab 2&quot;&gt;Content 2&lt;/bc-tab&gt;&lt;/bc-tabs&gt;
+
+&lt;!-- bc-tab --&gt;
+&lt;bc-tab label=&quot;Tab Content&quot;&gt;Panel content here&lt;/bc-tab&gt;
+
+&lt;!-- bc-row --&gt;
+&lt;bc-row gap=&quot;1rem&quot;&gt;&lt;div&gt;Col 1&lt;/div&gt;&lt;div&gt;Col 2&lt;/div&gt;&lt;/bc-row&gt;
+
+&lt;!-- bc-column --&gt;
+&lt;bc-column width=&quot;50%&quot;&gt;Half-width column&lt;/bc-column&gt;
+
+&lt;!-- bc-header --&gt;
+&lt;bc-header title=&quot;Page Title&quot; subtitle=&quot;Description&quot;&gt;&lt;/bc-header&gt;
+
+&lt;!-- bc-sheet --&gt;
+&lt;bc-sheet title=&quot;Card Title&quot;&gt;Card content&lt;/bc-sheet&gt;
+
+&lt;!-- bc-separator --&gt;
+&lt;bc-separator&gt;&lt;/bc-separator&gt;
+
+&lt;!-- bc-html-block --&gt;
+&lt;bc-html-block content=&quot;&lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Text&lt;/p&gt;&quot;&gt;&lt;/bc-html-block&gt;
+
+&lt;!-- bc-button-box --&gt;
+&lt;bc-button-box&gt;&lt;button&gt;Action&lt;/button&gt;&lt;/bc-button-box&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-section, @bitcode/components/bc-tabs, @bitcode/components/bc-tab, @bitcode/components/bc-row, @bitcode/components/bc-column, @bitcode/components/bc-header, @bitcode/components/bc-sheet, @bitcode/components/bc-separator, @bitcode/components/bc-html-block, @bitcode/components/bc-button-box';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-section */}
+      &lt;bc-section title=&quot;Section Title&quot;&gt;Content&lt;/bc-section&gt;
+
+      {/* bc-tabs */}
+      &lt;bc-tabs&gt;&lt;bc-tab label=&quot;Tab 1&quot;&gt;Content 1&lt;/bc-tab&gt;&lt;bc-tab label=&quot;Tab 2&quot;&gt;Content 2&lt;/bc-tab&gt;&lt;/bc-tabs&gt;
+
+      {/* bc-tab */}
+      &lt;bc-tab label=&quot;Tab Content&quot;&gt;Panel content here&lt;/bc-tab&gt;
+
+      {/* bc-row */}
+      &lt;bc-row gap=&quot;1rem&quot;&gt;&lt;div&gt;Col 1&lt;/div&gt;&lt;div&gt;Col 2&lt;/div&gt;&lt;/bc-row&gt;
+
+      {/* bc-column */}
+      &lt;bc-column width=&quot;50%&quot;&gt;Half-width column&lt;/bc-column&gt;
+
+      {/* bc-header */}
+      &lt;bc-header title=&quot;Page Title&quot; subtitle=&quot;Description&quot;&gt;&lt;/bc-header&gt;
+
+      {/* bc-sheet */}
+      &lt;bc-sheet title=&quot;Card Title&quot;&gt;Card content&lt;/bc-sheet&gt;
+
+      {/* bc-separator */}
+      &lt;bc-separator&gt;&lt;/bc-separator&gt;
+
+      {/* bc-html-block */}
+      &lt;bc-html-block content=&quot;&lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Text&lt;/p&gt;&quot;&gt;&lt;/bc-html-block&gt;
+
+      {/* bc-button-box */}
+      &lt;bc-button-box&gt;&lt;button&gt;Action&lt;/button&gt;&lt;/bc-button-box&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-section --&gt;
+  &lt;bc-section title=&quot;Section Title&quot;&gt;Content&lt;/bc-section&gt;
+
+  &lt;!-- bc-tabs --&gt;
+  &lt;bc-tabs&gt;&lt;bc-tab label=&quot;Tab 1&quot;&gt;Content 1&lt;/bc-tab&gt;&lt;bc-tab label=&quot;Tab 2&quot;&gt;Content 2&lt;/bc-tab&gt;&lt;/bc-tabs&gt;
+
+  &lt;!-- bc-tab --&gt;
+  &lt;bc-tab label=&quot;Tab Content&quot;&gt;Panel content here&lt;/bc-tab&gt;
+
+  &lt;!-- bc-row --&gt;
+  &lt;bc-row gap=&quot;1rem&quot;&gt;&lt;div&gt;Col 1&lt;/div&gt;&lt;div&gt;Col 2&lt;/div&gt;&lt;/bc-row&gt;
+
+  &lt;!-- bc-column --&gt;
+  &lt;bc-column width=&quot;50%&quot;&gt;Half-width column&lt;/bc-column&gt;
+
+  &lt;!-- bc-header --&gt;
+  &lt;bc-header title=&quot;Page Title&quot; subtitle=&quot;Description&quot;&gt;&lt;/bc-header&gt;
+
+  &lt;!-- bc-sheet --&gt;
+  &lt;bc-sheet title=&quot;Card Title&quot;&gt;Card content&lt;/bc-sheet&gt;
+
+  &lt;!-- bc-separator --&gt;
+  &lt;bc-separator&gt;&lt;/bc-separator&gt;
+
+  &lt;!-- bc-html-block --&gt;
+  &lt;bc-html-block content=&quot;&lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Text&lt;/p&gt;&quot;&gt;&lt;/bc-html-block&gt;
+
+  &lt;!-- bc-button-box --&gt;
+  &lt;bc-button-box&gt;&lt;button&gt;Action&lt;/button&gt;&lt;/bc-button-box&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-section --&gt;
+&lt;bc-section title=&quot;Section Title&quot;&gt;Content&lt;/bc-section&gt;
+
+&lt;!-- bc-tabs --&gt;
+&lt;bc-tabs&gt;&lt;bc-tab label=&quot;Tab 1&quot;&gt;Content 1&lt;/bc-tab&gt;&lt;bc-tab label=&quot;Tab 2&quot;&gt;Content 2&lt;/bc-tab&gt;&lt;/bc-tabs&gt;
+
+&lt;!-- bc-tab --&gt;
+&lt;bc-tab label=&quot;Tab Content&quot;&gt;Panel content here&lt;/bc-tab&gt;
+
+&lt;!-- bc-row --&gt;
+&lt;bc-row gap=&quot;1rem&quot;&gt;&lt;div&gt;Col 1&lt;/div&gt;&lt;div&gt;Col 2&lt;/div&gt;&lt;/bc-row&gt;
+
+&lt;!-- bc-column --&gt;
+&lt;bc-column width=&quot;50%&quot;&gt;Half-width column&lt;/bc-column&gt;
+
+&lt;!-- bc-header --&gt;
+&lt;bc-header title=&quot;Page Title&quot; subtitle=&quot;Description&quot;&gt;&lt;/bc-header&gt;
+
+&lt;!-- bc-sheet --&gt;
+&lt;bc-sheet title=&quot;Card Title&quot;&gt;Card content&lt;/bc-sheet&gt;
+
+&lt;!-- bc-separator --&gt;
+&lt;bc-separator&gt;&lt;/bc-separator&gt;
+
+&lt;!-- bc-html-block --&gt;
+&lt;bc-html-block content=&quot;&lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Text&lt;/p&gt;&quot;&gt;&lt;/bc-html-block&gt;
+
+&lt;!-- bc-button-box --&gt;
+&lt;bc-button-box&gt;&lt;button&gt;Action&lt;/button&gt;&lt;/bc-button-box&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

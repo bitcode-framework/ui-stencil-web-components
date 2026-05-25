@@ -38,8 +38,11 @@ export class BcChartCustom {
   @Prop() renderer: string = 'canvas';
   @Prop() dataSource: string = '';
   @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
   @Prop() refreshInterval: number = 0;
-  dataFetcher?: DataFetcher;
+  @Prop() model: string = '';
+  @Prop() localData?: string;
+  @Prop() dataFetcher?: DataFetcher;
 
   private chart: ECharts | null = null;
   private _refreshTimer: ReturnType<typeof setInterval> | null = null;
@@ -48,6 +51,7 @@ export class BcChartCustom {
   @Event() lcChartClick!: EventEmitter<ChartClickEvent>;
   @Event() lcChartHover!: EventEmitter<ChartHoverEvent>;
   @Event() lcChartReady!: EventEmitter<void>;
+  @Event() lcError!: EventEmitter<string>;
 
   componentDidLoad() {
     this.chart = initChart(this.el, this.theme, this.renderer, {
@@ -55,13 +59,15 @@ export class BcChartCustom {
     });
     this._resizeObserver = setupResizeObserver(this.el, this.chart);
     this.renderChart();
-    if (this.dataSource || this.dataFetcher) this._fetchData();
+    if (this.localData || this.dataSource || this.dataFetcher || this.model) this._fetchData();
     if (this.refreshInterval > 0) this._refreshTimer = setInterval(() => this._fetchData(), this.refreshInterval);
   }
 
   @Watch('option') onOptionChange() { this.renderChart(); }
   @Watch('theme') onThemeChange() { this._reinit(); }
   @Watch('renderer') onRendererChange() { this._reinit(); }
+  @Watch('dataSource') onDataSourceChange() { if (this.dataSource || this.model) this._fetchData(); }
+  @Watch('model') onModelChange() { if (this.dataSource || this.model) this._fetchData(); }
 
   disconnectedCallback() { disposeChart(this.chart, this._refreshTimer, this._resizeObserver); }
 
@@ -77,9 +83,9 @@ export class BcChartCustom {
   private async _fetchData() {
     this.loading = true;
     try {
-      const result = await fetchChartData({ dataFetcher: this.dataFetcher, el: this.el, dataSource: this.dataSource, fetchHeaders: this.fetchHeaders });
+      const result = await fetchChartData({ dataFetcher: this.dataFetcher, el: this.el, dataSource: this.dataSource, fetchHeaders: this.fetchHeaders, model: this.model, localData: this.localData, fetchOptions: this.fetchOptions ? JSON.parse(this.fetchOptions) : undefined });
       this.option = JSON.stringify(result);
-    } catch { /* keep existing */ }
+    } catch (err) { this.lcError.emit(String(err)); }
     this.loading = false;
   }
 
@@ -97,7 +103,7 @@ export class BcChartCustom {
   @Method() async setOption(opt: unknown): Promise<void> { this.option = typeof opt === 'string' ? opt : JSON.stringify(opt); }
   @Method() async updateData(newData: unknown): Promise<void> { this.option = typeof newData === 'string' ? newData : JSON.stringify(newData); }
   @Method() async setData(newData: unknown): Promise<void> { this.option = typeof newData === 'string' ? newData : JSON.stringify(newData); }
-  @Method() async refresh(): Promise<void> { if (this.dataSource || this.dataFetcher) await this._fetchData(); else this.renderChart(); }
+  @Method() async refresh(): Promise<void> { if (this.localData || this.dataSource || this.dataFetcher || this.model) await this._fetchData(); else this.renderChart(); }
   @Method() async resize(): Promise<void> { this.chart?.resize(); }
   @Method() async exportImage(format: string = 'png'): Promise<string> { return this.chart?.getDataURL({ type: format as 'png' | 'jpeg' | 'svg', pixelRatio: 2 }) || ''; }
   @Method() async getChartInstance(): Promise<unknown> { return this.chart; }

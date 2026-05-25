@@ -1,9 +1,9 @@
-@import '../field-base.css';
+﻿@import '../field-base.css';
 
 .bc-duration-inputs {
   display: flex;
   align-items: center;
-  gap: var(--bc-spacing-xs);
+  gap: var(--bc-spacing-xs, 0.25rem);
 }
 
 .bc-duration-part {
@@ -12,6 +12,6 @@
 }
 
 .bc-duration-sep {
-  font-size: var(--bc-font-size-sm);
-  color: var(--bc-text-secondary);
+  font-size: var(--bc-font-size-sm, 0.875rem);
+  color: var(--bc-text-secondary, #6b7280);
 }

@@ -1,0 +1,73 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (3 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 3 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-link --&gt;
+&lt;bc-field-link name=&quot;ref&quot; label=&quot;Reference&quot; href=&quot;https://example.com&quot; text=&quot;Open&quot;&gt;&lt;/bc-field-link&gt;
+
+&lt;!-- bc-field-dynlink --&gt;
+&lt;bc-field-dynlink name=&quot;doc&quot; label=&quot;Document&quot; pattern=&quot;/docs/{id}&quot;&gt;&lt;/bc-field-dynlink&gt;
+
+&lt;!-- bc-field-tableselect --&gt;
+&lt;bc-field-tableselect name=&quot;product&quot; label=&quot;Product&quot; model=&quot;product&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;}]'&gt;&lt;/bc-field-tableselect&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-link, @bitcode/components/bc-field-dynlink, @bitcode/components/bc-field-tableselect';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-link */}
+      &lt;bc-field-link name=&quot;ref&quot; label=&quot;Reference&quot; href=&quot;https://example.com&quot; text=&quot;Open&quot;&gt;&lt;/bc-field-link&gt;
+
+      {/* bc-field-dynlink */}
+      &lt;bc-field-dynlink name=&quot;doc&quot; label=&quot;Document&quot; pattern=&quot;/docs/{id}&quot;&gt;&lt;/bc-field-dynlink&gt;
+
+      {/* bc-field-tableselect */}
+      &lt;bc-field-tableselect name=&quot;product&quot; label=&quot;Product&quot; model=&quot;product&quot; columns={[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;}]}&gt;&lt;/bc-field-tableselect&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-link --&gt;
+  &lt;bc-field-link name=&quot;ref&quot; label=&quot;Reference&quot; href=&quot;https://example.com&quot; text=&quot;Open&quot;&gt;&lt;/bc-field-link&gt;
+
+  &lt;!-- bc-field-dynlink --&gt;
+  &lt;bc-field-dynlink name=&quot;doc&quot; label=&quot;Document&quot; pattern=&quot;/docs/{id}&quot;&gt;&lt;/bc-field-dynlink&gt;
+
+  &lt;!-- bc-field-tableselect --&gt;
+  &lt;bc-field-tableselect name=&quot;product&quot; label=&quot;Product&quot; model=&quot;product&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;}]'&gt;&lt;/bc-field-tableselect&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-link --&gt;
+&lt;bc-field-link name=&quot;ref&quot; label=&quot;Reference&quot; href=&quot;https://example.com&quot; text=&quot;Open&quot;&gt;&lt;/bc-field-link&gt;
+
+&lt;!-- bc-field-dynlink --&gt;
+&lt;bc-field-dynlink name=&quot;doc&quot; label=&quot;Document&quot; pattern=&quot;/docs/{id}&quot;&gt;&lt;/bc-field-dynlink&gt;
+
+&lt;!-- bc-field-tableselect --&gt;
+&lt;bc-field-tableselect name=&quot;product&quot; label=&quot;Product&quot; model=&quot;product&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;}]'&gt;&lt;/bc-field-tableselect&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

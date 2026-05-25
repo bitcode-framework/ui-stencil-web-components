@@ -1,0 +1,42 @@
+<!-- FIELDS — TEXT -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="demo-section" id="string">
+    <h2><code>bc-field-string</code></h2>
+    <p class="desc">Single-line text input with validation, prefix/suffix, clearable, character count.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-string name="d-string" label="Basic" placeholder="Type something..." hint="Hint text" clearable></bc-field-string>
+        <bc-field-string name="d-string-req" label="Required + Pattern" required pattern="^[a-zA-Z]+$" pattern-message="Letters only" hint="Only letters"></bc-field-string>
+      </div>
+      <div class="demo-row mt">
+        <bc-field-string name="d-string-pfx" label="Prefix/Suffix" prefix-text="https://" suffix-text=".com" placeholder="example"></bc-field-string>
+        <bc-field-string name="d-string-cnt" label="Counter" max-length="50" show-count clearable></bc-field-string>
+      </div>
+      <div class="demo-row mt">
+        <bc-field-string name="d-string-dis" label="Disabled" value="Cannot edit" disabled></bc-field-string>
+        <bc-field-string name="d-string-ro" label="Readonly" value="Read only" readonly></bc-field-string>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="password">
+    <h2><code>bc-field-password</code></h2>
+    <div class="demo-box">
+      <bc-field-password name="d-pass" label="Password" placeholder="Enter password" required min-length="8" hint="Min 8 chars" show-reveal clearable></bc-field-password>
+    </div>
+  </div>
+
+  <div class="demo-section" id="text">
+    <h2><code>bc-field-text</code></h2>
+    <div class="demo-box">
+      <bc-field-text name="d-text" label="Description" placeholder="Write..." rows="4" max-length="500" show-count hint="Max 500" clearable></bc-field-text>
+    </div>
+  </div>
+
+  <div class="demo-section" id="smalltext">
+    <h2><code>bc-field-smalltext</code></h2>
+    <div class="demo-box">
+      <bc-field-smalltext name="d-stext" label="Short Note" placeholder="Brief..." rows="2" clearable></bc-field-smalltext>
+    </div>
+  </div>

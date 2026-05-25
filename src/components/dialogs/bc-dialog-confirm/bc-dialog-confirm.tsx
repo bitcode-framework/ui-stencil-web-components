@@ -33,13 +33,23 @@ export class BcDialogConfirm {
     this.lcDialogClose.emit({type: 'cancel'});
   }
 
+  private _icon(): string {
+    switch (this.variant) {
+      case 'danger': return '⚠';
+      case 'warning': return '⚡';
+      case 'info': return 'ℹ';
+      default: return '?';
+    }
+  }
+
   render() {
     if (!this.open) return null;
+    const btnClass = this.variant === 'danger' ? 'bc-btn-danger' : this.variant === 'warning' ? 'bc-btn-warning' : this.variant === 'info' ? 'bc-btn-info' : 'bc-btn-primary';
     return (
       <div class="bc-overlay" onClick={() => this._cancel()}>
         <div class={`bc-dialog bc-dialog-${this.size}`} onClick={(e) => e.stopPropagation()} role="alertdialog" aria-modal="true" aria-label={this.dialogTitle}>
           <div class="bc-dialog-header">
-            <h3>{this.dialogTitle}</h3>
+            <h3><span class={`bc-dialog-icon bc-dialog-icon-${this.variant}`}>{this._icon()}</span> {this.dialogTitle}</h3>
             <button type="button" class="bc-close" onClick={() => this._cancel()}>&times;</button>
           </div>
           <div class="bc-dialog-body">
@@ -48,7 +58,7 @@ export class BcDialogConfirm {
           </div>
           <div class="bc-dialog-footer">
             <button type="button" class="bc-btn" onClick={() => this._cancel()}>{this.cancelText}</button>
-            <button type="button" class={`bc-btn bc-btn-${this.variant === 'danger' ? 'danger' : 'primary'}`} onClick={() => this._confirm()}>{this.confirmText}</button>
+            <button type="button" class={`bc-btn ${btnClass}`} onClick={() => this._confirm()}>{this.confirmText}</button>
           </div>
         </div>
       </div>

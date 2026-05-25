@@ -1,0 +1,67 @@
+<!-- FIELDS — RELATIONAL -->
+  <div class="demo-section" id="tags">
+    <h2><code>bc-field-tags</code></h2>
+    <p class="desc">Tag input with search dropdown. Standalone mode uses static options.</p>
+    <div class="demo-box">
+      <bc-field-tags name="d-tags" label="Tags" value='["javascript","web"]' clearable></bc-field-tags>
+    </div>
+  </div>
+
+  <div class="demo-section" id="link">
+    <h2><code>bc-field-link</code></h2>
+    <p class="desc">Many2one/ForeignKey selector with searchable dropdown.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-link name="d-link" label="Contact" model="contact" display-field="name" clearable value="demo-000001"></bc-field-link>
+        <bc-field-link name="d-link-co" label="Company" model="contact" display-field="company" clearable></bc-field-link>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dynlink">
+    <h2><code>bc-field-dynlink</code></h2>
+    <p class="desc">Polymorphic link field — selects a model type then a record from that model.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-dynlink name="d-dyn" label="Dynamic Link" model="contact" clearable></bc-field-dynlink>
+        <bc-field-dynlink name="d-dyn-lead" label="Lead Link" model="lead" clearable></bc-field-dynlink>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="tableselect">
+    <h2><code>bc-field-tableselect</code></h2>
+    <p class="desc">Multi-record selector with search and table view.</p>
+    <div class="demo-box">
+      <bc-field-tableselect name="d-ts" label="Select Contacts" model="contact" clearable value='["demo-000001","demo-000002"]'></bc-field-tableselect>
+    </div>
+  </div>
+
+  <div class="demo-section" id="morph">
+    <h2><code>bc-field-morph</code></h2>
+    <p class="desc">Polymorphic relationship field with type selector.</p>
+    <div class="demo-box">
+      <bc-field-morph name="d-morph" label="Morph" models='["contact","company"]' clearable></bc-field-morph>
+    </div>
+  </div>
+
+  <div class="demo-section" id="geo">
+    <h2><code>bc-field-geo</code></h2>
+    <p class="desc">Map-based geo point picker using Leaflet. Click to place marker.</p>
+    <div class="demo-box">
+      <bc-field-geo name="d-geo" label="Location" value='{"lat":-6.2088,"lng":106.8456}'></bc-field-geo>
+    </div>
+  </div>
+
+  <div class="demo-section" id="lookup">
+    <h2><code>bc-lookup-modal</code></h2>
+    <p class="desc">Modal for browsing/selecting records from a table.</p>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-lookup').open=true">Open Lookup</button>
+      <bc-lookup-modal id="d-lookup" modal-title="Select Contact" model="contact" columns='[{"field":"name","label":"Name"},{"field":"email","label":"Email"},{"field":"company","label":"Company"},{"field":"city","label":"City"}]' display-field="name"></bc-lookup-modal>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CHARTS -->
+  <!-- ═══════════════════════════════════════════ -->

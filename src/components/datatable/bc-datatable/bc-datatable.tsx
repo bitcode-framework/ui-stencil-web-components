@@ -68,6 +68,7 @@ export class BcDatatable {
   @Prop() dataSource: string = '';
   @Prop() localData: string = '';
   @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
   @Prop() emptyText: string = '';
 
   dataFetcher?: DataFetcher;

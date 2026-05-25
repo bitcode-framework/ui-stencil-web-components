@@ -1,0 +1,157 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (10 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 10 components — Vanilla HTML --&gt;
+&lt;!-- bc-view-list --&gt;
+&lt;bc-view-list model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-view-list&gt;
+
+&lt;!-- bc-view-form --&gt;
+&lt;bc-view-form model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]'&gt;&lt;/bc-view-form&gt;
+
+&lt;!-- bc-view-kanban --&gt;
+&lt;bc-view-kanban model=&quot;lead&quot; fields='[&quot;name&quot;,&quot;stage&quot;]'&gt;&lt;/bc-view-kanban&gt;
+
+&lt;!-- bc-view-calendar --&gt;
+&lt;bc-view-calendar model=&quot;event&quot; fields='[&quot;name&quot;,&quot;start&quot;,&quot;end&quot;]'&gt;&lt;/bc-view-calendar&gt;
+
+&lt;!-- bc-view-gantt --&gt;
+&lt;bc-view-gantt tasks='[{&quot;id&quot;:&quot;1&quot;,&quot;text&quot;:&quot;Task 1&quot;,&quot;start&quot;:&quot;2024-01-01&quot;,&quot;duration&quot;:5}]'&gt;&lt;/bc-view-gantt&gt;
+
+&lt;!-- bc-view-map --&gt;
+&lt;bc-view-map model=&quot;branch&quot; fields='[&quot;name&quot;,&quot;lat&quot;,&quot;lng&quot;]'&gt;&lt;/bc-view-map&gt;
+
+&lt;!-- bc-view-tree --&gt;
+&lt;bc-view-tree model=&quot;category&quot; fields='[&quot;name&quot;,&quot;parent&quot;]'&gt;&lt;/bc-view-tree&gt;
+
+&lt;!-- bc-view-report --&gt;
+&lt;bc-view-report model=&quot;sale&quot; fields='[&quot;name&quot;,&quot;amount&quot;]'&gt;&lt;/bc-view-report&gt;
+
+&lt;!-- bc-view-editor --&gt;
+&lt;bc-view-editor model-fields='[{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-view-editor&gt;
+
+&lt;!-- bc-view-activity --&gt;
+&lt;bc-view-activity model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;desc&quot;]'&gt;&lt;/bc-view-activity&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-view-list, @bitcode/components/bc-view-form, @bitcode/components/bc-view-kanban, @bitcode/components/bc-view-calendar, @bitcode/components/bc-view-gantt, @bitcode/components/bc-view-map, @bitcode/components/bc-view-tree, @bitcode/components/bc-view-report, @bitcode/components/bc-view-editor, @bitcode/components/bc-view-activity';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-view-list */}
+      &lt;bc-view-list model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;email&quot;]}&gt;&lt;/bc-view-list&gt;
+
+      {/* bc-view-form */}
+      &lt;bc-view-form model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]}&gt;&lt;/bc-view-form&gt;
+
+      {/* bc-view-kanban */}
+      &lt;bc-view-kanban model=&quot;lead&quot; fields={[&quot;name&quot;,&quot;stage&quot;]}&gt;&lt;/bc-view-kanban&gt;
+
+      {/* bc-view-calendar */}
+      &lt;bc-view-calendar model=&quot;event&quot; fields={[&quot;name&quot;,&quot;start&quot;,&quot;end&quot;]}&gt;&lt;/bc-view-calendar&gt;
+
+      {/* bc-view-gantt */}
+      &lt;bc-view-gantt tasks={[{&quot;id&quot;:&quot;1&quot;,&quot;text&quot;:&quot;Task 1&quot;,&quot;start&quot;:&quot;2024-01-01&quot;,&quot;duration&quot;:5}]}&gt;&lt;/bc-view-gantt&gt;
+
+      {/* bc-view-map */}
+      &lt;bc-view-map model=&quot;branch&quot; fields={[&quot;name&quot;,&quot;lat&quot;,&quot;lng&quot;]}&gt;&lt;/bc-view-map&gt;
+
+      {/* bc-view-tree */}
+      &lt;bc-view-tree model=&quot;category&quot; fields={[&quot;name&quot;,&quot;parent&quot;]}&gt;&lt;/bc-view-tree&gt;
+
+      {/* bc-view-report */}
+      &lt;bc-view-report model=&quot;sale&quot; fields={[&quot;name&quot;,&quot;amount&quot;]}&gt;&lt;/bc-view-report&gt;
+
+      {/* bc-view-editor */}
+      &lt;bc-view-editor modelFields={[{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;}]}&gt;&lt;/bc-view-editor&gt;
+
+      {/* bc-view-activity */}
+      &lt;bc-view-activity model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;desc&quot;]}&gt;&lt;/bc-view-activity&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-view-list --&gt;
+  &lt;bc-view-list model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-view-list&gt;
+
+  &lt;!-- bc-view-form --&gt;
+  &lt;bc-view-form model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]'&gt;&lt;/bc-view-form&gt;
+
+  &lt;!-- bc-view-kanban --&gt;
+  &lt;bc-view-kanban model=&quot;lead&quot; fields='[&quot;name&quot;,&quot;stage&quot;]'&gt;&lt;/bc-view-kanban&gt;
+
+  &lt;!-- bc-view-calendar --&gt;
+  &lt;bc-view-calendar model=&quot;event&quot; fields='[&quot;name&quot;,&quot;start&quot;,&quot;end&quot;]'&gt;&lt;/bc-view-calendar&gt;
+
+  &lt;!-- bc-view-gantt --&gt;
+  &lt;bc-view-gantt tasks='[{&quot;id&quot;:&quot;1&quot;,&quot;text&quot;:&quot;Task 1&quot;,&quot;start&quot;:&quot;2024-01-01&quot;,&quot;duration&quot;:5}]'&gt;&lt;/bc-view-gantt&gt;
+
+  &lt;!-- bc-view-map --&gt;
+  &lt;bc-view-map model=&quot;branch&quot; fields='[&quot;name&quot;,&quot;lat&quot;,&quot;lng&quot;]'&gt;&lt;/bc-view-map&gt;
+
+  &lt;!-- bc-view-tree --&gt;
+  &lt;bc-view-tree model=&quot;category&quot; fields='[&quot;name&quot;,&quot;parent&quot;]'&gt;&lt;/bc-view-tree&gt;
+
+  &lt;!-- bc-view-report --&gt;
+  &lt;bc-view-report model=&quot;sale&quot; fields='[&quot;name&quot;,&quot;amount&quot;]'&gt;&lt;/bc-view-report&gt;
+
+  &lt;!-- bc-view-editor --&gt;
+  &lt;bc-view-editor model-fields='[{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-view-editor&gt;
+
+  &lt;!-- bc-view-activity --&gt;
+  &lt;bc-view-activity model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;desc&quot;]'&gt;&lt;/bc-view-activity&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-view-list --&gt;
+&lt;bc-view-list model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-view-list&gt;
+
+&lt;!-- bc-view-form --&gt;
+&lt;bc-view-form model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]'&gt;&lt;/bc-view-form&gt;
+
+&lt;!-- bc-view-kanban --&gt;
+&lt;bc-view-kanban model=&quot;lead&quot; fields='[&quot;name&quot;,&quot;stage&quot;]'&gt;&lt;/bc-view-kanban&gt;
+
+&lt;!-- bc-view-calendar --&gt;
+&lt;bc-view-calendar model=&quot;event&quot; fields='[&quot;name&quot;,&quot;start&quot;,&quot;end&quot;]'&gt;&lt;/bc-view-calendar&gt;
+
+&lt;!-- bc-view-gantt --&gt;
+&lt;bc-view-gantt tasks='[{&quot;id&quot;:&quot;1&quot;,&quot;text&quot;:&quot;Task 1&quot;,&quot;start&quot;:&quot;2024-01-01&quot;,&quot;duration&quot;:5}]'&gt;&lt;/bc-view-gantt&gt;
+
+&lt;!-- bc-view-map --&gt;
+&lt;bc-view-map model=&quot;branch&quot; fields='[&quot;name&quot;,&quot;lat&quot;,&quot;lng&quot;]'&gt;&lt;/bc-view-map&gt;
+
+&lt;!-- bc-view-tree --&gt;
+&lt;bc-view-tree model=&quot;category&quot; fields='[&quot;name&quot;,&quot;parent&quot;]'&gt;&lt;/bc-view-tree&gt;
+
+&lt;!-- bc-view-report --&gt;
+&lt;bc-view-report model=&quot;sale&quot; fields='[&quot;name&quot;,&quot;amount&quot;]'&gt;&lt;/bc-view-report&gt;
+
+&lt;!-- bc-view-editor --&gt;
+&lt;bc-view-editor model-fields='[{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-view-editor&gt;
+
+&lt;!-- bc-view-activity --&gt;
+&lt;bc-view-activity model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;desc&quot;]'&gt;&lt;/bc-view-activity&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

@@ -157,7 +157,79 @@
 }
 
 [data-bc-theme="light"] {
+  --bc-primary: #4f46e5;
+  --bc-primary-hover: #4338ca;
+  --bc-primary-light: #eef2ff;
+  --bc-primary-text: #ffffff;
+
+  --bc-success: #10b981;
+  --bc-success-light: #ecfdf5;
+  --bc-warning: #f59e0b;
+  --bc-warning-light: #fffbeb;
+  --bc-danger: #ef4444;
+  --bc-danger-light: #fef2f2;
+  --bc-info: #3b82f6;
+  --bc-info-light: #eff6ff;
+  --bc-muted: #6b7280;
+
   --bc-bg: #ffffff;
+  --bc-bg-secondary: #f9fafb;
+  --bc-bg-tertiary: #f3f4f6;
+  --bc-bg-hover: #f3f4f6;
+
+  --bc-border-color: #e5e7eb;
+  --bc-border-color-focus: #4f46e5;
+
+  --bc-text: #111827;
+  --bc-text-secondary: #6b7280;
+  --bc-text-placeholder: #9ca3af;
+  --bc-text-disabled: #d1d5db;
+
+  --bc-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --bc-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --bc-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --bc-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  --bc-input-bg: #ffffff;
+  --bc-input-focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+[data-bc-theme="dark"] {
+  --bc-primary: #818cf8;
+  --bc-primary-hover: #a5b4fc;
+  --bc-primary-light: rgba(129, 140, 248, 0.15);
+  --bc-primary-text: #ffffff;
+
+  --bc-success: #34d399;
+  --bc-success-light: rgba(52, 211, 153, 0.15);
+  --bc-warning: #fbbf24;
+  --bc-warning-light: rgba(251, 191, 36, 0.15);
+  --bc-danger: #f87171;
+  --bc-danger-light: rgba(248, 113, 113, 0.15);
+  --bc-info: #60a5fa;
+  --bc-info-light: rgba(96, 165, 250, 0.15);
+  --bc-muted: #9ca3af;
+
+  --bc-bg: #0f172a;
+  --bc-bg-secondary: #1e293b;
+  --bc-bg-tertiary: #334155;
+  --bc-bg-hover: #1e293b;
+
+  --bc-border-color: #334155;
+  --bc-border-color-focus: #818cf8;
+
+  --bc-text: #f1f5f9;
+  --bc-text-secondary: #94a3b8;
+  --bc-text-placeholder: #64748b;
+  --bc-text-disabled: #475569;
+
+  --bc-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --bc-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --bc-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --bc-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+
+  --bc-input-bg: #1e293b;
+  --bc-input-focus-ring: 0 0 0 3px rgba(129, 140, 248, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {

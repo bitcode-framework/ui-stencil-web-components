@@ -1,13 +1,16 @@
 # @bitcode/components
 
-Enterprise-grade Stencil Web Components for business applications. 119 components covering forms, charts, data tables, layout, dialogs, media viewers, and widgets. Works in any HTML page, no framework required.
+Enterprise-grade Stencil Web Components for business applications. 127 components covering forms, charts, data tables, layout, dialogs, media viewers, kanban board, and widgets. Works in any HTML page, no framework required.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![npm version](https://img.shields.io/npm/v/@bitcode/components.svg)](https://www.npmjs.com/package/@bitcode/components)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://bitcode-framework.github.io/ui-stencil-web-components/demo/)
+
+**[Live Demo →](https://bitcode-framework.github.io/ui-stencil-web-components/demo/)** — interactive component gallery with all 127 components.
 
 ## What is @bitcode/components?
 
-119 Web Components built with [Stencil.js](https://stenciljs.com/). They compile to standard Custom Elements, so they run anywhere HTML runs: plain pages, React, Vue, Angular, Svelte, or any framework that renders to the DOM.
+127 Web Components built with [Stencil.js](https://stenciljs.com/). They compile to standard Custom Elements, so they run anywhere HTML runs: plain pages, React, Vue, Angular, Svelte, or any framework that renders to the DOM.
 
 Built for the [BitCode](https://github.com/bitcode-framework) low-code platform, but fully standalone. No BitCode server or runtime dependency. Drop a `<script>` tag and start using components.
 

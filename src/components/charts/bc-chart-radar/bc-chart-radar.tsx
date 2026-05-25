@@ -27,8 +27,11 @@ export class BcChartRadar {
   @Prop({ mutable: true }) loading: boolean = false;
   @Prop() dataSource: string = '';
   @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
   @Prop() refreshInterval: number = 0;
-  dataFetcher?: DataFetcher;
+  @Prop() model: string = '';
+  @Prop() localData?: string;
+  @Prop() dataFetcher?: DataFetcher;
 
   @Prop() theme: string = '';
   @Prop() renderer: string = 'canvas';
@@ -47,6 +50,7 @@ export class BcChartRadar {
   @Event() lcChartLegendSelect!: EventEmitter<ChartLegendSelectEvent>;
   @Event() lcChartDataZoom!: EventEmitter<ChartDataZoomEvent>;
   @Event() lcChartReady!: EventEmitter<void>;
+  @Event() lcError!: EventEmitter<string>;
 
   componentDidLoad() {
     this.chart = initChart(this.el, this.theme, this.renderer, {
@@ -55,13 +59,15 @@ export class BcChartRadar {
     });
     this._resizeObserver = setupResizeObserver(this.el, this.chart);
     this.renderChart();
-    if (this.dataSource || this.dataFetcher) this._fetchData();
+    if (this.localData || this.dataSource || this.dataFetcher || this.model) this._fetchData();
     if (this.refreshInterval > 0) this._refreshTimer = setInterval(() => this._fetchData(), this.refreshInterval);
   }
 
   @Watch('data') onDataChange() { this.renderChart(); }
   @Watch('theme') onThemeChange() { this._reinit(); }
   @Watch('renderer') onRendererChange() { this._reinit(); }
+  @Watch('dataSource') onDataSourceChange() { if (this.dataSource || this.model) this._fetchData(); }
+  @Watch('model') onModelChange() { if (this.dataSource || this.model) this._fetchData(); }
 
   disconnectedCallback() { disposeChart(this.chart, this._refreshTimer, this._resizeObserver); }
 
@@ -78,9 +84,9 @@ export class BcChartRadar {
   private async _fetchData() {
     this.loading = true;
     try {
-      const result = await fetchChartData({ dataFetcher: this.dataFetcher, el: this.el, dataSource: this.dataSource, fetchHeaders: this.fetchHeaders });
+      const result = await fetchChartData({ dataFetcher: this.dataFetcher, el: this.el, dataSource: this.dataSource, fetchHeaders: this.fetchHeaders, model: this.model, localData: this.localData, fetchOptions: this.fetchOptions ? JSON.parse(this.fetchOptions) : undefined });
       this.data = JSON.stringify(result);
-    } catch { /* keep existing */ }
+    } catch (err) { this.lcError.emit(String(err)); }
     this.loading = false;
   }
 
@@ -117,7 +123,7 @@ export class BcChartRadar {
 
   @Method() async updateData(newData: unknown): Promise<void> { this.data = typeof newData === 'string' ? newData : JSON.stringify(newData); }
   @Method() async setData(newData: unknown): Promise<void> { this.data = typeof newData === 'string' ? newData : JSON.stringify(newData); }
-  @Method() async refresh(): Promise<void> { if (this.dataSource || this.dataFetcher) await this._fetchData(); else this.renderChart(); }
+  @Method() async refresh(): Promise<void> { if (this.localData || this.dataSource || this.dataFetcher || this.model) await this._fetchData(); else this.renderChart(); }
   @Method() async resize(): Promise<void> { this.chart?.resize(); }
   @Method() async exportImage(format: string = 'png'): Promise<string> { return this.chart?.getDataURL({ type: format as 'png' | 'jpeg' | 'svg', pixelRatio: 2 }) || ''; }
   @Method() async getChartInstance(): Promise<unknown> { return this.chart; }

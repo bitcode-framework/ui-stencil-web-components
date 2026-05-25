@@ -1,5 +1,8 @@
-import { Component, Prop, State, Event, EventEmitter, Element, Listen, Method, h } from '@stencil/core';
+import { Component, Prop, State, Event, EventEmitter, Element, Listen, Method, Watch, h } from '@stencil/core';
 import { getApiClient } from '../../../core/api-client';
+import { fetchData } from '../../../core/data-fetcher';
+import { BcSetup } from '../../../core/bc-setup';
+import { DataFetcher } from '../../../core/types';
 import { i18n } from '../../../core/i18n';
 
 interface Permissions {
@@ -25,12 +28,17 @@ interface Permissions {
 export class BcViewForm {
   @Element() el!: HTMLElement;
   @Prop() model: string = '';
+  @Prop() localData?: string;
   @Prop() viewTitle: string = '';
   @Prop() recordId: string = '';
   @Prop() fields: string = '[]';
   @Prop() config: string = '{}';
   @Prop() permissions: string = '{}';
   @Prop() moduleName: string = '';
+  @Prop() dataSource: string = '';
+  @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
+  dataFetcher?: DataFetcher;
 
   @State() data: Record<string, unknown> = {};
   @State() loading: boolean = false;
@@ -38,6 +46,7 @@ export class BcViewForm {
   @State() perms: Permissions = {};
 
   @Event() lcFormSubmit!: EventEmitter<{model: string; data: Record<string, unknown>; id?: string}>;
+  @Event() lcError!: EventEmitter<{message: string}>;
 
   private can(op: string): boolean {
     const key = `can_${op}` as keyof Permissions;
@@ -53,16 +62,45 @@ export class BcViewForm {
   }
 
   async componentDidLoad() {
-    if (this.recordId && this.model) {
-      this.loading = true;
-      try {
-        const api = getApiClient();
-        const res = await api.read(this.model, this.recordId);
-        this.data = (res as any).data || res;
+    await this.fetchRecord();
+  }
+
+  @Watch('model') @Watch('recordId') @Watch('dataSource')
+  onSourceChange() { this.fetchRecord(); }
+
+  private async fetchRecord() {
+    if (!this.recordId) return;
+    if (!this.model && !this.dataSource && !this.dataFetcher) return;
+    this.loading = true;
+    try {
+      if (this.dataFetcher) {
+        const result = await this.dataFetcher({ filters: { id: this.recordId } });
+        this.data = (result.data?.[0] as Record<string, unknown>) || {};
+      } else if (this.dataSource) {
+        const baseUrl = BcSetup.getBaseUrl();
+        let url = this.dataSource;
+        if (url && !url.startsWith('http') && baseUrl) url = baseUrl + url;
+        const headers = { ...BcSetup.getHeaders(), ...(this.fetchHeaders ? JSON.parse(this.fetchHeaders) : {}) };
+        this.el.dispatchEvent(new CustomEvent('lcBeforeFetch', { detail: { url: `${url}/${this.recordId}`, headers }, bubbles: true, cancelable: true }));
+        const res = await fetch(`${url}/${this.recordId}`, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        this.data = json.data || json;
+      } else if (this.model) {
+        try {
+          const result = await fetchData({ element: this.el, model: this.model, localData: this.localData, fetchOptions: this.fetchOptions ? JSON.parse(this.fetchOptions) : undefined, fetchHeaders: this.fetchHeaders, params: { filters: { id: this.recordId } } });
+          this.data = (result.data?.[0] as Record<string, unknown>) || {};
+        } catch {
+          const api = getApiClient();
+          const res = await api.read(this.model, this.recordId);
+          this.data = (res as any).data || res;
+        }
       }
-      catch { this.data = {}; }
-      this.loading = false;
+    } catch (err) {
+      this.data = {};
+      this.lcError.emit({ message: String(err) });
     }
+    this.loading = false;
   }
 
   @Listen('lcFieldChange')
@@ -73,13 +111,13 @@ export class BcViewForm {
   }
 
   private async handleSave() {
-    const api = getApiClient();
     try {
+      const api = getApiClient();
       if (this.recordId) { await api.update(this.model, this.recordId, this.data); }
       else { const r = await api.create(this.model, this.data); this.data = r; }
       this.dirty = false;
       this.lcFormSubmit.emit({ model: this.model, data: this.data, id: this.recordId });
-    } catch (err) { console.error('Save failed:', err); }
+    } catch (err) { this.lcError.emit({ message: String(err) }); }
   }
 
   private async handleDelete() {
@@ -88,17 +126,21 @@ export class BcViewForm {
       const api = getApiClient();
       await api.remove(this.model, this.recordId);
       window.history.back();
-    } catch (err) { console.error('Delete failed:', err); }
+    } catch (err) { this.lcError.emit({ message: String(err) }); }
   }
 
   private async handleClone() {
     if (!this.recordId) return;
     try {
-      const url = `/api/${this.model}s/${this.recordId}/clone`;
-      await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-      await this.componentDidLoad();
-    } catch (err) { console.error('Clone failed:', err); }
-  }  @Method() async refresh(): Promise<void> { }
+      const baseUrl = BcSetup.getBaseUrl();
+      const url = baseUrl ? `${baseUrl}/api/${this.model}s/${this.recordId}/clone` : `/api/${this.model}s/${this.recordId}/clone`;
+      const headers = { ...BcSetup.getHeaders(), 'Content-Type': 'application/json' };
+      await fetch(url, { method: 'POST', headers });
+      await this.fetchRecord();
+    } catch (err) { this.lcError.emit({ message: String(err) }); }
+  }
+
+  @Method() async refresh(): Promise<void> { await this.fetchRecord(); }
 
   render() {
     const isNew = !this.recordId;

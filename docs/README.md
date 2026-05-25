@@ -104,13 +104,38 @@ See [getting-started.md](getting-started.md) for full setup guide.
 
 bc-row, bc-column, bc-section, bc-tabs, bc-tab, bc-sheet, bc-header, bc-separator, bc-button-box, bc-html-block
 
-### Dialogs (5)
+### Dialogs (7)
 
-bc-dialog-modal, bc-dialog-confirm, bc-dialog-quickentry, bc-dialog-wizard, bc-toast
+bc-dialog-modal, bc-dialog-confirm, bc-dialog-alert, bc-dialog-prompt, bc-dialog-quickentry, bc-dialog-wizard, bc-toast
+
+| Component | Description |
+|-----------|-------------|
+| [bc-dialog-confirm](dialogs/bc-dialog-confirm.md) | Confirmation dialog — 4 variants (default, danger, warning, info) |
+| [bc-dialog-alert](dialogs/bc-dialog-alert.md) | Alert dialog — 5 variants (default, success, danger, warning, info) |
 
 ### Widgets (12)
 
 bc-badge, bc-copy, bc-phone, bc-email, bc-url, bc-progress, bc-statusbar, bc-priority, bc-handle, bc-domain, bc-placeholder, bc-sync-status
+
+### Views (10)
+
+bc-view-list, bc-view-form, bc-view-kanban, bc-view-calendar, bc-view-gantt, bc-view-chart, bc-view-grid, bc-view-pivot, bc-view-gallery, bc-view-tree
+
+| Component | Description |
+|-----------|-------------|
+| [bc-view-gantt](views/bc-view-gantt.md) | Enterprise Gantt chart — tree hierarchy, drag-and-drop, dependencies, multi-scale timeline |
+
+### Kanban (5)
+
+bc-kanban-board, bc-kanban-card-subtasks, bc-kanban-card-comments, bc-kanban-card-attachments, bc-kanban-card-activity
+
+| Component | Description |
+|-----------|-------------|
+| [bc-kanban-board](kanban/bc-kanban-board.md) | Enterprise kanban board — drag-drop, column reorder, card detail panel, inline dialogs, @mention, full i18n |
+| [bc-kanban-card-comments](kanban/bc-kanban-card-comments.md) | Comments with @mention dropdown, inline file attachments |
+| [bc-kanban-card-subtasks](kanban/bc-kanban-card-subtasks.md) | Checklist with progress bar, toggle/create/delete |
+| [bc-kanban-card-attachments](kanban/bc-kanban-card-attachments.md) | File list with upload, image thumbnails, delete |
+| [bc-kanban-card-activity](kanban/bc-kanban-card-activity.md) | Timeline with relative time formatting |
 
 ### Media (8)
 

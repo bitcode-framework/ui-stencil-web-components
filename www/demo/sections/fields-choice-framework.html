@@ -1,0 +1,109 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (6 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 6 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-select --&gt;
+&lt;bc-field-select name=&quot;status&quot; label=&quot;Status&quot; options='[{&quot;label&quot;:&quot;Active&quot;,&quot;value&quot;:&quot;active&quot;},{&quot;label&quot;:&quot;Inactive&quot;,&quot;value&quot;:&quot;inactive&quot;}]'&gt;&lt;/bc-field-select&gt;
+
+&lt;!-- bc-field-checkbox --&gt;
+&lt;bc-field-checkbox name=&quot;colors&quot; label=&quot;Colors&quot; options='[{&quot;label&quot;:&quot;Red&quot;,&quot;value&quot;:&quot;red&quot;},{&quot;label&quot;:&quot;Blue&quot;,&quot;value&quot;:&quot;blue&quot;}]'&gt;&lt;/bc-field-checkbox&gt;
+
+&lt;!-- bc-field-toggle --&gt;
+&lt;bc-field-toggle name=&quot;dark&quot; label=&quot;Dark Mode&quot;&gt;&lt;/bc-field-toggle&gt;
+
+&lt;!-- bc-field-radio --&gt;
+&lt;bc-field-radio name=&quot;gender&quot; label=&quot;Gender&quot; options='[{&quot;label&quot;:&quot;Male&quot;,&quot;value&quot;:&quot;M&quot;},{&quot;label&quot;:&quot;Female&quot;,&quot;value&quot;:&quot;F&quot;}]'&gt;&lt;/bc-field-radio&gt;
+
+&lt;!-- bc-field-rating --&gt;
+&lt;bc-field-rating name=&quot;stars&quot; label=&quot;Rating&quot; max=&quot;5&quot;&gt;&lt;/bc-field-rating&gt;
+
+&lt;!-- bc-field-color --&gt;
+&lt;bc-field-color name=&quot;theme&quot; label=&quot;Theme Color&quot; value=&quot;#4f46e5&quot;&gt;&lt;/bc-field-color&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-select, @bitcode/components/bc-field-checkbox, @bitcode/components/bc-field-toggle, @bitcode/components/bc-field-radio, @bitcode/components/bc-field-rating, @bitcode/components/bc-field-color';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-select */}
+      &lt;bc-field-select name=&quot;status&quot; label=&quot;Status&quot; options={[{&quot;label&quot;:&quot;Active&quot;,&quot;value&quot;:&quot;active&quot;},{&quot;label&quot;:&quot;Inactive&quot;,&quot;value&quot;:&quot;inactive&quot;}]}&gt;&lt;/bc-field-select&gt;
+
+      {/* bc-field-checkbox */}
+      &lt;bc-field-checkbox name=&quot;colors&quot; label=&quot;Colors&quot; options={[{&quot;label&quot;:&quot;Red&quot;,&quot;value&quot;:&quot;red&quot;},{&quot;label&quot;:&quot;Blue&quot;,&quot;value&quot;:&quot;blue&quot;}]}&gt;&lt;/bc-field-checkbox&gt;
+
+      {/* bc-field-toggle */}
+      &lt;bc-field-toggle name=&quot;dark&quot; label=&quot;Dark Mode&quot;&gt;&lt;/bc-field-toggle&gt;
+
+      {/* bc-field-radio */}
+      &lt;bc-field-radio name=&quot;gender&quot; label=&quot;Gender&quot; options={[{&quot;label&quot;:&quot;Male&quot;,&quot;value&quot;:&quot;M&quot;},{&quot;label&quot;:&quot;Female&quot;,&quot;value&quot;:&quot;F&quot;}]}&gt;&lt;/bc-field-radio&gt;
+
+      {/* bc-field-rating */}
+      &lt;bc-field-rating name=&quot;stars&quot; label=&quot;Rating&quot; max=&quot;5&quot;&gt;&lt;/bc-field-rating&gt;
+
+      {/* bc-field-color */}
+      &lt;bc-field-color name=&quot;theme&quot; label=&quot;Theme Color&quot; value=&quot;#4f46e5&quot;&gt;&lt;/bc-field-color&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-select --&gt;
+  &lt;bc-field-select name=&quot;status&quot; label=&quot;Status&quot; options='[{&quot;label&quot;:&quot;Active&quot;,&quot;value&quot;:&quot;active&quot;},{&quot;label&quot;:&quot;Inactive&quot;,&quot;value&quot;:&quot;inactive&quot;}]'&gt;&lt;/bc-field-select&gt;
+
+  &lt;!-- bc-field-checkbox --&gt;
+  &lt;bc-field-checkbox name=&quot;colors&quot; label=&quot;Colors&quot; options='[{&quot;label&quot;:&quot;Red&quot;,&quot;value&quot;:&quot;red&quot;},{&quot;label&quot;:&quot;Blue&quot;,&quot;value&quot;:&quot;blue&quot;}]'&gt;&lt;/bc-field-checkbox&gt;
+
+  &lt;!-- bc-field-toggle --&gt;
+  &lt;bc-field-toggle name=&quot;dark&quot; label=&quot;Dark Mode&quot;&gt;&lt;/bc-field-toggle&gt;
+
+  &lt;!-- bc-field-radio --&gt;
+  &lt;bc-field-radio name=&quot;gender&quot; label=&quot;Gender&quot; options='[{&quot;label&quot;:&quot;Male&quot;,&quot;value&quot;:&quot;M&quot;},{&quot;label&quot;:&quot;Female&quot;,&quot;value&quot;:&quot;F&quot;}]'&gt;&lt;/bc-field-radio&gt;
+
+  &lt;!-- bc-field-rating --&gt;
+  &lt;bc-field-rating name=&quot;stars&quot; label=&quot;Rating&quot; max=&quot;5&quot;&gt;&lt;/bc-field-rating&gt;
+
+  &lt;!-- bc-field-color --&gt;
+  &lt;bc-field-color name=&quot;theme&quot; label=&quot;Theme Color&quot; value=&quot;#4f46e5&quot;&gt;&lt;/bc-field-color&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-select --&gt;
+&lt;bc-field-select name=&quot;status&quot; label=&quot;Status&quot; options='[{&quot;label&quot;:&quot;Active&quot;,&quot;value&quot;:&quot;active&quot;},{&quot;label&quot;:&quot;Inactive&quot;,&quot;value&quot;:&quot;inactive&quot;}]'&gt;&lt;/bc-field-select&gt;
+
+&lt;!-- bc-field-checkbox --&gt;
+&lt;bc-field-checkbox name=&quot;colors&quot; label=&quot;Colors&quot; options='[{&quot;label&quot;:&quot;Red&quot;,&quot;value&quot;:&quot;red&quot;},{&quot;label&quot;:&quot;Blue&quot;,&quot;value&quot;:&quot;blue&quot;}]'&gt;&lt;/bc-field-checkbox&gt;
+
+&lt;!-- bc-field-toggle --&gt;
+&lt;bc-field-toggle name=&quot;dark&quot; label=&quot;Dark Mode&quot;&gt;&lt;/bc-field-toggle&gt;
+
+&lt;!-- bc-field-radio --&gt;
+&lt;bc-field-radio name=&quot;gender&quot; label=&quot;Gender&quot; options='[{&quot;label&quot;:&quot;Male&quot;,&quot;value&quot;:&quot;M&quot;},{&quot;label&quot;:&quot;Female&quot;,&quot;value&quot;:&quot;F&quot;}]'&gt;&lt;/bc-field-radio&gt;
+
+&lt;!-- bc-field-rating --&gt;
+&lt;bc-field-rating name=&quot;stars&quot; label=&quot;Rating&quot; max=&quot;5&quot;&gt;&lt;/bc-field-rating&gt;
+
+&lt;!-- bc-field-color --&gt;
+&lt;bc-field-color name=&quot;theme&quot; label=&quot;Theme Color&quot; value=&quot;#4f46e5&quot;&gt;&lt;/bc-field-color&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

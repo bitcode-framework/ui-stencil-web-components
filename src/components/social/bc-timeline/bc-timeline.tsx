@@ -1,5 +1,8 @@
-import { Component, Prop, State, Element, h } from '@stencil/core';
+import { Component, Prop, State, Element, Watch, Event, EventEmitter, Method, h } from '@stencil/core';
 import { getApiClient } from '../../../core/api-client';
+import { fetchData } from '../../../core/data-fetcher';
+import { BcSetup } from '../../../core/bc-setup';
+import { DataFetcher } from '../../../core/types';
 import { i18n } from '../../../core/i18n';
 
 interface AuditEntry { id: string; field: string; oldValue: string; newValue: string; user: string; date: string; }
@@ -9,18 +12,54 @@ export class BcTimeline {
   @Element() el!: HTMLElement;
   @Prop() recordId: string = '';
   @Prop() model: string = '';
+  @Prop() localData?: string;
+  @Prop() dataSource: string = '';
+  @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
+  dataFetcher?: DataFetcher;
   @State() entries: AuditEntry[] = [];
   @State() loading: boolean = false;
+  @Event() lcError!: EventEmitter<{message: string}>;
 
   componentWillRender() { this.el.dir = i18n.dir; }
 
   async componentDidLoad() {
-    if (!this.model || !this.recordId) return;
+    await this.fetchData();
+  }
+
+  @Watch('model') @Watch('dataSource')
+  onSourceChange() { this.fetchData(); }
+
+  private async fetchData() {
+    if (!this.model && !this.dataSource && !this.dataFetcher) return;
+    if (this.model && !this.recordId) return;
     this.loading = true;
     try {
-      const api = getApiClient();
-      const res = await api.list(this.model + '_audit', { pageSize: 50 });
-      this.entries = res.data.map(r => ({
+      let rows: Array<Record<string, unknown>> = [];
+      if (this.dataFetcher) {
+        const result = await this.dataFetcher({ pageSize: 50, filters: { record_id: this.recordId } });
+        rows = result.data as Array<Record<string, unknown>>;
+      } else if (this.dataSource) {
+        const baseUrl = BcSetup.getBaseUrl();
+        let url = this.dataSource;
+        if (url && !url.startsWith('http') && baseUrl) url = baseUrl + url;
+        const headers = { ...BcSetup.getHeaders(), ...(this.fetchHeaders ? JSON.parse(this.fetchHeaders) : {}) };
+        this.el.dispatchEvent(new CustomEvent('lcBeforeFetch', { detail: { url, headers, params: {} }, bubbles: true, cancelable: true }));
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        rows = json.data || json;
+      } else if (this.model) {
+        try {
+          const result = await fetchData({ element: this.el, model: this.model + '_audit', fetchHeaders: this.fetchHeaders, params: { pageSize: 50 } });
+          rows = result.data as Array<Record<string, unknown>>;
+        } catch {
+          const api = getApiClient();
+          const res = await api.list(this.model + '_audit', { pageSize: 50 });
+          rows = res.data;
+        }
+      }
+      this.entries = rows.map(r => ({
         id: String(r['id'] || ''),
         field: String(r['field'] || ''),
         oldValue: String(r['old_value'] || ''),
@@ -28,9 +67,14 @@ export class BcTimeline {
         user: String(r['user'] || 'System'),
         date: String(r['created_at'] || r['date'] || ''),
       }));
-    } catch { this.entries = []; }
+    } catch (err) {
+      this.entries = [];
+      this.lcError.emit({ message: String(err) });
+    }
     this.loading = false;
   }
+
+  @Method() async refresh(): Promise<void> { await this.fetchData(); }
 
   private formatDate(d: string): string {
     try { return i18n.tf.date(d, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }

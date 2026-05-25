@@ -1,5 +1,5 @@
-:host {
+﻿:host {
   display: block;
   font-family: var(--bc-font-family, system-ui, sans-serif);
 }
-.bc-progress { position: relative; height: 1.25rem; background: var(--bc-bg-tertiary); border-radius: var(--bc-radius-full); overflow: hidden; } .bc-progress-bar { height: 100%; border-radius: var(--bc-radius-full); transition: width var(--bc-transition-slow); } .bc-progress-primary { background: var(--bc-primary); } .bc-progress-success { background: var(--bc-success); } .bc-progress-warning { background: var(--bc-warning); } .bc-progress-danger { background: var(--bc-danger); } .bc-progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: var(--bc-font-size-xs); font-weight: 600; color: var(--bc-text); }
+.bc-progress { position: relative; height: 1.25rem; background: var(--bc-bg-tertiary, #f3f4f6); border-radius: var(--bc-radius-full, 9999px); overflow: hidden; } .bc-progress-bar { height: 100%; border-radius: var(--bc-radius-full, 9999px); transition: width var(--bc-transition-slow, 300ms ease); } .bc-progress-primary { background: var(--bc-primary, #4f46e5); } .bc-progress-success { background: var(--bc-success, #10b981); } .bc-progress-warning { background: var(--bc-warning, #f59e0b); } .bc-progress-danger { background: var(--bc-danger, #ef4444); } .bc-progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: var(--bc-font-size-xs, 0.75rem); font-weight: 600; color: var(--bc-text, #111827); }

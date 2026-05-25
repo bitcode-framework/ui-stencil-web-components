@@ -4,12 +4,13 @@ import { FieldState, createFieldState, markDirty, markTouched, getFieldClasses, 
 import { BcSetup } from '../../../core/bc-setup';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { basicSetup } from '@codemirror/basic-setup';
+import { basicSetup } from 'codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { json as jsonLang } from '@codemirror/lang-json';
 import { html as htmlLang } from '@codemirror/lang-html';
 import { sql } from '@codemirror/lang-sql';
+import { getCodeEditorThemeExtensions } from '../../../core/code-editor-theme';
 
 @Component({ tag: 'bc-field-code', styleUrl: 'bc-field-code.css', shadow: false })
 export class BcFieldCode {
@@ -71,6 +72,7 @@ export class BcFieldCode {
       extensions: [
         basicSetup,
         this.getLangExtension(),
+        ...getCodeEditorThemeExtensions(),
         EditorView.editable.of(!this.readonly && !this.disabled),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {

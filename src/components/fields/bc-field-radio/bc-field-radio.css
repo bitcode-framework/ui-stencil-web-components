@@ -1,9 +1,9 @@
-@import '../field-base.css';
+﻿@import '../field-base.css';
 
 .bc-radio-group {
   display: flex;
   flex-direction: column;
-  gap: var(--bc-spacing-sm);
+  gap: var(--bc-spacing-sm, 0.5rem);
 }
 
 .bc-radio-group.horizontal {
@@ -14,14 +14,14 @@
 .bc-radio-option {
   display: flex;
   align-items: center;
-  gap: var(--bc-spacing-xs);
+  gap: var(--bc-spacing-xs, 0.25rem);
   cursor: pointer;
-  font-size: var(--bc-font-size-base);
-  color: var(--bc-text);
+  font-size: var(--bc-font-size-base, 1rem);
+  color: var(--bc-text, #111827);
 }
 
 input[type="radio"] {
-  accent-color: var(--bc-primary);
+  accent-color: var(--bc-primary, #4f46e5);
   width: 1rem;
   height: 1rem;
 }

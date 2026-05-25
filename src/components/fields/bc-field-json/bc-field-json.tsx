@@ -4,8 +4,9 @@ import { FieldState, createFieldState, markDirty, markTouched, getFieldClasses }
 import { BcSetup } from '../../../core/bc-setup';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { basicSetup } from '@codemirror/basic-setup';
+import { basicSetup } from 'codemirror';
 import { json } from '@codemirror/lang-json';
+import { getCodeEditorThemeExtensions } from '../../../core/code-editor-theme';
 
 @Component({ tag: 'bc-field-json', styleUrl: 'bc-field-json.css', shadow: false })
 export class BcFieldJson {
@@ -54,6 +55,7 @@ export class BcFieldJson {
       extensions: [
         basicSetup,
         json(),
+        ...getCodeEditorThemeExtensions(),
         EditorView.editable.of(!this.readonly && !this.disabled),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {

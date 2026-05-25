@@ -1,5 +1,8 @@
-import { Component, Method, Prop, State, Event, EventEmitter, Element, h } from '@stencil/core';
+import { Component, Method, Prop, State, Event, EventEmitter, Element, Watch, h } from '@stencil/core';
 import { getApiClient } from '../../../core/api-client';
+import { fetchData } from '../../../core/data-fetcher';
+import { BcSetup } from '../../../core/bc-setup';
+import { DataFetcher } from '../../../core/types';
 import { i18n } from '../../../core/i18n';
 
 @Component({
@@ -10,9 +13,15 @@ import { i18n } from '../../../core/i18n';
 export class BcViewList {
   @Element() el!: HTMLElement;
   @Prop() model: string = '';
+  @Prop() localData?: string;
   @Prop() viewTitle: string = '';
   @Prop() fields: string = '[]';
   @Prop() config: string = '{}';
+  @Prop() dataSource: string = '';
+  @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
+  @Prop() refreshInterval: number = 0;
+  dataFetcher?: DataFetcher;
 
   @State() data: Array<Record<string, unknown>> = [];
   @State() total: number = 0;
@@ -25,6 +34,9 @@ export class BcViewList {
   @State() searchQuery: string = '';
 
   @Event() lcRowSelect!: EventEmitter<{ids: string[]}>;
+  @Event() lcError!: EventEmitter<{message: string}>;
+
+  private _rt: ReturnType<typeof setInterval> | null = null;
 
   private getFields(): string[] { try { return JSON.parse(this.fields); } catch { return []; } }
 
@@ -32,22 +44,56 @@ export class BcViewList {
     this.el.dir = i18n.dir;
   }
 
-  async componentDidLoad() { await this.fetchData(); }
+  async componentDidLoad() {
+    await this.fetchData();
+    if (this.refreshInterval > 0) this._rt = setInterval(() => this.fetchData(), this.refreshInterval);
+  }
+
+  disconnectedCallback() {
+    if (this._rt) clearInterval(this._rt);
+  }
+
+  @Watch('model') @Watch('dataSource')
+  onSourceChange() { this.fetchData(); }
 
   private async fetchData() {
-    if (!this.model) return;
+    if (!this.model && !this.dataSource && !this.dataFetcher) return;
     this.loading = true;
     try {
-      const api = getApiClient();
-      const res = await api.list(this.model, {
-        page: this.page, pageSize: this.pageSize,
-        sort: this.sortField || undefined,
-        order: this.sortField ? this.sortOrder : undefined,
-        q: this.searchQuery || undefined,
-      });
-      this.data = res.data;
-      this.total = res.total;
-    } catch { this.data = []; this.total = 0; }
+      if (this.dataFetcher) {
+        const result = await this.dataFetcher({ page: this.page, pageSize: this.pageSize, sort: this.sortField ? [{ field: this.sortField, direction: this.sortOrder }] : undefined, search: this.searchQuery || undefined });
+        this.data = result.data as Array<Record<string, unknown>>;
+        this.total = result.total;
+      } else if (this.dataSource) {
+        const baseUrl = BcSetup.getBaseUrl();
+        let url = this.dataSource;
+        if (url && !url.startsWith('http') && baseUrl) url = baseUrl + url;
+        const headers = { ...BcSetup.getHeaders(), ...(this.fetchHeaders ? JSON.parse(this.fetchHeaders) : {}) };
+        const beforeEvent = new CustomEvent('lcBeforeFetch', { detail: { url, headers, params: {} }, bubbles: true, cancelable: true });
+        this.el.dispatchEvent(beforeEvent);
+        const res = await fetch(beforeEvent.detail.url, { headers: beforeEvent.detail.headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const afterEvent = new CustomEvent('lcAfterFetch', { detail: { response: json, data: null as unknown[] | null, total: 0 }, bubbles: true });
+        this.el.dispatchEvent(afterEvent);
+        this.data = (afterEvent.detail.data || json.data || json) as Array<Record<string, unknown>>;
+        this.total = afterEvent.detail.total || json.total || this.data.length;
+      } else if (this.model) {
+        try {
+          const result = await fetchData({ element: this.el, model: this.model, localData: this.localData, fetchOptions: this.fetchOptions ? JSON.parse(this.fetchOptions) : undefined, fetchHeaders: this.fetchHeaders, params: { page: this.page, pageSize: this.pageSize, sort: this.sortField ? [{ field: this.sortField, direction: this.sortOrder }] : undefined, search: this.searchQuery || undefined } });
+          this.data = result.data as Array<Record<string, unknown>>;
+          this.total = result.total;
+        } catch {
+          const api = getApiClient();
+          const res = await api.list(this.model, { page: this.page, pageSize: this.pageSize, sort: this.sortField || undefined, order: this.sortField ? this.sortOrder : undefined, q: this.searchQuery || undefined });
+          this.data = res.data;
+          this.total = res.total;
+        }
+      }
+    } catch (err) {
+      this.data = []; this.total = 0;
+      this.lcError.emit({ message: String(err) });
+    }
     this.loading = false;
   }
 
@@ -72,7 +118,9 @@ export class BcViewList {
     this.lcRowSelect.emit({ ids: Array.from(this.selected) });
   }
 
-  private async handleSearch(q: string) { this.searchQuery = q; this.page = 1; await this.fetchData(); }  @Method() async refresh(): Promise<void> { }
+  private async handleSearch(q: string) { this.searchQuery = q; this.page = 1; await this.fetchData(); }
+
+  @Method() async refresh(): Promise<void> { await this.fetchData(); }
 
   render() {
     const fields = this.getFields();

@@ -1,5 +1,5 @@
-:host {
+﻿:host {
   display: block;
   font-family: var(--bc-font-family, system-ui, sans-serif);
 }
-.bc-handle { cursor: grab; color: var(--bc-text-secondary); font-size: 1.25rem; user-select: none; } .bc-handle:active { cursor: grabbing; }
+.bc-handle { cursor: grab; color: var(--bc-text-secondary, #6b7280); font-size: 1.25rem; user-select: none; } .bc-handle:active { cursor: grabbing; }

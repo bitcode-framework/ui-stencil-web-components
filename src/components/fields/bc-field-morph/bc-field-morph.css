@@ -23,7 +23,7 @@
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: var(--bc-z-dropdown, 100);
   background: var(--bc-surface, #fff);
   border: 1px solid var(--bc-border, #e2e8f0);
   border-radius: var(--bc-radius, 6px);

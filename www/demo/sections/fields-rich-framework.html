@@ -1,0 +1,85 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (4 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 4 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-richtext --&gt;
+&lt;bc-field-richtext name=&quot;content&quot; label=&quot;Content&quot;&gt;&lt;/bc-field-richtext&gt;
+
+&lt;!-- bc-field-markdown --&gt;
+&lt;bc-field-markdown name=&quot;readme&quot; label=&quot;README&quot;&gt;&lt;/bc-field-markdown&gt;
+
+&lt;!-- bc-field-code --&gt;
+&lt;bc-field-code name=&quot;script&quot; label=&quot;Script&quot; language=&quot;javascript&quot;&gt;&lt;/bc-field-code&gt;
+
+&lt;!-- bc-field-json --&gt;
+&lt;bc-field-json name=&quot;config&quot; label=&quot;Config&quot;&gt;&lt;/bc-field-json&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-richtext, @bitcode/components/bc-field-markdown, @bitcode/components/bc-field-code, @bitcode/components/bc-field-json';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-richtext */}
+      &lt;bc-field-richtext name=&quot;content&quot; label=&quot;Content&quot;&gt;&lt;/bc-field-richtext&gt;
+
+      {/* bc-field-markdown */}
+      &lt;bc-field-markdown name=&quot;readme&quot; label=&quot;README&quot;&gt;&lt;/bc-field-markdown&gt;
+
+      {/* bc-field-code */}
+      &lt;bc-field-code name=&quot;script&quot; label=&quot;Script&quot; language=&quot;javascript&quot;&gt;&lt;/bc-field-code&gt;
+
+      {/* bc-field-json */}
+      &lt;bc-field-json name=&quot;config&quot; label=&quot;Config&quot;&gt;&lt;/bc-field-json&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-richtext --&gt;
+  &lt;bc-field-richtext name=&quot;content&quot; label=&quot;Content&quot;&gt;&lt;/bc-field-richtext&gt;
+
+  &lt;!-- bc-field-markdown --&gt;
+  &lt;bc-field-markdown name=&quot;readme&quot; label=&quot;README&quot;&gt;&lt;/bc-field-markdown&gt;
+
+  &lt;!-- bc-field-code --&gt;
+  &lt;bc-field-code name=&quot;script&quot; label=&quot;Script&quot; language=&quot;javascript&quot;&gt;&lt;/bc-field-code&gt;
+
+  &lt;!-- bc-field-json --&gt;
+  &lt;bc-field-json name=&quot;config&quot; label=&quot;Config&quot;&gt;&lt;/bc-field-json&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-richtext --&gt;
+&lt;bc-field-richtext name=&quot;content&quot; label=&quot;Content&quot;&gt;&lt;/bc-field-richtext&gt;
+
+&lt;!-- bc-field-markdown --&gt;
+&lt;bc-field-markdown name=&quot;readme&quot; label=&quot;README&quot;&gt;&lt;/bc-field-markdown&gt;
+
+&lt;!-- bc-field-code --&gt;
+&lt;bc-field-code name=&quot;script&quot; label=&quot;Script&quot; language=&quot;javascript&quot;&gt;&lt;/bc-field-code&gt;
+
+&lt;!-- bc-field-json --&gt;
+&lt;bc-field-json name=&quot;config&quot; label=&quot;Config&quot;&gt;&lt;/bc-field-json&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

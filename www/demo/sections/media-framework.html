@@ -1,0 +1,133 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (8 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 8 components — Vanilla HTML --&gt;
+&lt;!-- bc-viewer-pdf --&gt;
+&lt;bc-viewer-pdf src=&quot;/files/doc.pdf&quot;&gt;&lt;/bc-viewer-pdf&gt;
+
+&lt;!-- bc-viewer-image --&gt;
+&lt;bc-viewer-image src=&quot;/files/photo.jpg&quot; thumbnail&gt;&lt;/bc-viewer-image&gt;
+
+&lt;!-- bc-viewer-video --&gt;
+&lt;bc-viewer-video src=&quot;/files/clip.mp4&quot;&gt;&lt;/bc-viewer-video&gt;
+
+&lt;!-- bc-viewer-audio --&gt;
+&lt;bc-viewer-audio src=&quot;/files/podcast.mp3&quot;&gt;&lt;/bc-viewer-audio&gt;
+
+&lt;!-- bc-viewer-document --&gt;
+&lt;bc-viewer-document src=&quot;/files/report.docx&quot;&gt;&lt;/bc-viewer-document&gt;
+
+&lt;!-- bc-viewer-youtube --&gt;
+&lt;bc-viewer-youtube video-id=&quot;dQw4w9WgXcQ&quot;&gt;&lt;/bc-viewer-youtube&gt;
+
+&lt;!-- bc-viewer-instagram --&gt;
+&lt;bc-viewer-instagram post-url=&quot;https://instagram.com/p/xxx&quot;&gt;&lt;/bc-viewer-instagram&gt;
+
+&lt;!-- bc-viewer-tiktok --&gt;
+&lt;bc-viewer-tiktok video-url=&quot;https://tiktok.com/@x/video/123&quot;&gt;&lt;/bc-viewer-tiktok&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-viewer-pdf, @bitcode/components/bc-viewer-image, @bitcode/components/bc-viewer-video, @bitcode/components/bc-viewer-audio, @bitcode/components/bc-viewer-document, @bitcode/components/bc-viewer-youtube, @bitcode/components/bc-viewer-instagram, @bitcode/components/bc-viewer-tiktok';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-viewer-pdf */}
+      &lt;bc-viewer-pdf src=&quot;/files/doc.pdf&quot;&gt;&lt;/bc-viewer-pdf&gt;
+
+      {/* bc-viewer-image */}
+      &lt;bc-viewer-image src=&quot;/files/photo.jpg&quot; thumbnail={true}&gt;&lt;/bc-viewer-image&gt;
+
+      {/* bc-viewer-video */}
+      &lt;bc-viewer-video src=&quot;/files/clip.mp4&quot;&gt;&lt;/bc-viewer-video&gt;
+
+      {/* bc-viewer-audio */}
+      &lt;bc-viewer-audio src=&quot;/files/podcast.mp3&quot;&gt;&lt;/bc-viewer-audio&gt;
+
+      {/* bc-viewer-document */}
+      &lt;bc-viewer-document src=&quot;/files/report.docx&quot;&gt;&lt;/bc-viewer-document&gt;
+
+      {/* bc-viewer-youtube */}
+      &lt;bc-viewer-youtube videoId=&quot;dQw4w9WgXcQ&quot;&gt;&lt;/bc-viewer-youtube&gt;
+
+      {/* bc-viewer-instagram */}
+      &lt;bc-viewer-instagram postUrl=&quot;https://instagram.com/p/xxx&quot;&gt;&lt;/bc-viewer-instagram&gt;
+
+      {/* bc-viewer-tiktok */}
+      &lt;bc-viewer-tiktok videoUrl=&quot;https://tiktok.com/@x/video/123&quot;&gt;&lt;/bc-viewer-tiktok&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-viewer-pdf --&gt;
+  &lt;bc-viewer-pdf src=&quot;/files/doc.pdf&quot;&gt;&lt;/bc-viewer-pdf&gt;
+
+  &lt;!-- bc-viewer-image --&gt;
+  &lt;bc-viewer-image src=&quot;/files/photo.jpg&quot; thumbnail&gt;&lt;/bc-viewer-image&gt;
+
+  &lt;!-- bc-viewer-video --&gt;
+  &lt;bc-viewer-video src=&quot;/files/clip.mp4&quot;&gt;&lt;/bc-viewer-video&gt;
+
+  &lt;!-- bc-viewer-audio --&gt;
+  &lt;bc-viewer-audio src=&quot;/files/podcast.mp3&quot;&gt;&lt;/bc-viewer-audio&gt;
+
+  &lt;!-- bc-viewer-document --&gt;
+  &lt;bc-viewer-document src=&quot;/files/report.docx&quot;&gt;&lt;/bc-viewer-document&gt;
+
+  &lt;!-- bc-viewer-youtube --&gt;
+  &lt;bc-viewer-youtube video-id=&quot;dQw4w9WgXcQ&quot;&gt;&lt;/bc-viewer-youtube&gt;
+
+  &lt;!-- bc-viewer-instagram --&gt;
+  &lt;bc-viewer-instagram post-url=&quot;https://instagram.com/p/xxx&quot;&gt;&lt;/bc-viewer-instagram&gt;
+
+  &lt;!-- bc-viewer-tiktok --&gt;
+  &lt;bc-viewer-tiktok video-url=&quot;https://tiktok.com/@x/video/123&quot;&gt;&lt;/bc-viewer-tiktok&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-viewer-pdf --&gt;
+&lt;bc-viewer-pdf src=&quot;/files/doc.pdf&quot;&gt;&lt;/bc-viewer-pdf&gt;
+
+&lt;!-- bc-viewer-image --&gt;
+&lt;bc-viewer-image src=&quot;/files/photo.jpg&quot; thumbnail&gt;&lt;/bc-viewer-image&gt;
+
+&lt;!-- bc-viewer-video --&gt;
+&lt;bc-viewer-video src=&quot;/files/clip.mp4&quot;&gt;&lt;/bc-viewer-video&gt;
+
+&lt;!-- bc-viewer-audio --&gt;
+&lt;bc-viewer-audio src=&quot;/files/podcast.mp3&quot;&gt;&lt;/bc-viewer-audio&gt;
+
+&lt;!-- bc-viewer-document --&gt;
+&lt;bc-viewer-document src=&quot;/files/report.docx&quot;&gt;&lt;/bc-viewer-document&gt;
+
+&lt;!-- bc-viewer-youtube --&gt;
+&lt;bc-viewer-youtube video-id=&quot;dQw4w9WgXcQ&quot;&gt;&lt;/bc-viewer-youtube&gt;
+
+&lt;!-- bc-viewer-instagram --&gt;
+&lt;bc-viewer-instagram post-url=&quot;https://instagram.com/p/xxx&quot;&gt;&lt;/bc-viewer-instagram&gt;
+
+&lt;!-- bc-viewer-tiktok --&gt;
+&lt;bc-viewer-tiktok video-url=&quot;https://tiktok.com/@x/video/123&quot;&gt;&lt;/bc-viewer-tiktok&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

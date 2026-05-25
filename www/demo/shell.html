@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" data-bc-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BitCode Components — Gallery</title>
+  <meta name="bc-theme" content="light">
+  <link rel="stylesheet" href="../build/bc-components.css">
+  <script src="demo-mock-api.js"></script>
+  <script type="module" src="../build/bc-components.esm.js"></script>
+  <script nomodule src="../build/bc-components.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--bc-font-family, 'Inter', system-ui, sans-serif); background: var(--bc-bg, #fff); color: var(--bc-text, #111827); display: flex; min-height: 100vh; }
+
+    .sidebar { width: 260px; border-right: 1px solid var(--bc-border-color, #e5e7eb); padding: 1rem 0; overflow-y: auto; position: fixed; top: 0; bottom: 0; background: var(--bc-bg-secondary, #f9fafb); z-index: 10; }
+    .sidebar-header { padding: 0 1rem 1rem; border-bottom: 1px solid var(--bc-border-color, #e5e7eb); }
+    .sidebar-header h1 { font-size: 1.125rem; font-weight: 700; }
+    .sidebar-header p { font-size: 0.75rem; color: var(--bc-text-secondary, #6b7280); margin-top: 0.25rem; }
+    .sidebar-search { padding: 0.75rem 1rem; }
+    .sidebar-search input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.375rem; font-size: 0.875rem; outline: none; background: var(--bc-input-bg, #fff); color: var(--bc-text, #111827); }
+    .sidebar-search input:focus { border-color: var(--bc-primary, #4f46e5); box-shadow: 0 0 0 3px rgba(79,70,229,0.15); }
+    .sidebar-group { padding: 0.25rem 0; }
+    .sidebar-group-title { padding: 0.25rem 1rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--bc-text-secondary, #6b7280); }
+    .sidebar-link { display: block; padding: 0.375rem 1rem 0.375rem 1.5rem; font-size: 0.8125rem; color: var(--bc-text, #111827); text-decoration: none; cursor: pointer; transition: background 0.15s; }
+    .sidebar-link:hover { background: var(--bc-bg-hover, #f3f4f6); }
+    .sidebar-link.active { background: var(--bc-primary-light, #eef2ff); color: var(--bc-primary, #4f46e5); font-weight: 500; }
+    .sidebar-link.hidden { display: none; }
+
+    .main { margin-left: 260px; flex: 1; padding: 2rem; max-width: 960px; }
+    .toolbar { display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; padding: 1rem; background: var(--bc-bg-secondary, #f9fafb); border-radius: 0.5rem; border: 1px solid var(--bc-border-color, #e5e7eb); flex-wrap: wrap; }
+    .toolbar label { font-size: 0.8125rem; font-weight: 500; }
+    .toolbar select, .toolbar button { padding: 0.375rem 0.75rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.375rem; font-size: 0.8125rem; background: var(--bc-input-bg, #fff); color: var(--bc-text, #111827); cursor: pointer; }
+    .toolbar button.active { background: var(--bc-primary, #4f46e5); color: #fff; border-color: var(--bc-primary, #4f46e5); }
+
+    .demo-section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+    .demo-section h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.25rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--bc-border-color, #e5e7eb); }
+    .demo-section h2 code { font-size: 1rem; background: var(--bc-bg-tertiary, #f3f4f6); padding: 0.125rem 0.375rem; border-radius: 0.25rem; }
+    .demo-section p.desc { font-size: 0.875rem; color: var(--bc-text-secondary, #6b7280); margin-bottom: 1rem; }
+    .badge { display: inline-block; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff; padding: 0.125rem 0.5rem; border-radius: 0.25rem; vertical-align: middle; margin-inline-start: 0.375rem; }
+    .demo-box { padding: 1.5rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.5rem; margin-bottom: 1rem; background: var(--bc-bg, #fff); }
+    .demo-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+    .demo-row > * { flex: 1; min-width: 200px; }
+    .demo-btn { padding: 0.5rem 1rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.375rem; cursor: pointer; background: var(--bc-input-bg, #fff); color: var(--bc-text, #111827); font-size: 0.8125rem; }
+    .demo-btn:hover { background: var(--bc-bg-hover, #f3f4f6); }
+    .mt { margin-top: 1rem; }
+    .group-heading { font-size: 1.5rem; font-weight: 700; margin: 3rem 0 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--bc-primary, #4f46e5); color: var(--bc-primary, #4f46e5); }
+
+    /* Framework examples */
+    .fw-details { margin-top: 0.5rem; margin-bottom: 1.5rem; }
+    .fw-summary { cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--bc-primary, #4f46e5); padding: 0.375rem 0; user-select: none; }
+    .fw-summary:hover { text-decoration: underline; }
+    .fw-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--bc-border-color, #e5e7eb); margin-bottom: 0; }
+    .fw-tab { padding: 0.375rem 0.75rem; font-size: 0.75rem; border: 1px solid transparent; border-bottom: none; border-radius: 0.375rem 0.375rem 0 0; cursor: pointer; background: transparent; color: var(--bc-text-secondary, #6b7280); font-weight: 500; }
+    .fw-tab:hover { color: var(--bc-text, #111827); background: var(--bc-bg-hover, #f3f4f6); }
+    .fw-tab.active { color: var(--bc-primary, #4f46e5); border-color: var(--bc-border-color, #e5e7eb); background: var(--bc-bg, #fff); margin-bottom: -1px; border-bottom: 1px solid var(--bc-bg, #fff); }
+    .fw-content { border: 1px solid var(--bc-border-color, #e5e7eb); border-top: none; border-radius: 0 0 0.5rem 0.5rem; overflow: hidden; }
+    .fw-panel { display: none; padding: 0; margin: 0; }
+    .fw-panel.active { display: block; }
+    .fw-panel pre { margin: 0; padding: 1rem; overflow-x: auto; font-size: 0.8125rem; line-height: 1.6; background: var(--bc-bg-tertiary, #f3f4f6); color: var(--bc-text, #111827); }
+    .fw-panel code { font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h1>BC Components</h1>
+    <p>122 enterprise components</p>
+  </div>
+  <div class="sidebar-search">
+    <input type="text" id="search" placeholder="Search components..." oninput="filterSidebar(this.value)">
+  </div>
+
+  <!-- FIELDS -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Fields — Text</div>
+    <a class="sidebar-link" data-section="string">bc-field-string</a>
+    <a class="sidebar-link" data-section="password">bc-field-password</a>
+    <a class="sidebar-link" data-section="text">bc-field-text</a>
+    <a class="sidebar-link" data-section="smalltext">bc-field-smalltext</a>
+  </div>
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Fields — Number</div>
+    <a class="sidebar-link" data-section="integer">bc-field-integer</a>
+    <a class="sidebar-link" data-section="float">bc-field-float</a>
+    <a class="sidebar-link" data-section="decimal">bc-field-decimal</a>
+    <a class="sidebar-link" data-section="currency">bc-field-currency</a>
+    <a class="sidebar-link" data-section="percent">bc-field-percent</a>
+  </div>
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Fields — Date/Time</div>
+    <a class="sidebar-link" data-section="date">bc-field-date</a>
+    <a class="sidebar-link" data-section="datetime">bc-field-datetime</a>
+    <a class="sidebar-link" data-section="time">bc-field-time</a>
+    <a class="sidebar-link" data-section="duration">bc-field-duration</a>
+  </div>
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Fields — Choice</div>
+    <a class="sidebar-link" data-section="select">bc-field-select</a>
+    <a class="sidebar-link" data-section="checkbox">bc-field-checkbox</a>
+    <a class="sidebar-link" data-section="toggle">bc-field-toggle</a>
+    <a class="sidebar-link" data-section="radio">bc-field-radio</a>
+    <a class="sidebar-link" data-section="multicheck">bc-field-multicheck</a>
+    <a class="sidebar-link" data-section="rating">bc-field-rating</a>
+    <a class="sidebar-link" data-section="color">bc-field-color</a>
+  </div>
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Fields — Rich</div>
+    <a class="sidebar-link" data-section="richtext">bc-field-richtext</a>
+    <a class="sidebar-link" data-section="markdown">bc-field-markdown</a>
+    <a class="sidebar-link" data-section="html">bc-field-html</a>
+    <a class="sidebar-link" data-section="code">bc-field-code</a>
+    <a class="sidebar-link" data-section="json">bc-field-json</a>
+  </div>
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Fields — Special</div>
+    <a class="sidebar-link" data-section="file">bc-field-file</a>
+    <a class="sidebar-link" data-section="image">bc-field-image</a>
+    <a class="sidebar-link" data-section="signature">bc-field-signature</a>
+    <a class="sidebar-link" data-section="barcode">bc-field-barcode</a>
+  </div>
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Fields — Relational</div>
+    <a class="sidebar-link" data-section="tags">bc-field-tags</a>
+    <a class="sidebar-link" data-section="link">bc-field-link</a>
+    <a class="sidebar-link" data-section="dynlink">bc-field-dynlink</a>
+    <a class="sidebar-link" data-section="tableselect">bc-field-tableselect</a>
+    <a class="sidebar-link" data-section="morph">bc-field-morph</a>
+    <a class="sidebar-link" data-section="geo">bc-field-geo</a>
+    <a class="sidebar-link" data-section="lookup">bc-lookup-modal</a>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Charts</div>
+    <a class="sidebar-link" data-section="chart-bar">bc-chart-bar</a>
+    <a class="sidebar-link" data-section="chart-line">bc-chart-line</a>
+    <a class="sidebar-link" data-section="chart-area">bc-chart-area</a>
+    <a class="sidebar-link" data-section="chart-pie">bc-chart-pie</a>
+    <a class="sidebar-link" data-section="chart-scatter">bc-chart-scatter</a>
+    <a class="sidebar-link" data-section="chart-radar">bc-chart-radar</a>
+    <a class="sidebar-link" data-section="chart-gauge">bc-chart-gauge</a>
+    <a class="sidebar-link" data-section="chart-funnel">bc-chart-funnel</a>
+    <a class="sidebar-link" data-section="chart-heatmap">bc-chart-heatmap</a>
+    <a class="sidebar-link" data-section="chart-candlestick">bc-chart-candlestick</a>
+    <a class="sidebar-link" data-section="chart-boxplot">bc-chart-boxplot</a>
+    <a class="sidebar-link" data-section="chart-sankey">bc-chart-sankey</a>
+    <a class="sidebar-link" data-section="chart-treemap">bc-chart-treemap</a>
+    <a class="sidebar-link" data-section="chart-sunburst">bc-chart-sunburst</a>
+    <a class="sidebar-link" data-section="chart-graph">bc-chart-graph</a>
+    <a class="sidebar-link" data-section="chart-tree">bc-chart-tree</a>
+    <a class="sidebar-link" data-section="chart-themeriver">bc-chart-themeriver</a>
+    <a class="sidebar-link" data-section="chart-parallel">bc-chart-parallel</a>
+    <a class="sidebar-link" data-section="chart-pictorialbar">bc-chart-pictorialbar</a>
+    <a class="sidebar-link" data-section="chart-polar">bc-chart-polar</a>
+    <a class="sidebar-link" data-section="chart-mixed">bc-chart-mixed</a>
+    <a class="sidebar-link" data-section="chart-custom">bc-chart-custom</a>
+    <a class="sidebar-link" data-section="chart-pivot">bc-chart-pivot</a>
+    <a class="sidebar-link" data-section="chart-progress">bc-chart-progress</a>
+    <a class="sidebar-link" data-section="chart-kpi">bc-chart-kpi</a>
+    <a class="sidebar-link" data-section="chart-scorecard">bc-chart-scorecard</a>
+  </div>
+
+  <!-- DATATABLE -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Datatable</div>
+    <a class="sidebar-link" data-section="datatable">bc-datatable</a>
+    <a class="sidebar-link" data-section="child-table">bc-child-table</a>
+    <a class="sidebar-link" data-section="filter-panel">bc-filter-panel</a>
+    <a class="sidebar-link" data-section="filter-bar">bc-filter-bar</a>
+    <a class="sidebar-link" data-section="filter-builder">bc-filter-builder</a>
+  </div>
+
+  <!-- DIALOGS -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Dialogs</div>
+    <a class="sidebar-link" data-section="dialog-modal">bc-dialog-modal</a>
+    <a class="sidebar-link" data-section="dialog-confirm">bc-dialog-confirm</a>
+    <a class="sidebar-link" data-section="dialog-alert">bc-dialog-alert</a>
+    <a class="sidebar-link" data-section="dialog-prompt">bc-dialog-prompt</a>
+    <a class="sidebar-link" data-section="dialog-wizard">bc-dialog-wizard</a>
+    <a class="sidebar-link" data-section="dialog-quickentry">bc-dialog-quickentry</a>
+    <a class="sidebar-link" data-section="toast">bc-toast</a>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Layout</div>
+    <a class="sidebar-link" data-section="section">bc-section</a>
+    <a class="sidebar-link" data-section="tabs">bc-tabs</a>
+    <a class="sidebar-link" data-section="row">bc-row</a>
+    <a class="sidebar-link" data-section="column">bc-column</a>
+    <a class="sidebar-link" data-section="header">bc-header</a>
+    <a class="sidebar-link" data-section="sheet">bc-sheet</a>
+    <a class="sidebar-link" data-section="separator">bc-separator</a>
+    <a class="sidebar-link" data-section="html-block">bc-html-block</a>
+    <a class="sidebar-link" data-section="button-box">bc-button-box</a>
+  </div>
+
+  <!-- MEDIA -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Media</div>
+    <a class="sidebar-link" data-section="viewer-pdf">bc-viewer-pdf</a>
+    <a class="sidebar-link" data-section="viewer-image">bc-viewer-image</a>
+    <a class="sidebar-link" data-section="viewer-video">bc-viewer-video</a>
+    <a class="sidebar-link" data-section="viewer-audio">bc-viewer-audio</a>
+    <a class="sidebar-link" data-section="viewer-document">bc-viewer-document</a>
+    <a class="sidebar-link" data-section="viewer-youtube">bc-viewer-youtube</a>
+    <a class="sidebar-link" data-section="viewer-instagram">bc-viewer-instagram</a>
+    <a class="sidebar-link" data-section="viewer-tiktok">bc-viewer-tiktok</a>
+  </div>
+
+  <!-- VIEWS -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Views</div>
+    <a class="sidebar-link" data-section="view-list">bc-view-list</a>
+    <a class="sidebar-link" data-section="view-form">bc-view-form</a>
+    <a class="sidebar-link" data-section="view-kanban">bc-view-kanban</a>
+    <a class="sidebar-link" data-section="kanban-board">bc-kanban-board <span style="font-size:0.5rem;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;padding:1px 4px;border-radius:2px;vertical-align:middle">PRO</span></a>
+    <a class="sidebar-link" data-section="view-calendar">bc-view-calendar</a>
+    <a class="sidebar-link" data-section="view-gantt">bc-view-gantt</a>
+    <a class="sidebar-link" data-section="view-map">bc-view-map</a>
+    <a class="sidebar-link" data-section="view-tree">bc-view-tree</a>
+    <a class="sidebar-link" data-section="view-report">bc-view-report</a>
+    <a class="sidebar-link" data-section="view-editor">bc-view-editor</a>
+    <a class="sidebar-link" data-section="view-activity">bc-view-activity</a>
+  </div>
+
+  <!-- WIDGETS -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Widgets</div>
+    <a class="sidebar-link" data-section="badge">bc-widget-badge</a>
+    <a class="sidebar-link" data-section="progress">bc-widget-progress</a>
+    <a class="sidebar-link" data-section="priority">bc-priority</a>
+    <a class="sidebar-link" data-section="handle">bc-handle</a>
+    <a class="sidebar-link" data-section="copy">bc-copy</a>
+    <a class="sidebar-link" data-section="url">bc-url</a>
+    <a class="sidebar-link" data-section="email">bc-email</a>
+    <a class="sidebar-link" data-section="phone">bc-phone</a>
+    <a class="sidebar-link" data-section="domain">bc-domain</a>
+    <a class="sidebar-link" data-section="statusbar">bc-statusbar</a>
+    <a class="sidebar-link" data-section="placeholder">bc-placeholder</a>
+    <a class="sidebar-link" data-section="sync-status">bc-sync-status</a>
+  </div>
+
+  <!-- PRINT -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Print</div>
+    <a class="sidebar-link" data-section="print">bc-print</a>
+    <a class="sidebar-link" data-section="export">bc-export</a>
+    <a class="sidebar-link" data-section="report-link">bc-report-link</a>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Search</div>
+    <a class="sidebar-link" data-section="search">bc-search</a>
+    <a class="sidebar-link" data-section="favorites">bc-favorites</a>
+  </div>
+
+  <!-- SOCIAL -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Social</div>
+    <a class="sidebar-link" data-section="chatter">bc-chatter</a>
+    <a class="sidebar-link" data-section="timeline">bc-timeline</a>
+    <a class="sidebar-link" data-section="activity">bc-activity</a>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="toolbar">
+    <label>Theme:</label>
+    <select id="themeSelect">
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+      <option value="system">System</option>
+    </select>
+    <label>Size:</label>
+    <select id="sizeSelect">
+      <option value="sm">Small</option>
+      <option value="md" selected>Medium</option>
+      <option value="lg">Large</option>
+    </select>
+  </div>
+
+  <!--SECTIONS-->
+
+</main>
+
+<script>
+  function setTheme(theme) {
+    if (window.BcSetup) {
+      window.BcSetup.setTheme(theme);
+    } else {
+      if (theme === 'system') {
+        const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-bc-theme', dark ? 'dark' : 'light');
+      } else {
+        document.documentElement.setAttribute('data-bc-theme', theme);
+      }
+    }
+  }
+
+  document.getElementById('themeSelect').addEventListener('change', function() {
+    setTheme(this.value);
+  });
+
+  document.getElementById('sizeSelect').addEventListener('change', function() {
+    document.querySelectorAll('[size]').forEach(function(el) {
+      el.setAttribute('size', this.value);
+    }.bind(this));
+  });
+
+  document.querySelectorAll('.sidebar-link').forEach(function(link) {
+    link.addEventListener('click', function() {
+      var id = this.getAttribute('data-section');
+      var el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        document.querySelectorAll('.sidebar-link').forEach(function(l) { l.classList.remove('active'); });
+        this.classList.add('active');
+      }
+    });
+  });
+
+  function filterSidebar(query) {
+    var q = query.toLowerCase();
+    document.querySelectorAll('.sidebar-link').forEach(function(link) {
+      var text = link.textContent.toLowerCase();
+      if (q && !text.includes(q)) {
+        link.classList.add('hidden');
+      } else {
+        link.classList.remove('hidden');
+      }
+    });
+  }
+
+  function showToast(variant, message) {
+    var toast = document.getElementById('d-toast');
+    toast.setAttribute('variant', variant);
+    toast.setAttribute('message', message);
+    toast.setAttribute('dialog-title', variant.charAt(0).toUpperCase() + variant.slice(1));
+    toast.open = true;
+  }
+
+  function showFwTab(btn, fw) {
+    var container = btn.closest('.framework-examples');
+    container.querySelectorAll('.fw-tab').forEach(function(t) { t.classList.remove('active'); });
+    container.querySelectorAll('.fw-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    container.querySelector('[data-fw="' + fw + '"]').classList.add('active');
+  }
+</script>
+
+</body>
+</html>

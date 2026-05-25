@@ -1,10 +1,10 @@
-:host {
+﻿:host {
   display: block;
 }
 
 .bc-html-block {
-  font-family: var(--bc-font-family);
-  font-size: var(--bc-font-size-base);
-  color: var(--bc-text);
-  line-height: var(--bc-line-height);
+  font-family: var(--bc-font-family, system-ui, sans-serif);
+  font-size: var(--bc-font-size-base, 1rem);
+  color: var(--bc-text, #111827);
+  line-height: var(--bc-line-height, 1.5);
 }

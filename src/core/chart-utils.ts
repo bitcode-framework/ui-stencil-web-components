@@ -17,6 +17,8 @@ import {
 import type { ECharts, EChartsCoreOption } from 'echarts/core';
 import { ChartClickEvent, ChartHoverEvent, ChartLegendSelectEvent, ChartDataZoomEvent, DataFetcher } from './types';
 import { fetchData } from './data-fetcher';
+import { BcSetup } from './bc-setup';
+import { applyChartTheme } from './chart-theme';
 import type { EventEmitter } from '@stencil/core';
 
 // Register common components once (idempotent)
@@ -38,8 +40,70 @@ echarts.use([
   AriaComponent,
 ]);
 
+// Register BitCode dark theme matching our CSS variable palette
+echarts.registerTheme('dark', {
+  color: ['#818cf8', '#22d3ee', '#34d399', '#fbbf24', '#f87171', '#a78bfa', '#f472b6', '#2dd4bf', '#fb923c', '#818cf8'],
+  backgroundColor: 'transparent',
+  textStyle: { color: '#e2e8f0' },
+  title: { textStyle: { color: '#f1f5f9' }, subtextStyle: { color: '#94a3b8' } },
+  legend: { textStyle: { color: '#cbd5e1' } },
+  tooltip: {
+    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+    borderColor: '#334155',
+    textStyle: { color: '#f1f5f9' },
+  },
+  categoryAxis: {
+    axisLine: { lineStyle: { color: '#475569' } },
+    axisTick: { lineStyle: { color: '#475569' } },
+    axisLabel: { color: '#94a3b8' },
+    splitLine: { lineStyle: { color: '#1e293b' } },
+  },
+  valueAxis: {
+    axisLine: { lineStyle: { color: '#475569' } },
+    axisTick: { lineStyle: { color: '#475569' } },
+    axisLabel: { color: '#94a3b8' },
+    splitLine: { lineStyle: { color: '#1e293b' } },
+  },
+  logAxis: {
+    axisLine: { lineStyle: { color: '#475569' } },
+    axisTick: { lineStyle: { color: '#475569' } },
+    axisLabel: { color: '#94a3b8' },
+    splitLine: { lineStyle: { color: '#1e293b' } },
+  },
+  timeAxis: {
+    axisLine: { lineStyle: { color: '#475569' } },
+    axisTick: { lineStyle: { color: '#475569' } },
+    axisLabel: { color: '#94a3b8' },
+    splitLine: { lineStyle: { color: '#1e293b' } },
+  },
+  radar: {
+    name: { textStyle: { color: '#94a3b8' } },
+    axisLine: { lineStyle: { color: '#475569' } },
+    splitLine: { lineStyle: { color: '#334155' } },
+    splitArea: { areaStyle: { color: ['rgba(51,65,85,0.3)', 'rgba(51,65,85,0.1)'] } },
+  },
+  toolbox: { iconStyle: { borderColor: '#94a3b8' }, emphasis: { iconStyle: { borderColor: '#818cf8' } } },
+  dataZoom: {
+    backgroundColor: 'rgba(30,41,59,0.6)',
+    dataBackgroundColor: '#334155',
+    fillerColor: 'rgba(129,140,248,0.15)',
+    handleColor: '#818cf8',
+    textStyle: { color: '#94a3b8' },
+  },
+  markLine: { lineStyle: { color: '#64748b' } },
+});
+
 export { echarts };
 export type { ECharts, EChartsCoreOption as EChartsOption };
+
+const chartThemeCleanup = new WeakMap<ECharts, () => void>();
+const chartThemeObservers = new WeakMap<ECharts, MutationObserver>();
+
+function applyChartThemePatch(chart: ECharts, theme: string): void {
+  const option = chart.getOption() as Record<string, unknown>;
+  if (!option || Object.keys(option).length === 0) return;
+  chart.setOption(applyChartTheme(option, theme), true);
+}
 
 // ============================================================================
 // DATA PARSING
@@ -203,11 +267,42 @@ export function initChart(
     themeArg = 'dark';
   } else if (theme) {
     try { themeArg = JSON.parse(theme); } catch { themeArg = theme; }
+  } else {
+    // Auto-detect from page theme when no explicit theme prop
+    const pageTheme = document.documentElement.getAttribute('data-bc-theme');
+    if (pageTheme === 'dark') {
+      themeArg = 'dark';
+    }
   }
 
   const chart = echarts.init(container as HTMLElement, themeArg as string | object | undefined, {
     renderer: (renderer === 'svg' ? 'svg' : 'canvas') as 'canvas' | 'svg',
   });
+  const baseSetOption = chart.setOption.bind(chart) as (
+    option: unknown,
+    notMerge?: boolean,
+    lazyUpdate?: boolean,
+  ) => void;
+  chart.setOption = ((option: unknown, notMerge?: boolean, lazyUpdate?: boolean) => {
+    if (option && typeof option === 'object' && !Array.isArray(option)) {
+      return baseSetOption(applyChartTheme(option as Record<string, unknown>, theme), notMerge, lazyUpdate);
+    }
+    return baseSetOption(option, notMerge, lazyUpdate);
+  }) as typeof chart.setOption;
+
+  const syncTheme = () => applyChartThemePatch(chart, theme);
+  const unsubscribeTheme = BcSetup.onThemeChange(() => {
+    if (!theme) syncTheme();
+  });
+  chartThemeCleanup.set(chart, unsubscribeTheme);
+
+  if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
+    const observer = new MutationObserver(() => {
+      if (!theme) syncTheme();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bc-theme'] });
+    chartThemeObservers.set(chart, observer);
+  }
 
   chart.on('click', (params: Record<string, unknown>) => {
     events.lcChartClick.emit({
@@ -260,6 +355,12 @@ export function initChart(
 }
 
 export function disposeChart(chart: ECharts | null, timer: ReturnType<typeof setInterval> | null, observer: ResizeObserver | null): void {
+  if (chart) {
+    chartThemeCleanup.get(chart)?.();
+    chartThemeCleanup.delete(chart);
+    chartThemeObservers.get(chart)?.disconnect();
+    chartThemeObservers.delete(chart);
+  }
   chart?.dispose();
   if (timer) clearInterval(timer);
   if (observer) observer.disconnect();
@@ -336,12 +437,18 @@ export async function fetchChartData(opts: {
   el: ChartHostElement;
   dataSource: string;
   fetchHeaders: string;
+  model?: string;
+  localData?: string | unknown[];
+  fetchOptions?: RequestInit;
 }): Promise<unknown[]> {
   const result = await fetchData({
     fetcher: opts.dataFetcher,
     element: opts.el,
     dataSource: opts.dataSource,
     fetchHeaders: opts.fetchHeaders,
+    model: opts.model,
+    localData: opts.localData,
+    fetchOptions: opts.fetchOptions,
   });
   return result.data;
 }

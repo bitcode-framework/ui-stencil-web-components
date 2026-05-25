@@ -1,4 +1,4 @@
-@import '../field-base.css';
+﻿@import '../field-base.css';
 
 .bc-rating {
   display: flex;
@@ -10,13 +10,13 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: var(--bc-border-color);
+  color: var(--bc-text-placeholder, #9ca3af);
   padding: 0;
-  transition: color var(--bc-transition);
+  transition: color var(--bc-transition, 150ms ease);
 }
 
 .bc-star.filled {
-  color: var(--bc-warning);
+  color: var(--bc-warning, #f59e0b);
 }
 
 .bc-star:disabled {

@@ -1,22 +1,22 @@
-:host {
+﻿:host {
   display: block;
   font-family: var(--bc-font-family, system-ui, sans-serif);
 }
 
 .bc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: var(--bc-z-modal, 300); }
-.bc-dialog { background: var(--bc-bg); border-radius: var(--bc-radius-xl); box-shadow: var(--bc-shadow-xl); min-width: 24rem; max-width: 90vw; max-height: 90vh; overflow: auto; }
-.bc-dialog-header { display: flex; justify-content: space-between; align-items: center; padding: var(--bc-spacing-md); border-bottom: 1px solid var(--bc-border-color); }
-.bc-dialog-header h3 { margin: 0; font-size: var(--bc-font-size-lg); }
-.bc-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--bc-text-secondary); padding: 0; line-height: 1; }
-.bc-dialog-body { padding: var(--bc-spacing-md); }
-.bc-dialog-message { margin: 0 0 var(--bc-spacing-sm); color: var(--bc-text-secondary); font-size: var(--bc-font-size-sm); }
-.bc-dialog-footer { display: flex; justify-content: flex-end; gap: var(--bc-spacing-sm); padding: var(--bc-spacing-md); border-top: 1px solid var(--bc-border-color); }
-.bc-btn { padding: 0.5rem 1rem; border: 1px solid var(--bc-border-color); border-radius: var(--bc-radius-md); background: var(--bc-bg); color: var(--bc-text); font-size: var(--bc-font-size-sm); cursor: pointer; transition: all var(--bc-transition); }
-.bc-btn:hover { background: var(--bc-bg-secondary); }
-.bc-btn-primary { background: var(--bc-primary); color: white; border-color: var(--bc-primary); }
+.bc-dialog { background: var(--bc-bg, #ffffff); border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: var(--bc-radius-xl, 0.75rem); box-shadow: var(--bc-shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1)); min-width: 24rem; max-width: 90vw; max-height: 90vh; overflow: auto; }
+.bc-dialog-header { display: flex; justify-content: space-between; align-items: center; padding: var(--bc-spacing-md, 1rem); border-bottom: 1px solid var(--bc-border-color, #e5e7eb); }
+.bc-dialog-header h3 { margin: 0; font-size: var(--bc-font-size-lg, 1.125rem); }
+.bc-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--bc-text-secondary, #6b7280); padding: 0; line-height: 1; }
+.bc-dialog-body { padding: var(--bc-spacing-md, 1rem); }
+.bc-dialog-message { margin: 0 0 var(--bc-spacing-sm, 0.5rem); color: var(--bc-text-secondary, #6b7280); font-size: var(--bc-font-size-sm, 0.875rem); }
+.bc-dialog-footer { display: flex; justify-content: flex-end; gap: var(--bc-spacing-sm, 0.5rem); padding: var(--bc-spacing-md, 1rem); border-top: 1px solid var(--bc-border-color, #e5e7eb); }
+.bc-btn { padding: 0.5rem 1rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: var(--bc-radius-md, 0.375rem); background: var(--bc-bg, #ffffff); color: var(--bc-text, #111827); font-size: var(--bc-font-size-sm, 0.875rem); cursor: pointer; transition: all var(--bc-transition, 150ms ease); }
+.bc-btn:hover { background: var(--bc-bg-secondary, #f9fafb); }
+.bc-btn-primary { background: var(--bc-primary, #4f46e5); color: white; border-color: var(--bc-primary, #4f46e5); }
 .bc-btn-primary:hover { opacity: 0.9; }
 .bc-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.bc-prompt-input { width: 100%; height: var(--bc-input-height, 2.5rem); padding: var(--bc-input-padding-y, 0.5rem) var(--bc-input-padding-x, 0.75rem); border: 1px solid var(--bc-border-color); border-radius: var(--bc-input-radius, 0.375rem); background: var(--bc-input-bg, #fff); font-family: inherit; font-size: var(--bc-font-size-base, 1rem); color: var(--bc-text); outline: none; box-sizing: border-box; transition: border-color var(--bc-transition, 150ms ease), box-shadow var(--bc-transition, 150ms ease); }
+.bc-prompt-input { width: 100%; height: var(--bc-input-height, 2.5rem); padding: var(--bc-input-padding-y, 0.5rem) var(--bc-input-padding-x, 0.75rem); border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: var(--bc-input-radius, 0.375rem); background: var(--bc-input-bg, #fff); font-family: inherit; font-size: var(--bc-font-size-base, 1rem); color: var(--bc-text, #111827); outline: none; box-sizing: border-box; transition: border-color var(--bc-transition, 150ms ease), box-shadow var(--bc-transition, 150ms ease); }
 .bc-prompt-input:focus { border-color: var(--bc-border-color-focus, #4f46e5); box-shadow: var(--bc-input-focus-ring, 0 0 0 3px rgba(79, 70, 229, 0.15)); }
 .bc-prompt-input::placeholder { color: var(--bc-text-placeholder, #9ca3af); }
 .bc-dialog-sm { min-width: 20rem; }

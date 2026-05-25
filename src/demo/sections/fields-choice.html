@@ -1,0 +1,66 @@
+<!-- FIELDS — CHOICE -->
+  <div class="demo-section" id="select">
+    <h2><code>bc-field-select</code></h2>
+    <p class="desc">Searchable dropdown with creatable and multi-select support.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-select name="d-sel" label="Country" options='[{"label":"Indonesia","value":"ID"},{"label":"Japan","value":"JP"},{"label":"US","value":"US"},{"label":"Germany","value":"DE"}]' searchable clearable hint="Searchable"></bc-field-select>
+        <bc-field-select name="d-sel-req" label="Status" options='[{"label":"Active","value":"active"},{"label":"Inactive","value":"inactive"}]' required></bc-field-select>
+      </div>
+      <div class="demo-row mt">
+        <bc-field-select name="d-sel-cr" label="Creatable" options='[{"label":"Bug","value":"bug"},{"label":"Feature","value":"feature"}]' searchable creatable></bc-field-select>
+        <bc-field-select name="d-sel-mul" label="Multi" options='[{"label":"Red","value":"red"},{"label":"Green","value":"green"},{"label":"Blue","value":"blue"}]' multiple searchable clearable></bc-field-select>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="checkbox">
+    <h2><code>bc-field-checkbox</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-checkbox name="d-chk" label="I agree" required></bc-field-checkbox>
+        <bc-field-checkbox name="d-chk-dis" label="Disabled" disabled></bc-field-checkbox>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="toggle">
+    <h2><code>bc-field-toggle</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-toggle name="d-tog" label="Notifications"></bc-field-toggle>
+        <bc-field-toggle name="d-tog-on" label="Active" value="true"></bc-field-toggle>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="radio">
+    <h2><code>bc-field-radio</code></h2>
+    <div class="demo-box">
+      <bc-field-radio name="d-rad" label="Gender" options='[{"label":"Male","value":"m"},{"label":"Female","value":"f"},{"label":"Other","value":"o"}]' required></bc-field-radio>
+    </div>
+  </div>
+
+  <div class="demo-section" id="multicheck">
+    <h2><code>bc-field-multicheck</code></h2>
+    <div class="demo-box">
+      <bc-field-multicheck name="d-mchk" label="Interests" options='[{"label":"Sports","value":"sports"},{"label":"Music","value":"music"},{"label":"Tech","value":"tech"}]' clearable></bc-field-multicheck>
+    </div>
+  </div>
+
+  <div class="demo-section" id="rating">
+    <h2><code>bc-field-rating</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-rating name="d-rat" label="Rating" required clearable></bc-field-rating>
+        <bc-field-rating name="d-rat10" label="10 stars" max-stars="10"></bc-field-rating>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="color">
+    <h2><code>bc-field-color</code></h2>
+    <div class="demo-box">
+      <bc-field-color name="d-col" label="Brand Color" clearable></bc-field-color>
+    </div>
+  </div>

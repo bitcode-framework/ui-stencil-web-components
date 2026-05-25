@@ -1,0 +1,181 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (12 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 12 components — Vanilla HTML --&gt;
+&lt;!-- bc-badge --&gt;
+&lt;bc-badge value=&quot;Active&quot; variant=&quot;success&quot;&gt;&lt;/bc-badge&gt;
+
+&lt;!-- bc-progress --&gt;
+&lt;bc-progress value=&quot;65&quot; max=&quot;100&quot;&gt;&lt;/bc-progress&gt;
+
+&lt;!-- bc-priority --&gt;
+&lt;bc-priority value=&quot;3&quot; label=&quot;High&quot;&gt;&lt;/bc-priority&gt;
+
+&lt;!-- bc-handle --&gt;
+&lt;bc-handle&gt;&lt;/bc-handle&gt;
+
+&lt;!-- bc-copy --&gt;
+&lt;bc-copy value=&quot;https://example.com&quot;&gt;&lt;/bc-copy&gt;
+
+&lt;!-- bc-url --&gt;
+&lt;bc-url value=&quot;https://example.com&quot;&gt;&lt;/bc-url&gt;
+
+&lt;!-- bc-email --&gt;
+&lt;bc-email value=&quot;hello@example.com&quot;&gt;&lt;/bc-email&gt;
+
+&lt;!-- bc-phone --&gt;
+&lt;bc-phone value=&quot;+6281234567890&quot;&gt;&lt;/bc-phone&gt;
+
+&lt;!-- bc-domain --&gt;
+&lt;bc-domain value='[[&quot;status&quot;,&quot;=&quot;,&quot;active&quot;]]'&gt;&lt;/bc-domain&gt;
+
+&lt;!-- bc-statusbar --&gt;
+&lt;bc-statusbar states='[{&quot;label&quot;:&quot;Draft&quot;,&quot;value&quot;:&quot;draft&quot;}]' value=&quot;draft&quot;&gt;&lt;/bc-statusbar&gt;
+
+&lt;!-- bc-placeholder --&gt;
+&lt;bc-placeholder text=&quot;No data&quot;&gt;&lt;/bc-placeholder&gt;
+
+&lt;!-- bc-sync-status --&gt;
+&lt;bc-sync-status compact&gt;&lt;/bc-sync-status&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-badge, @bitcode/components/bc-progress, @bitcode/components/bc-priority, @bitcode/components/bc-handle, @bitcode/components/bc-copy, @bitcode/components/bc-url, @bitcode/components/bc-email, @bitcode/components/bc-phone, @bitcode/components/bc-domain, @bitcode/components/bc-statusbar, @bitcode/components/bc-placeholder, @bitcode/components/bc-sync-status';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-badge */}
+      &lt;bc-badge value=&quot;Active&quot; variant=&quot;success&quot;&gt;&lt;/bc-badge&gt;
+
+      {/* bc-progress */}
+      &lt;bc-progress value=&quot;65&quot; max=&quot;100&quot;&gt;&lt;/bc-progress&gt;
+
+      {/* bc-priority */}
+      &lt;bc-priority value=&quot;3&quot; label=&quot;High&quot;&gt;&lt;/bc-priority&gt;
+
+      {/* bc-handle */}
+      &lt;bc-handle&gt;&lt;/bc-handle&gt;
+
+      {/* bc-copy */}
+      &lt;bc-copy value=&quot;https://example.com&quot;&gt;&lt;/bc-copy&gt;
+
+      {/* bc-url */}
+      &lt;bc-url value=&quot;https://example.com&quot;&gt;&lt;/bc-url&gt;
+
+      {/* bc-email */}
+      &lt;bc-email value=&quot;hello@example.com&quot;&gt;&lt;/bc-email&gt;
+
+      {/* bc-phone */}
+      &lt;bc-phone value=&quot;+6281234567890&quot;&gt;&lt;/bc-phone&gt;
+
+      {/* bc-domain */}
+      &lt;bc-domain value={[[&quot;status&quot;,&quot;=&quot;,&quot;active&quot;]]}&gt;&lt;/bc-domain&gt;
+
+      {/* bc-statusbar */}
+      &lt;bc-statusbar states={[{&quot;label&quot;:&quot;Draft&quot;,&quot;value&quot;:&quot;draft&quot;}]} value=&quot;draft&quot;&gt;&lt;/bc-statusbar&gt;
+
+      {/* bc-placeholder */}
+      &lt;bc-placeholder text=&quot;No data&quot;&gt;&lt;/bc-placeholder&gt;
+
+      {/* bc-sync-status */}
+      &lt;bc-sync-status compact={true}&gt;&lt;/bc-sync-status&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-badge --&gt;
+  &lt;bc-badge value=&quot;Active&quot; variant=&quot;success&quot;&gt;&lt;/bc-badge&gt;
+
+  &lt;!-- bc-progress --&gt;
+  &lt;bc-progress value=&quot;65&quot; max=&quot;100&quot;&gt;&lt;/bc-progress&gt;
+
+  &lt;!-- bc-priority --&gt;
+  &lt;bc-priority value=&quot;3&quot; label=&quot;High&quot;&gt;&lt;/bc-priority&gt;
+
+  &lt;!-- bc-handle --&gt;
+  &lt;bc-handle&gt;&lt;/bc-handle&gt;
+
+  &lt;!-- bc-copy --&gt;
+  &lt;bc-copy value=&quot;https://example.com&quot;&gt;&lt;/bc-copy&gt;
+
+  &lt;!-- bc-url --&gt;
+  &lt;bc-url value=&quot;https://example.com&quot;&gt;&lt;/bc-url&gt;
+
+  &lt;!-- bc-email --&gt;
+  &lt;bc-email value=&quot;hello@example.com&quot;&gt;&lt;/bc-email&gt;
+
+  &lt;!-- bc-phone --&gt;
+  &lt;bc-phone value=&quot;+6281234567890&quot;&gt;&lt;/bc-phone&gt;
+
+  &lt;!-- bc-domain --&gt;
+  &lt;bc-domain value='[[&quot;status&quot;,&quot;=&quot;,&quot;active&quot;]]'&gt;&lt;/bc-domain&gt;
+
+  &lt;!-- bc-statusbar --&gt;
+  &lt;bc-statusbar states='[{&quot;label&quot;:&quot;Draft&quot;,&quot;value&quot;:&quot;draft&quot;}]' value=&quot;draft&quot;&gt;&lt;/bc-statusbar&gt;
+
+  &lt;!-- bc-placeholder --&gt;
+  &lt;bc-placeholder text=&quot;No data&quot;&gt;&lt;/bc-placeholder&gt;
+
+  &lt;!-- bc-sync-status --&gt;
+  &lt;bc-sync-status compact&gt;&lt;/bc-sync-status&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-badge --&gt;
+&lt;bc-badge value=&quot;Active&quot; variant=&quot;success&quot;&gt;&lt;/bc-badge&gt;
+
+&lt;!-- bc-progress --&gt;
+&lt;bc-progress value=&quot;65&quot; max=&quot;100&quot;&gt;&lt;/bc-progress&gt;
+
+&lt;!-- bc-priority --&gt;
+&lt;bc-priority value=&quot;3&quot; label=&quot;High&quot;&gt;&lt;/bc-priority&gt;
+
+&lt;!-- bc-handle --&gt;
+&lt;bc-handle&gt;&lt;/bc-handle&gt;
+
+&lt;!-- bc-copy --&gt;
+&lt;bc-copy value=&quot;https://example.com&quot;&gt;&lt;/bc-copy&gt;
+
+&lt;!-- bc-url --&gt;
+&lt;bc-url value=&quot;https://example.com&quot;&gt;&lt;/bc-url&gt;
+
+&lt;!-- bc-email --&gt;
+&lt;bc-email value=&quot;hello@example.com&quot;&gt;&lt;/bc-email&gt;
+
+&lt;!-- bc-phone --&gt;
+&lt;bc-phone value=&quot;+6281234567890&quot;&gt;&lt;/bc-phone&gt;
+
+&lt;!-- bc-domain --&gt;
+&lt;bc-domain value='[[&quot;status&quot;,&quot;=&quot;,&quot;active&quot;]]'&gt;&lt;/bc-domain&gt;
+
+&lt;!-- bc-statusbar --&gt;
+&lt;bc-statusbar states='[{&quot;label&quot;:&quot;Draft&quot;,&quot;value&quot;:&quot;draft&quot;}]' value=&quot;draft&quot;&gt;&lt;/bc-statusbar&gt;
+
+&lt;!-- bc-placeholder --&gt;
+&lt;bc-placeholder text=&quot;No data&quot;&gt;&lt;/bc-placeholder&gt;
+
+&lt;!-- bc-sync-status --&gt;
+&lt;bc-sync-status compact&gt;&lt;/bc-sync-status&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

@@ -6,6 +6,8 @@
 <bc-field-code name="myfield" label="My Field" />
 ```
 
+Uses a CodeMirror editor skin tuned to feel closer to VS Code / JetBrains style editors: mono font stack, stronger syntax colors, gutter separation, active-line highlight, and dark-mode editor chrome.
+
 ## Props
 
 | Prop | Type | Default | Description |

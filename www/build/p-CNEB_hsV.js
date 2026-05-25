@@ -1,0 +1,1 @@
+import{az as n,a3 as o,di as a,b5 as e}from"./p-CoTnv3F3.js";function s(s,r,i){r=n(r)&&{coordDimensions:r}||o({encodeDefine:s.getEncode()},r);var c=s.getSource(),t=a(c,r).dimensions,d=new e(t,s);return d.initData(c,i),d}export{s as c}

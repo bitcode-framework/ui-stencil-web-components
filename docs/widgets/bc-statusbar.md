@@ -8,6 +8,8 @@
 <bc-statusbar></bc-statusbar>
 ```
 
+In dark mode, completed and active steps use a brighter progress-like fill, and step separators stay visible so each workflow stage is easy to distinguish.
+
 ## Props
 
 | Prop | Type | Default | Description |

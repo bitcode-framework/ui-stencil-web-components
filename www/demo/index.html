@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bc-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BitCode Components — Gallery</title>
-  <script type="module" src="/build/bc-components.esm.js"></script>
-  <script nomodule src="/build/bc-components.js"></script>
+  <meta name="bc-theme" content="light">
+  <link rel="stylesheet" href="../build/bc-components.css">
+  <script src="demo-mock-api.js"></script>
+  <script type="module" src="../build/bc-components.esm.js"></script>
+  <script nomodule src="../build/bc-components.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: var(--bc-font-family, 'Inter', system-ui, sans-serif); background: var(--bc-bg, #fff); color: var(--bc-text, #111827); display: flex; min-height: 100vh; }
@@ -15,28 +18,47 @@
     .sidebar-header h1 { font-size: 1.125rem; font-weight: 700; }
     .sidebar-header p { font-size: 0.75rem; color: var(--bc-text-secondary, #6b7280); margin-top: 0.25rem; }
     .sidebar-search { padding: 0.75rem 1rem; }
-    .sidebar-search input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.375rem; font-size: 0.875rem; outline: none; background: var(--bc-input-bg, #fff); }
+    .sidebar-search input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.375rem; font-size: 0.875rem; outline: none; background: var(--bc-input-bg, #fff); color: var(--bc-text, #111827); }
     .sidebar-search input:focus { border-color: var(--bc-primary, #4f46e5); box-shadow: 0 0 0 3px rgba(79,70,229,0.15); }
-    .sidebar-group { padding: 0.5rem 0; }
+    .sidebar-group { padding: 0.25rem 0; }
     .sidebar-group-title { padding: 0.25rem 1rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--bc-text-secondary, #6b7280); }
     .sidebar-link { display: block; padding: 0.375rem 1rem 0.375rem 1.5rem; font-size: 0.8125rem; color: var(--bc-text, #111827); text-decoration: none; cursor: pointer; transition: background 0.15s; }
     .sidebar-link:hover { background: var(--bc-bg-hover, #f3f4f6); }
     .sidebar-link.active { background: var(--bc-primary-light, #eef2ff); color: var(--bc-primary, #4f46e5); font-weight: 500; }
     .sidebar-link.hidden { display: none; }
 
-    .main { margin-left: 260px; flex: 1; padding: 2rem; max-width: 900px; }
+    .main { margin-left: 260px; flex: 1; padding: 2rem; max-width: 960px; }
     .toolbar { display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; padding: 1rem; background: var(--bc-bg-secondary, #f9fafb); border-radius: 0.5rem; border: 1px solid var(--bc-border-color, #e5e7eb); flex-wrap: wrap; }
     .toolbar label { font-size: 0.8125rem; font-weight: 500; }
-    .toolbar select, .toolbar button { padding: 0.375rem 0.75rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.375rem; font-size: 0.8125rem; background: var(--bc-input-bg, #fff); cursor: pointer; }
+    .toolbar select, .toolbar button { padding: 0.375rem 0.75rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.375rem; font-size: 0.8125rem; background: var(--bc-input-bg, #fff); color: var(--bc-text, #111827); cursor: pointer; }
     .toolbar button.active { background: var(--bc-primary, #4f46e5); color: #fff; border-color: var(--bc-primary, #4f46e5); }
 
     .demo-section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
     .demo-section h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.25rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--bc-border-color, #e5e7eb); }
     .demo-section h2 code { font-size: 1rem; background: var(--bc-bg-tertiary, #f3f4f6); padding: 0.125rem 0.375rem; border-radius: 0.25rem; }
-    .demo-section p { font-size: 0.875rem; color: var(--bc-text-secondary, #6b7280); margin-bottom: 1rem; }
+    .demo-section p.desc { font-size: 0.875rem; color: var(--bc-text-secondary, #6b7280); margin-bottom: 1rem; }
+    .badge { display: inline-block; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff; padding: 0.125rem 0.5rem; border-radius: 0.25rem; vertical-align: middle; margin-inline-start: 0.375rem; }
     .demo-box { padding: 1.5rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.5rem; margin-bottom: 1rem; background: var(--bc-bg, #fff); }
     .demo-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
     .demo-row > * { flex: 1; min-width: 200px; }
+    .demo-btn { padding: 0.5rem 1rem; border: 1px solid var(--bc-border-color, #e5e7eb); border-radius: 0.375rem; cursor: pointer; background: var(--bc-input-bg, #fff); color: var(--bc-text, #111827); font-size: 0.8125rem; }
+    .demo-btn:hover { background: var(--bc-bg-hover, #f3f4f6); }
+    .mt { margin-top: 1rem; }
+    .group-heading { font-size: 1.5rem; font-weight: 700; margin: 3rem 0 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--bc-primary, #4f46e5); color: var(--bc-primary, #4f46e5); }
+
+    /* Framework examples */
+    .fw-details { margin-top: 0.5rem; margin-bottom: 1.5rem; }
+    .fw-summary { cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--bc-primary, #4f46e5); padding: 0.375rem 0; user-select: none; }
+    .fw-summary:hover { text-decoration: underline; }
+    .fw-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--bc-border-color, #e5e7eb); margin-bottom: 0; }
+    .fw-tab { padding: 0.375rem 0.75rem; font-size: 0.75rem; border: 1px solid transparent; border-bottom: none; border-radius: 0.375rem 0.375rem 0 0; cursor: pointer; background: transparent; color: var(--bc-text-secondary, #6b7280); font-weight: 500; }
+    .fw-tab:hover { color: var(--bc-text, #111827); background: var(--bc-bg-hover, #f3f4f6); }
+    .fw-tab.active { color: var(--bc-primary, #4f46e5); border-color: var(--bc-border-color, #e5e7eb); background: var(--bc-bg, #fff); margin-bottom: -1px; border-bottom: 1px solid var(--bc-bg, #fff); }
+    .fw-content { border: 1px solid var(--bc-border-color, #e5e7eb); border-top: none; border-radius: 0 0 0.5rem 0.5rem; overflow: hidden; }
+    .fw-panel { display: none; padding: 0; margin: 0; }
+    .fw-panel.active { display: block; }
+    .fw-panel pre { margin: 0; padding: 1rem; overflow-x: auto; font-size: 0.8125rem; line-height: 1.6; background: var(--bc-bg-tertiary, #f3f4f6); color: var(--bc-text, #111827); }
+    .fw-panel code { font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; }
   </style>
 </head>
 <body>
@@ -44,107 +66,243 @@
 <nav class="sidebar">
   <div class="sidebar-header">
     <h1>BC Components</h1>
-    <p>103 enterprise components</p>
+    <p>122 enterprise components</p>
   </div>
   <div class="sidebar-search">
     <input type="text" id="search" placeholder="Search components..." oninput="filterSidebar(this.value)">
   </div>
+
+  <!-- FIELDS -->
   <div class="sidebar-group">
     <div class="sidebar-group-title">Fields — Text</div>
-    <a class="sidebar-link" data-section="string" onclick="scrollTo('string')">bc-field-string</a>
-    <a class="sidebar-link" data-section="password" onclick="scrollTo('password')">bc-field-password</a>
-    <a class="sidebar-link" data-section="text" onclick="scrollTo('text')">bc-field-text</a>
-    <a class="sidebar-link" data-section="smalltext" onclick="scrollTo('smalltext')">bc-field-smalltext</a>
+    <a class="sidebar-link" data-section="string">bc-field-string</a>
+    <a class="sidebar-link" data-section="password">bc-field-password</a>
+    <a class="sidebar-link" data-section="text">bc-field-text</a>
+    <a class="sidebar-link" data-section="smalltext">bc-field-smalltext</a>
   </div>
   <div class="sidebar-group">
     <div class="sidebar-group-title">Fields — Number</div>
-    <a class="sidebar-link" data-section="integer" onclick="scrollTo('integer')">bc-field-integer</a>
-    <a class="sidebar-link" data-section="float" onclick="scrollTo('float')">bc-field-float</a>
-    <a class="sidebar-link" data-section="decimal" onclick="scrollTo('decimal')">bc-field-decimal</a>
-    <a class="sidebar-link" data-section="currency" onclick="scrollTo('currency')">bc-field-currency</a>
-    <a class="sidebar-link" data-section="percent" onclick="scrollTo('percent')">bc-field-percent</a>
+    <a class="sidebar-link" data-section="integer">bc-field-integer</a>
+    <a class="sidebar-link" data-section="float">bc-field-float</a>
+    <a class="sidebar-link" data-section="decimal">bc-field-decimal</a>
+    <a class="sidebar-link" data-section="currency">bc-field-currency</a>
+    <a class="sidebar-link" data-section="percent">bc-field-percent</a>
   </div>
   <div class="sidebar-group">
     <div class="sidebar-group-title">Fields — Date/Time</div>
-    <a class="sidebar-link" data-section="date" onclick="scrollTo('date')">bc-field-date</a>
-    <a class="sidebar-link" data-section="datetime" onclick="scrollTo('datetime')">bc-field-datetime</a>
-    <a class="sidebar-link" data-section="time" onclick="scrollTo('time')">bc-field-time</a>
-    <a class="sidebar-link" data-section="duration" onclick="scrollTo('duration')">bc-field-duration</a>
+    <a class="sidebar-link" data-section="date">bc-field-date</a>
+    <a class="sidebar-link" data-section="datetime">bc-field-datetime</a>
+    <a class="sidebar-link" data-section="time">bc-field-time</a>
+    <a class="sidebar-link" data-section="duration">bc-field-duration</a>
   </div>
   <div class="sidebar-group">
     <div class="sidebar-group-title">Fields — Choice</div>
-    <a class="sidebar-link" data-section="select" onclick="scrollTo('select')">bc-field-select</a>
-    <a class="sidebar-link" data-section="checkbox" onclick="scrollTo('checkbox')">bc-field-checkbox</a>
-    <a class="sidebar-link" data-section="toggle" onclick="scrollTo('toggle')">bc-field-toggle</a>
-    <a class="sidebar-link" data-section="radio" onclick="scrollTo('radio')">bc-field-radio</a>
-    <a class="sidebar-link" data-section="multicheck" onclick="scrollTo('multicheck')">bc-field-multicheck</a>
-    <a class="sidebar-link" data-section="rating" onclick="scrollTo('rating')">bc-field-rating</a>
-    <a class="sidebar-link" data-section="color" onclick="scrollTo('color')">bc-field-color</a>
+    <a class="sidebar-link" data-section="select">bc-field-select</a>
+    <a class="sidebar-link" data-section="checkbox">bc-field-checkbox</a>
+    <a class="sidebar-link" data-section="toggle">bc-field-toggle</a>
+    <a class="sidebar-link" data-section="radio">bc-field-radio</a>
+    <a class="sidebar-link" data-section="multicheck">bc-field-multicheck</a>
+    <a class="sidebar-link" data-section="rating">bc-field-rating</a>
+    <a class="sidebar-link" data-section="color">bc-field-color</a>
   </div>
   <div class="sidebar-group">
     <div class="sidebar-group-title">Fields — Rich</div>
-    <a class="sidebar-link" data-section="richtext" onclick="scrollTo('richtext')">bc-field-richtext</a>
-    <a class="sidebar-link" data-section="markdown" onclick="scrollTo('markdown')">bc-field-markdown</a>
-    <a class="sidebar-link" data-section="html" onclick="scrollTo('html')">bc-field-html</a>
-    <a class="sidebar-link" data-section="code" onclick="scrollTo('code')">bc-field-code</a>
-    <a class="sidebar-link" data-section="json" onclick="scrollTo('json')">bc-field-json</a>
+    <a class="sidebar-link" data-section="richtext">bc-field-richtext</a>
+    <a class="sidebar-link" data-section="markdown">bc-field-markdown</a>
+    <a class="sidebar-link" data-section="html">bc-field-html</a>
+    <a class="sidebar-link" data-section="code">bc-field-code</a>
+    <a class="sidebar-link" data-section="json">bc-field-json</a>
   </div>
   <div class="sidebar-group">
     <div class="sidebar-group-title">Fields — Special</div>
-    <a class="sidebar-link" data-section="file" onclick="scrollTo('file')">bc-field-file</a>
-    <a class="sidebar-link" data-section="image" onclick="scrollTo('image')">bc-field-image</a>
-    <a class="sidebar-link" data-section="signature" onclick="scrollTo('signature')">bc-field-signature</a>
-    <a class="sidebar-link" data-section="barcode" onclick="scrollTo('barcode')">bc-field-barcode</a>
+    <a class="sidebar-link" data-section="file">bc-field-file</a>
+    <a class="sidebar-link" data-section="image">bc-field-image</a>
+    <a class="sidebar-link" data-section="signature">bc-field-signature</a>
+    <a class="sidebar-link" data-section="barcode">bc-field-barcode</a>
   </div>
   <div class="sidebar-group">
-    <div class="sidebar-group-title">Layout</div>
-    <a class="sidebar-link" data-section="section" onclick="scrollTo('section')">bc-section</a>
-    <a class="sidebar-link" data-section="tabs" onclick="scrollTo('tabs')">bc-tabs</a>
+    <div class="sidebar-group-title">Fields — Relational</div>
+    <a class="sidebar-link" data-section="tags">bc-field-tags</a>
+    <a class="sidebar-link" data-section="link">bc-field-link</a>
+    <a class="sidebar-link" data-section="dynlink">bc-field-dynlink</a>
+    <a class="sidebar-link" data-section="tableselect">bc-field-tableselect</a>
+    <a class="sidebar-link" data-section="morph">bc-field-morph</a>
+    <a class="sidebar-link" data-section="geo">bc-field-geo</a>
+    <a class="sidebar-link" data-section="lookup">bc-lookup-modal</a>
   </div>
+
+  <!-- CHARTS -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Charts</div>
+    <a class="sidebar-link" data-section="chart-bar">bc-chart-bar</a>
+    <a class="sidebar-link" data-section="chart-line">bc-chart-line</a>
+    <a class="sidebar-link" data-section="chart-area">bc-chart-area</a>
+    <a class="sidebar-link" data-section="chart-pie">bc-chart-pie</a>
+    <a class="sidebar-link" data-section="chart-scatter">bc-chart-scatter</a>
+    <a class="sidebar-link" data-section="chart-radar">bc-chart-radar</a>
+    <a class="sidebar-link" data-section="chart-gauge">bc-chart-gauge</a>
+    <a class="sidebar-link" data-section="chart-funnel">bc-chart-funnel</a>
+    <a class="sidebar-link" data-section="chart-heatmap">bc-chart-heatmap</a>
+    <a class="sidebar-link" data-section="chart-candlestick">bc-chart-candlestick</a>
+    <a class="sidebar-link" data-section="chart-boxplot">bc-chart-boxplot</a>
+    <a class="sidebar-link" data-section="chart-sankey">bc-chart-sankey</a>
+    <a class="sidebar-link" data-section="chart-treemap">bc-chart-treemap</a>
+    <a class="sidebar-link" data-section="chart-sunburst">bc-chart-sunburst</a>
+    <a class="sidebar-link" data-section="chart-graph">bc-chart-graph</a>
+    <a class="sidebar-link" data-section="chart-tree">bc-chart-tree</a>
+    <a class="sidebar-link" data-section="chart-themeriver">bc-chart-themeriver</a>
+    <a class="sidebar-link" data-section="chart-parallel">bc-chart-parallel</a>
+    <a class="sidebar-link" data-section="chart-pictorialbar">bc-chart-pictorialbar</a>
+    <a class="sidebar-link" data-section="chart-polar">bc-chart-polar</a>
+    <a class="sidebar-link" data-section="chart-mixed">bc-chart-mixed</a>
+    <a class="sidebar-link" data-section="chart-custom">bc-chart-custom</a>
+    <a class="sidebar-link" data-section="chart-pivot">bc-chart-pivot</a>
+    <a class="sidebar-link" data-section="chart-progress">bc-chart-progress</a>
+    <a class="sidebar-link" data-section="chart-kpi">bc-chart-kpi</a>
+    <a class="sidebar-link" data-section="chart-scorecard">bc-chart-scorecard</a>
+  </div>
+
+  <!-- DATATABLE -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Datatable</div>
+    <a class="sidebar-link" data-section="datatable">bc-datatable</a>
+    <a class="sidebar-link" data-section="child-table">bc-child-table</a>
+    <a class="sidebar-link" data-section="filter-panel">bc-filter-panel</a>
+    <a class="sidebar-link" data-section="filter-bar">bc-filter-bar</a>
+    <a class="sidebar-link" data-section="filter-builder">bc-filter-builder</a>
+  </div>
+
+  <!-- DIALOGS -->
   <div class="sidebar-group">
     <div class="sidebar-group-title">Dialogs</div>
-    <a class="sidebar-link" data-section="dialog" onclick="scrollTo('dialog')">bc-dialog-modal</a>
-    <a class="sidebar-link" data-section="toast" onclick="scrollTo('toast')">bc-toast</a>
+    <a class="sidebar-link" data-section="dialog-modal">bc-dialog-modal</a>
+    <a class="sidebar-link" data-section="dialog-confirm">bc-dialog-confirm</a>
+    <a class="sidebar-link" data-section="dialog-alert">bc-dialog-alert</a>
+    <a class="sidebar-link" data-section="dialog-prompt">bc-dialog-prompt</a>
+    <a class="sidebar-link" data-section="dialog-wizard">bc-dialog-wizard</a>
+    <a class="sidebar-link" data-section="dialog-quickentry">bc-dialog-quickentry</a>
+    <a class="sidebar-link" data-section="toast">bc-toast</a>
   </div>
+
+  <!-- LAYOUT -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Layout</div>
+    <a class="sidebar-link" data-section="section">bc-section</a>
+    <a class="sidebar-link" data-section="tabs">bc-tabs</a>
+    <a class="sidebar-link" data-section="row">bc-row</a>
+    <a class="sidebar-link" data-section="column">bc-column</a>
+    <a class="sidebar-link" data-section="header">bc-header</a>
+    <a class="sidebar-link" data-section="sheet">bc-sheet</a>
+    <a class="sidebar-link" data-section="separator">bc-separator</a>
+    <a class="sidebar-link" data-section="html-block">bc-html-block</a>
+    <a class="sidebar-link" data-section="button-box">bc-button-box</a>
+  </div>
+
+  <!-- MEDIA -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Media</div>
+    <a class="sidebar-link" data-section="viewer-pdf">bc-viewer-pdf</a>
+    <a class="sidebar-link" data-section="viewer-image">bc-viewer-image</a>
+    <a class="sidebar-link" data-section="viewer-video">bc-viewer-video</a>
+    <a class="sidebar-link" data-section="viewer-audio">bc-viewer-audio</a>
+    <a class="sidebar-link" data-section="viewer-document">bc-viewer-document</a>
+    <a class="sidebar-link" data-section="viewer-youtube">bc-viewer-youtube</a>
+    <a class="sidebar-link" data-section="viewer-instagram">bc-viewer-instagram</a>
+    <a class="sidebar-link" data-section="viewer-tiktok">bc-viewer-tiktok</a>
+  </div>
+
+  <!-- VIEWS -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Views</div>
+    <a class="sidebar-link" data-section="view-list">bc-view-list</a>
+    <a class="sidebar-link" data-section="view-form">bc-view-form</a>
+    <a class="sidebar-link" data-section="view-kanban">bc-view-kanban</a>
+    <a class="sidebar-link" data-section="kanban-board">bc-kanban-board <span style="font-size:0.5rem;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;padding:1px 4px;border-radius:2px;vertical-align:middle">PRO</span></a>
+    <a class="sidebar-link" data-section="view-calendar">bc-view-calendar</a>
+    <a class="sidebar-link" data-section="view-gantt">bc-view-gantt</a>
+    <a class="sidebar-link" data-section="view-map">bc-view-map</a>
+    <a class="sidebar-link" data-section="view-tree">bc-view-tree</a>
+    <a class="sidebar-link" data-section="view-report">bc-view-report</a>
+    <a class="sidebar-link" data-section="view-editor">bc-view-editor</a>
+    <a class="sidebar-link" data-section="view-activity">bc-view-activity</a>
+  </div>
+
+  <!-- WIDGETS -->
   <div class="sidebar-group">
     <div class="sidebar-group-title">Widgets</div>
-    <a class="sidebar-link" data-section="badge" onclick="scrollTo('badge')">bc-widget-badge</a>
-    <a class="sidebar-link" data-section="progress" onclick="scrollTo('progress')">bc-widget-progress</a>
+    <a class="sidebar-link" data-section="badge">bc-widget-badge</a>
+    <a class="sidebar-link" data-section="progress">bc-widget-progress</a>
+    <a class="sidebar-link" data-section="priority">bc-priority</a>
+    <a class="sidebar-link" data-section="handle">bc-handle</a>
+    <a class="sidebar-link" data-section="copy">bc-copy</a>
+    <a class="sidebar-link" data-section="url">bc-url</a>
+    <a class="sidebar-link" data-section="email">bc-email</a>
+    <a class="sidebar-link" data-section="phone">bc-phone</a>
+    <a class="sidebar-link" data-section="domain">bc-domain</a>
+    <a class="sidebar-link" data-section="statusbar">bc-statusbar</a>
+    <a class="sidebar-link" data-section="placeholder">bc-placeholder</a>
+    <a class="sidebar-link" data-section="sync-status">bc-sync-status</a>
+  </div>
+
+  <!-- PRINT -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Print</div>
+    <a class="sidebar-link" data-section="print">bc-print</a>
+    <a class="sidebar-link" data-section="export">bc-export</a>
+    <a class="sidebar-link" data-section="report-link">bc-report-link</a>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Search</div>
+    <a class="sidebar-link" data-section="search">bc-search</a>
+    <a class="sidebar-link" data-section="favorites">bc-favorites</a>
+  </div>
+
+  <!-- SOCIAL -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Social</div>
+    <a class="sidebar-link" data-section="chatter">bc-chatter</a>
+    <a class="sidebar-link" data-section="timeline">bc-timeline</a>
+    <a class="sidebar-link" data-section="activity">bc-activity</a>
   </div>
 </nav>
 
 <main class="main">
   <div class="toolbar">
     <label>Theme:</label>
-    <select onchange="setTheme(this.value)">
+    <select id="themeSelect">
       <option value="light">Light</option>
       <option value="dark">Dark</option>
       <option value="system">System</option>
     </select>
     <label>Size:</label>
-    <select id="sizeSelect" onchange="setSize(this.value)">
+    <select id="sizeSelect">
       <option value="sm">Small</option>
       <option value="md" selected>Medium</option>
       <option value="lg">Large</option>
     </select>
   </div>
 
-  <!-- TEXT FIELDS -->
+  
+  <!-- FIELDS — TEXT -->
+  <!-- ═══════════════════════════════════════════ -->
+
   <div class="demo-section" id="string">
     <h2><code>bc-field-string</code></h2>
-    <p>Single-line text input with validation, prefix/suffix, clearable, character count.</p>
+    <p class="desc">Single-line text input with validation, prefix/suffix, clearable, character count.</p>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-string name="demo-string" label="Basic" placeholder="Type something..." hint="This is a hint text" clearable></bc-field-string>
-        <bc-field-string name="demo-string-req" label="Required + Pattern" required pattern="^[a-zA-Z]+$" pattern-message="Letters only" hint="Only letters allowed"></bc-field-string>
+        <bc-field-string name="d-string" label="Basic" placeholder="Type something..." hint="Hint text" clearable></bc-field-string>
+        <bc-field-string name="d-string-req" label="Required + Pattern" required pattern="^[a-zA-Z]+$" pattern-message="Letters only" hint="Only letters"></bc-field-string>
       </div>
-      <div class="demo-row" style="margin-top:1rem">
-        <bc-field-string name="demo-string-prefix" label="With Prefix/Suffix" prefix-text="https://" suffix-text=".com" placeholder="example"></bc-field-string>
-        <bc-field-string name="demo-string-count" label="With Counter" max-length="50" show-count clearable></bc-field-string>
+      <div class="demo-row mt">
+        <bc-field-string name="d-string-pfx" label="Prefix/Suffix" prefix-text="https://" suffix-text=".com" placeholder="example"></bc-field-string>
+        <bc-field-string name="d-string-cnt" label="Counter" max-length="50" show-count clearable></bc-field-string>
       </div>
-      <div class="demo-row" style="margin-top:1rem">
-        <bc-field-string name="demo-string-disabled" label="Disabled" value="Cannot edit" disabled></bc-field-string>
-        <bc-field-string name="demo-string-readonly" label="Readonly" value="Read only value" readonly></bc-field-string>
+      <div class="demo-row mt">
+        <bc-field-string name="d-string-dis" label="Disabled" value="Cannot edit" disabled></bc-field-string>
+        <bc-field-string name="d-string-ro" label="Readonly" value="Read only" readonly></bc-field-string>
       </div>
     </div>
   </div>
@@ -152,31 +310,117 @@
   <div class="demo-section" id="password">
     <h2><code>bc-field-password</code></h2>
     <div class="demo-box">
-      <bc-field-password name="demo-pass" label="Password" placeholder="Enter password" required min-length="8" hint="Minimum 8 characters" show-reveal clearable></bc-field-password>
+      <bc-field-password name="d-pass" label="Password" placeholder="Enter password" required min-length="8" hint="Min 8 chars" show-reveal clearable></bc-field-password>
     </div>
   </div>
 
   <div class="demo-section" id="text">
     <h2><code>bc-field-text</code></h2>
     <div class="demo-box">
-      <bc-field-text name="demo-text" label="Description" placeholder="Write a description..." rows="4" max-length="500" show-count hint="Max 500 characters" clearable></bc-field-text>
+      <bc-field-text name="d-text" label="Description" placeholder="Write..." rows="4" max-length="500" show-count hint="Max 500" clearable></bc-field-text>
     </div>
   </div>
 
   <div class="demo-section" id="smalltext">
     <h2><code>bc-field-smalltext</code></h2>
     <div class="demo-box">
-      <bc-field-smalltext name="demo-smalltext" label="Short Note" placeholder="Brief note..." rows="2" clearable></bc-field-smalltext>
+      <bc-field-smalltext name="d-stext" label="Short Note" placeholder="Brief..." rows="2" clearable></bc-field-smalltext>
     </div>
   </div>
 
-  <!-- NUMBER FIELDS -->
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (4 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 4 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-string --&gt;
+&lt;bc-field-string name=&quot;username&quot; label=&quot;Username&quot; placeholder=&quot;Enter...&quot; required clearable&gt;&lt;/bc-field-string&gt;
+
+&lt;!-- bc-field-password --&gt;
+&lt;bc-field-password name=&quot;pw&quot; label=&quot;Password&quot; required min-length=&quot;8&quot; show-reveal&gt;&lt;/bc-field-password&gt;
+
+&lt;!-- bc-field-text --&gt;
+&lt;bc-field-text name=&quot;bio&quot; label=&quot;Bio&quot; rows=&quot;4&quot; max-length=&quot;500&quot; show-count&gt;&lt;/bc-field-text&gt;
+
+&lt;!-- bc-field-smalltext --&gt;
+&lt;bc-field-smalltext name=&quot;note&quot; label=&quot;Note&quot; rows=&quot;2&quot;&gt;&lt;/bc-field-smalltext&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-string, @bitcode/components/bc-field-password, @bitcode/components/bc-field-text, @bitcode/components/bc-field-smalltext';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-string */}
+      &lt;bc-field-string name=&quot;username&quot; label=&quot;Username&quot; placeholder=&quot;Enter...&quot; required clearable={true}&gt;&lt;/bc-field-string&gt;
+
+      {/* bc-field-password */}
+      &lt;bc-field-password name=&quot;pw&quot; label=&quot;Password&quot; required min-length=&quot;8&quot; show-reveal&gt;&lt;/bc-field-password&gt;
+
+      {/* bc-field-text */}
+      &lt;bc-field-text name=&quot;bio&quot; label=&quot;Bio&quot; rows=&quot;4&quot; max-length=&quot;500&quot; show-count&gt;&lt;/bc-field-text&gt;
+
+      {/* bc-field-smalltext */}
+      &lt;bc-field-smalltext name=&quot;note&quot; label=&quot;Note&quot; rows=&quot;2&quot;&gt;&lt;/bc-field-smalltext&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-string --&gt;
+  &lt;bc-field-string name=&quot;username&quot; label=&quot;Username&quot; placeholder=&quot;Enter...&quot; required clearable&gt;&lt;/bc-field-string&gt;
+
+  &lt;!-- bc-field-password --&gt;
+  &lt;bc-field-password name=&quot;pw&quot; label=&quot;Password&quot; required min-length=&quot;8&quot; show-reveal&gt;&lt;/bc-field-password&gt;
+
+  &lt;!-- bc-field-text --&gt;
+  &lt;bc-field-text name=&quot;bio&quot; label=&quot;Bio&quot; rows=&quot;4&quot; max-length=&quot;500&quot; show-count&gt;&lt;/bc-field-text&gt;
+
+  &lt;!-- bc-field-smalltext --&gt;
+  &lt;bc-field-smalltext name=&quot;note&quot; label=&quot;Note&quot; rows=&quot;2&quot;&gt;&lt;/bc-field-smalltext&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-string --&gt;
+&lt;bc-field-string name=&quot;username&quot; label=&quot;Username&quot; placeholder=&quot;Enter...&quot; required clearable&gt;&lt;/bc-field-string&gt;
+
+&lt;!-- bc-field-password --&gt;
+&lt;bc-field-password name=&quot;pw&quot; label=&quot;Password&quot; required min-length=&quot;8&quot; show-reveal&gt;&lt;/bc-field-password&gt;
+
+&lt;!-- bc-field-text --&gt;
+&lt;bc-field-text name=&quot;bio&quot; label=&quot;Bio&quot; rows=&quot;4&quot; max-length=&quot;500&quot; show-count&gt;&lt;/bc-field-text&gt;
+
+&lt;!-- bc-field-smalltext --&gt;
+&lt;bc-field-smalltext name=&quot;note&quot; label=&quot;Note&quot; rows=&quot;2&quot;&gt;&lt;/bc-field-smalltext&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <!-- FIELDS — NUMBER -->
   <div class="demo-section" id="integer">
     <h2><code>bc-field-integer</code></h2>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-integer name="demo-int" label="Quantity" min="0" max="100" step="1" hint="0-100" clearable></bc-field-integer>
-        <bc-field-integer name="demo-int-req" label="Age (required)" required min="0" max="150" suffix-text="years"></bc-field-integer>
+        <bc-field-integer name="d-int" label="Quantity" min="0" max="100" step="1" hint="0-100" clearable></bc-field-integer>
+        <bc-field-integer name="d-int-req" label="Age" required min="0" max="150" suffix-text="years"></bc-field-integer>
       </div>
     </div>
   </div>
@@ -184,14 +428,14 @@
   <div class="demo-section" id="float">
     <h2><code>bc-field-float</code></h2>
     <div class="demo-box">
-      <bc-field-float name="demo-float" label="Weight" placeholder="0.00" precision="2" suffix-text="kg" clearable></bc-field-float>
+      <bc-field-float name="d-float" label="Weight" placeholder="0.00" precision="2" suffix-text="kg" clearable></bc-field-float>
     </div>
   </div>
 
   <div class="demo-section" id="decimal">
     <h2><code>bc-field-decimal</code></h2>
     <div class="demo-box">
-      <bc-field-decimal name="demo-decimal" label="Price" placeholder="0.00" precision="2" prefix-text="$" clearable></bc-field-decimal>
+      <bc-field-decimal name="d-dec" label="Price" placeholder="0.00" precision="2" prefix-text="$" clearable></bc-field-decimal>
     </div>
   </div>
 
@@ -199,8 +443,8 @@
     <h2><code>bc-field-currency</code></h2>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-currency name="demo-currency-usd" label="Amount (USD)" currency="USD" clearable></bc-field-currency>
-        <bc-field-currency name="demo-currency-idr" label="Amount (IDR)" currency="IDR" clearable></bc-field-currency>
+        <bc-field-currency name="d-usd" label="USD" currency="USD" clearable></bc-field-currency>
+        <bc-field-currency name="d-idr" label="IDR" currency="IDR" clearable></bc-field-currency>
       </div>
     </div>
   </div>
@@ -208,17 +452,115 @@
   <div class="demo-section" id="percent">
     <h2><code>bc-field-percent</code></h2>
     <div class="demo-box">
-      <bc-field-percent name="demo-percent" label="Discount" min="0" max="100" hint="0-100%" clearable></bc-field-percent>
+      <bc-field-percent name="d-pct" label="Discount" min="0" max="100" hint="0-100%" clearable></bc-field-percent>
     </div>
   </div>
 
-  <!-- DATE/TIME -->
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (5 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 5 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-integer --&gt;
+&lt;bc-field-integer name=&quot;qty&quot; label=&quot;Quantity&quot; min=&quot;0&quot; max=&quot;999&quot; step=&quot;1&quot;&gt;&lt;/bc-field-integer&gt;
+
+&lt;!-- bc-field-float --&gt;
+&lt;bc-field-float name=&quot;weight&quot; label=&quot;Weight&quot; precision=&quot;2&quot; suffix-text=&quot;kg&quot;&gt;&lt;/bc-field-float&gt;
+
+&lt;!-- bc-field-decimal --&gt;
+&lt;bc-field-decimal name=&quot;price&quot; label=&quot;Price&quot; precision=&quot;2&quot; prefix-text=&quot;<!--SECTIONS-->quot;&gt;&lt;/bc-field-decimal&gt;
+
+&lt;!-- bc-field-currency --&gt;
+&lt;bc-field-currency name=&quot;amount&quot; label=&quot;Amount&quot; currency=&quot;USD&quot;&gt;&lt;/bc-field-currency&gt;
+
+&lt;!-- bc-field-percent --&gt;
+&lt;bc-field-percent name=&quot;discount&quot; label=&quot;Discount&quot; min=&quot;0&quot; max=&quot;100&quot;&gt;&lt;/bc-field-percent&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-integer, @bitcode/components/bc-field-float, @bitcode/components/bc-field-decimal, @bitcode/components/bc-field-currency, @bitcode/components/bc-field-percent';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-integer */}
+      &lt;bc-field-integer name=&quot;qty&quot; label=&quot;Quantity&quot; min=&quot;0&quot; max=&quot;999&quot; step=&quot;1&quot;&gt;&lt;/bc-field-integer&gt;
+
+      {/* bc-field-float */}
+      &lt;bc-field-float name=&quot;weight&quot; label=&quot;Weight&quot; precision=&quot;2&quot; suffix-text=&quot;kg&quot;&gt;&lt;/bc-field-float&gt;
+
+      {/* bc-field-decimal */}
+      &lt;bc-field-decimal name=&quot;price&quot; label=&quot;Price&quot; precision=&quot;2&quot; prefix-text=&quot;<!--SECTIONS-->quot;&gt;&lt;/bc-field-decimal&gt;
+
+      {/* bc-field-currency */}
+      &lt;bc-field-currency name=&quot;amount&quot; label=&quot;Amount&quot; currency=&quot;USD&quot;&gt;&lt;/bc-field-currency&gt;
+
+      {/* bc-field-percent */}
+      &lt;bc-field-percent name=&quot;discount&quot; label=&quot;Discount&quot; min=&quot;0&quot; max=&quot;100&quot;&gt;&lt;/bc-field-percent&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-integer --&gt;
+  &lt;bc-field-integer name=&quot;qty&quot; label=&quot;Quantity&quot; min=&quot;0&quot; max=&quot;999&quot; step=&quot;1&quot;&gt;&lt;/bc-field-integer&gt;
+
+  &lt;!-- bc-field-float --&gt;
+  &lt;bc-field-float name=&quot;weight&quot; label=&quot;Weight&quot; precision=&quot;2&quot; suffix-text=&quot;kg&quot;&gt;&lt;/bc-field-float&gt;
+
+  &lt;!-- bc-field-decimal --&gt;
+  &lt;bc-field-decimal name=&quot;price&quot; label=&quot;Price&quot; precision=&quot;2&quot; prefix-text=&quot;<!--SECTIONS-->quot;&gt;&lt;/bc-field-decimal&gt;
+
+  &lt;!-- bc-field-currency --&gt;
+  &lt;bc-field-currency name=&quot;amount&quot; label=&quot;Amount&quot; currency=&quot;USD&quot;&gt;&lt;/bc-field-currency&gt;
+
+  &lt;!-- bc-field-percent --&gt;
+  &lt;bc-field-percent name=&quot;discount&quot; label=&quot;Discount&quot; min=&quot;0&quot; max=&quot;100&quot;&gt;&lt;/bc-field-percent&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-integer --&gt;
+&lt;bc-field-integer name=&quot;qty&quot; label=&quot;Quantity&quot; min=&quot;0&quot; max=&quot;999&quot; step=&quot;1&quot;&gt;&lt;/bc-field-integer&gt;
+
+&lt;!-- bc-field-float --&gt;
+&lt;bc-field-float name=&quot;weight&quot; label=&quot;Weight&quot; precision=&quot;2&quot; suffix-text=&quot;kg&quot;&gt;&lt;/bc-field-float&gt;
+
+&lt;!-- bc-field-decimal --&gt;
+&lt;bc-field-decimal name=&quot;price&quot; label=&quot;Price&quot; precision=&quot;2&quot; prefix-text=&quot;<!--SECTIONS-->quot;&gt;&lt;/bc-field-decimal&gt;
+
+&lt;!-- bc-field-currency --&gt;
+&lt;bc-field-currency name=&quot;amount&quot; label=&quot;Amount&quot; currency=&quot;USD&quot;&gt;&lt;/bc-field-currency&gt;
+
+&lt;!-- bc-field-percent --&gt;
+&lt;bc-field-percent name=&quot;discount&quot; label=&quot;Discount&quot; min=&quot;0&quot; max=&quot;100&quot;&gt;&lt;/bc-field-percent&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <!-- FIELDS — DATE/TIME -->
   <div class="demo-section" id="date">
     <h2><code>bc-field-date</code></h2>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-date name="demo-date" label="Start Date" required clearable hint="Select a date"></bc-field-date>
-        <bc-field-date name="demo-date-range" label="End Date" clearable></bc-field-date>
+        <bc-field-date name="d-date" label="Start Date" required clearable></bc-field-date>
+        <bc-field-date name="d-date2" label="End Date" clearable></bc-field-date>
       </div>
     </div>
   </div>
@@ -226,38 +568,110 @@
   <div class="demo-section" id="datetime">
     <h2><code>bc-field-datetime</code></h2>
     <div class="demo-box">
-      <bc-field-datetime name="demo-datetime" label="Event DateTime" clearable></bc-field-datetime>
+      <bc-field-datetime name="d-dt" label="Event DateTime" clearable></bc-field-datetime>
     </div>
   </div>
 
   <div class="demo-section" id="time">
     <h2><code>bc-field-time</code></h2>
     <div class="demo-box">
-      <bc-field-time name="demo-time" label="Meeting Time" clearable></bc-field-time>
+      <bc-field-time name="d-time" label="Meeting Time" clearable></bc-field-time>
     </div>
   </div>
 
   <div class="demo-section" id="duration">
     <h2><code>bc-field-duration</code></h2>
     <div class="demo-box">
-      <bc-field-duration name="demo-duration" label="Duration" hint="Hours and minutes" clearable></bc-field-duration>
+      <bc-field-duration name="d-dur" label="Duration" hint="Hours and minutes" clearable></bc-field-duration>
     </div>
   </div>
 
-  <!-- CHOICE -->
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (3 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 3 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-date --&gt;
+&lt;bc-field-date name=&quot;birthday&quot; label=&quot;Birthday&quot;&gt;&lt;/bc-field-date&gt;
+
+&lt;!-- bc-field-datetime --&gt;
+&lt;bc-field-datetime name=&quot;created&quot; label=&quot;Created At&quot;&gt;&lt;/bc-field-datetime&gt;
+
+&lt;!-- bc-field-time --&gt;
+&lt;bc-field-time name=&quot;start&quot; label=&quot;Start Time&quot;&gt;&lt;/bc-field-time&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-date, @bitcode/components/bc-field-datetime, @bitcode/components/bc-field-time';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-date */}
+      &lt;bc-field-date name=&quot;birthday&quot; label=&quot;Birthday&quot;&gt;&lt;/bc-field-date&gt;
+
+      {/* bc-field-datetime */}
+      &lt;bc-field-datetime name=&quot;created&quot; label=&quot;Created At&quot;&gt;&lt;/bc-field-datetime&gt;
+
+      {/* bc-field-time */}
+      &lt;bc-field-time name=&quot;start&quot; label=&quot;Start Time&quot;&gt;&lt;/bc-field-time&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-date --&gt;
+  &lt;bc-field-date name=&quot;birthday&quot; label=&quot;Birthday&quot;&gt;&lt;/bc-field-date&gt;
+
+  &lt;!-- bc-field-datetime --&gt;
+  &lt;bc-field-datetime name=&quot;created&quot; label=&quot;Created At&quot;&gt;&lt;/bc-field-datetime&gt;
+
+  &lt;!-- bc-field-time --&gt;
+  &lt;bc-field-time name=&quot;start&quot; label=&quot;Start Time&quot;&gt;&lt;/bc-field-time&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-date --&gt;
+&lt;bc-field-date name=&quot;birthday&quot; label=&quot;Birthday&quot;&gt;&lt;/bc-field-date&gt;
+
+&lt;!-- bc-field-datetime --&gt;
+&lt;bc-field-datetime name=&quot;created&quot; label=&quot;Created At&quot;&gt;&lt;/bc-field-datetime&gt;
+
+&lt;!-- bc-field-time --&gt;
+&lt;bc-field-time name=&quot;start&quot; label=&quot;Start Time&quot;&gt;&lt;/bc-field-time&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <!-- FIELDS — CHOICE -->
   <div class="demo-section" id="select">
     <h2><code>bc-field-select</code></h2>
-    <p>Custom searchable dropdown with 4-level data support.</p>
+    <p class="desc">Searchable dropdown with creatable and multi-select support.</p>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-select name="demo-select" label="Country" options='[{"label":"Indonesia","value":"ID"},{"label":"Japan","value":"JP"},{"label":"United States","value":"US"},{"label":"Germany","value":"DE"},{"label":"Australia","value":"AU"}]' searchable clearable hint="Searchable dropdown"></bc-field-select>
-        <bc-field-select name="demo-select-req" label="Status (required)" options='[{"label":"Active","value":"active"},{"label":"Inactive","value":"inactive"},{"label":"Pending","value":"pending"}]' required></bc-field-select>
+        <bc-field-select name="d-sel" label="Country" options='[{"label":"Indonesia","value":"ID"},{"label":"Japan","value":"JP"},{"label":"US","value":"US"},{"label":"Germany","value":"DE"}]' searchable clearable hint="Searchable"></bc-field-select>
+        <bc-field-select name="d-sel-req" label="Status" options='[{"label":"Active","value":"active"},{"label":"Inactive","value":"inactive"}]' required></bc-field-select>
       </div>
-      <div class="demo-row" style="margin-top:1rem">
-        <bc-field-select name="demo-select-creatable" label="Tags (creatable)" options='[{"label":"Bug","value":"bug"},{"label":"Feature","value":"feature"}]' searchable creatable hint="Type to create new option"></bc-field-select>
-      </div>
-      <div class="demo-row" style="margin-top:1rem">
-        <bc-field-select name="demo-select-multi" label="Multi-select" options='[{"label":"Red","value":"red"},{"label":"Green","value":"green"},{"label":"Blue","value":"blue"},{"label":"Yellow","value":"yellow"}]' multiple searchable clearable hint="Select multiple items"></bc-field-select>
+      <div class="demo-row mt">
+        <bc-field-select name="d-sel-cr" label="Creatable" options='[{"label":"Bug","value":"bug"},{"label":"Feature","value":"feature"}]' searchable creatable></bc-field-select>
+        <bc-field-select name="d-sel-mul" label="Multi" options='[{"label":"Red","value":"red"},{"label":"Green","value":"green"},{"label":"Blue","value":"blue"}]' multiple searchable clearable></bc-field-select>
       </div>
     </div>
   </div>
@@ -266,8 +680,8 @@
     <h2><code>bc-field-checkbox</code></h2>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-checkbox name="demo-check" label="I agree to terms" required hint="You must agree"></bc-field-checkbox>
-        <bc-field-checkbox name="demo-check-disabled" label="Disabled checkbox" disabled></bc-field-checkbox>
+        <bc-field-checkbox name="d-chk" label="I agree" required></bc-field-checkbox>
+        <bc-field-checkbox name="d-chk-dis" label="Disabled" disabled></bc-field-checkbox>
       </div>
     </div>
   </div>
@@ -276,8 +690,8 @@
     <h2><code>bc-field-toggle</code></h2>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-toggle name="demo-toggle" label="Enable notifications"></bc-field-toggle>
-        <bc-field-toggle name="demo-toggle-on" label="Active" value="true"></bc-field-toggle>
+        <bc-field-toggle name="d-tog" label="Notifications"></bc-field-toggle>
+        <bc-field-toggle name="d-tog-on" label="Active" value="true"></bc-field-toggle>
       </div>
     </div>
   </div>
@@ -285,14 +699,14 @@
   <div class="demo-section" id="radio">
     <h2><code>bc-field-radio</code></h2>
     <div class="demo-box">
-      <bc-field-radio name="demo-radio" label="Gender" options='[{"label":"Male","value":"male"},{"label":"Female","value":"female"},{"label":"Other","value":"other"}]' required></bc-field-radio>
+      <bc-field-radio name="d-rad" label="Gender" options='[{"label":"Male","value":"m"},{"label":"Female","value":"f"},{"label":"Other","value":"o"}]' required></bc-field-radio>
     </div>
   </div>
 
   <div class="demo-section" id="multicheck">
     <h2><code>bc-field-multicheck</code></h2>
     <div class="demo-box">
-      <bc-field-multicheck name="demo-multicheck" label="Interests" options='[{"label":"Sports","value":"sports"},{"label":"Music","value":"music"},{"label":"Tech","value":"tech"},{"label":"Art","value":"art"}]' clearable></bc-field-multicheck>
+      <bc-field-multicheck name="d-mchk" label="Interests" options='[{"label":"Sports","value":"sports"},{"label":"Music","value":"music"},{"label":"Tech","value":"tech"}]' clearable></bc-field-multicheck>
     </div>
   </div>
 
@@ -300,8 +714,8 @@
     <h2><code>bc-field-rating</code></h2>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-rating name="demo-rating" label="Rating" required clearable hint="Click a star"></bc-field-rating>
-        <bc-field-rating name="demo-rating-10" label="Rating (10 stars)" max-stars="10"></bc-field-rating>
+        <bc-field-rating name="d-rat" label="Rating" required clearable></bc-field-rating>
+        <bc-field-rating name="d-rat10" label="10 stars" max-stars="10"></bc-field-rating>
       </div>
     </div>
   </div>
@@ -309,65 +723,264 @@
   <div class="demo-section" id="color">
     <h2><code>bc-field-color</code></h2>
     <div class="demo-box">
-      <bc-field-color name="demo-color" label="Brand Color" hint="Pick a color" clearable></bc-field-color>
+      <bc-field-color name="d-col" label="Brand Color" clearable></bc-field-color>
     </div>
   </div>
 
-  <!-- RICH EDITORS -->
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (6 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 6 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-select --&gt;
+&lt;bc-field-select name=&quot;status&quot; label=&quot;Status&quot; options='[{&quot;label&quot;:&quot;Active&quot;,&quot;value&quot;:&quot;active&quot;},{&quot;label&quot;:&quot;Inactive&quot;,&quot;value&quot;:&quot;inactive&quot;}]'&gt;&lt;/bc-field-select&gt;
+
+&lt;!-- bc-field-checkbox --&gt;
+&lt;bc-field-checkbox name=&quot;colors&quot; label=&quot;Colors&quot; options='[{&quot;label&quot;:&quot;Red&quot;,&quot;value&quot;:&quot;red&quot;},{&quot;label&quot;:&quot;Blue&quot;,&quot;value&quot;:&quot;blue&quot;}]'&gt;&lt;/bc-field-checkbox&gt;
+
+&lt;!-- bc-field-toggle --&gt;
+&lt;bc-field-toggle name=&quot;dark&quot; label=&quot;Dark Mode&quot;&gt;&lt;/bc-field-toggle&gt;
+
+&lt;!-- bc-field-radio --&gt;
+&lt;bc-field-radio name=&quot;gender&quot; label=&quot;Gender&quot; options='[{&quot;label&quot;:&quot;Male&quot;,&quot;value&quot;:&quot;M&quot;},{&quot;label&quot;:&quot;Female&quot;,&quot;value&quot;:&quot;F&quot;}]'&gt;&lt;/bc-field-radio&gt;
+
+&lt;!-- bc-field-rating --&gt;
+&lt;bc-field-rating name=&quot;stars&quot; label=&quot;Rating&quot; max=&quot;5&quot;&gt;&lt;/bc-field-rating&gt;
+
+&lt;!-- bc-field-color --&gt;
+&lt;bc-field-color name=&quot;theme&quot; label=&quot;Theme Color&quot; value=&quot;#4f46e5&quot;&gt;&lt;/bc-field-color&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-select, @bitcode/components/bc-field-checkbox, @bitcode/components/bc-field-toggle, @bitcode/components/bc-field-radio, @bitcode/components/bc-field-rating, @bitcode/components/bc-field-color';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-select */}
+      &lt;bc-field-select name=&quot;status&quot; label=&quot;Status&quot; options={[{&quot;label&quot;:&quot;Active&quot;,&quot;value&quot;:&quot;active&quot;},{&quot;label&quot;:&quot;Inactive&quot;,&quot;value&quot;:&quot;inactive&quot;}]}&gt;&lt;/bc-field-select&gt;
+
+      {/* bc-field-checkbox */}
+      &lt;bc-field-checkbox name=&quot;colors&quot; label=&quot;Colors&quot; options={[{&quot;label&quot;:&quot;Red&quot;,&quot;value&quot;:&quot;red&quot;},{&quot;label&quot;:&quot;Blue&quot;,&quot;value&quot;:&quot;blue&quot;}]}&gt;&lt;/bc-field-checkbox&gt;
+
+      {/* bc-field-toggle */}
+      &lt;bc-field-toggle name=&quot;dark&quot; label=&quot;Dark Mode&quot;&gt;&lt;/bc-field-toggle&gt;
+
+      {/* bc-field-radio */}
+      &lt;bc-field-radio name=&quot;gender&quot; label=&quot;Gender&quot; options={[{&quot;label&quot;:&quot;Male&quot;,&quot;value&quot;:&quot;M&quot;},{&quot;label&quot;:&quot;Female&quot;,&quot;value&quot;:&quot;F&quot;}]}&gt;&lt;/bc-field-radio&gt;
+
+      {/* bc-field-rating */}
+      &lt;bc-field-rating name=&quot;stars&quot; label=&quot;Rating&quot; max=&quot;5&quot;&gt;&lt;/bc-field-rating&gt;
+
+      {/* bc-field-color */}
+      &lt;bc-field-color name=&quot;theme&quot; label=&quot;Theme Color&quot; value=&quot;#4f46e5&quot;&gt;&lt;/bc-field-color&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-select --&gt;
+  &lt;bc-field-select name=&quot;status&quot; label=&quot;Status&quot; options='[{&quot;label&quot;:&quot;Active&quot;,&quot;value&quot;:&quot;active&quot;},{&quot;label&quot;:&quot;Inactive&quot;,&quot;value&quot;:&quot;inactive&quot;}]'&gt;&lt;/bc-field-select&gt;
+
+  &lt;!-- bc-field-checkbox --&gt;
+  &lt;bc-field-checkbox name=&quot;colors&quot; label=&quot;Colors&quot; options='[{&quot;label&quot;:&quot;Red&quot;,&quot;value&quot;:&quot;red&quot;},{&quot;label&quot;:&quot;Blue&quot;,&quot;value&quot;:&quot;blue&quot;}]'&gt;&lt;/bc-field-checkbox&gt;
+
+  &lt;!-- bc-field-toggle --&gt;
+  &lt;bc-field-toggle name=&quot;dark&quot; label=&quot;Dark Mode&quot;&gt;&lt;/bc-field-toggle&gt;
+
+  &lt;!-- bc-field-radio --&gt;
+  &lt;bc-field-radio name=&quot;gender&quot; label=&quot;Gender&quot; options='[{&quot;label&quot;:&quot;Male&quot;,&quot;value&quot;:&quot;M&quot;},{&quot;label&quot;:&quot;Female&quot;,&quot;value&quot;:&quot;F&quot;}]'&gt;&lt;/bc-field-radio&gt;
+
+  &lt;!-- bc-field-rating --&gt;
+  &lt;bc-field-rating name=&quot;stars&quot; label=&quot;Rating&quot; max=&quot;5&quot;&gt;&lt;/bc-field-rating&gt;
+
+  &lt;!-- bc-field-color --&gt;
+  &lt;bc-field-color name=&quot;theme&quot; label=&quot;Theme Color&quot; value=&quot;#4f46e5&quot;&gt;&lt;/bc-field-color&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-select --&gt;
+&lt;bc-field-select name=&quot;status&quot; label=&quot;Status&quot; options='[{&quot;label&quot;:&quot;Active&quot;,&quot;value&quot;:&quot;active&quot;},{&quot;label&quot;:&quot;Inactive&quot;,&quot;value&quot;:&quot;inactive&quot;}]'&gt;&lt;/bc-field-select&gt;
+
+&lt;!-- bc-field-checkbox --&gt;
+&lt;bc-field-checkbox name=&quot;colors&quot; label=&quot;Colors&quot; options='[{&quot;label&quot;:&quot;Red&quot;,&quot;value&quot;:&quot;red&quot;},{&quot;label&quot;:&quot;Blue&quot;,&quot;value&quot;:&quot;blue&quot;}]'&gt;&lt;/bc-field-checkbox&gt;
+
+&lt;!-- bc-field-toggle --&gt;
+&lt;bc-field-toggle name=&quot;dark&quot; label=&quot;Dark Mode&quot;&gt;&lt;/bc-field-toggle&gt;
+
+&lt;!-- bc-field-radio --&gt;
+&lt;bc-field-radio name=&quot;gender&quot; label=&quot;Gender&quot; options='[{&quot;label&quot;:&quot;Male&quot;,&quot;value&quot;:&quot;M&quot;},{&quot;label&quot;:&quot;Female&quot;,&quot;value&quot;:&quot;F&quot;}]'&gt;&lt;/bc-field-radio&gt;
+
+&lt;!-- bc-field-rating --&gt;
+&lt;bc-field-rating name=&quot;stars&quot; label=&quot;Rating&quot; max=&quot;5&quot;&gt;&lt;/bc-field-rating&gt;
+
+&lt;!-- bc-field-color --&gt;
+&lt;bc-field-color name=&quot;theme&quot; label=&quot;Theme Color&quot; value=&quot;#4f46e5&quot;&gt;&lt;/bc-field-color&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <!-- FIELDS — RICH -->
   <div class="demo-section" id="richtext">
     <h2><code>bc-field-richtext</code></h2>
     <div class="demo-box">
-      <bc-field-richtext name="demo-richtext" label="Content" hint="Rich text editor with toolbar"></bc-field-richtext>
+      <bc-field-richtext name="d-rt" label="Content" hint="Rich text with toolbar"></bc-field-richtext>
     </div>
   </div>
 
   <div class="demo-section" id="markdown">
     <h2><code>bc-field-markdown</code></h2>
     <div class="demo-box">
-      <bc-field-markdown name="demo-markdown" label="README" hint="Write/Preview toggle" max-length="2000" show-count></bc-field-markdown>
+      <bc-field-markdown name="d-md" label="README" hint="Write/Preview" max-length="2000" show-count></bc-field-markdown>
     </div>
   </div>
 
   <div class="demo-section" id="html">
     <h2><code>bc-field-html</code></h2>
     <div class="demo-box">
-      <bc-field-html name="demo-html" label="HTML Content" value="<h3>Hello</h3><p>World</p>" hint="Source/Preview toggle"></bc-field-html>
+      <bc-field-html name="d-html" label="HTML" value="<h3>Hello</h3><p>World</p>" hint="Source/Preview"></bc-field-html>
     </div>
   </div>
 
   <div class="demo-section" id="code">
     <h2><code>bc-field-code</code></h2>
     <div class="demo-box">
-      <bc-field-code name="demo-code" label="JavaScript" language="javascript" value="function hello() { return 'world'; }"></bc-field-code>
+      <div class="demo-row">
+        <bc-field-code name="d-code-js" label="JavaScript" language="javascript" value="function hello() { return 'world'; }"></bc-field-code>
+        <bc-field-code name="d-code-py" label="Python" language="python" value="def hello():&#10;    return 'world'"></bc-field-code>
+      </div>
     </div>
   </div>
 
   <div class="demo-section" id="json">
     <h2><code>bc-field-json</code></h2>
     <div class="demo-box">
-      <bc-field-json name="demo-json" label="Config" value='{"key": "value", "count": 42}'></bc-field-json>
+      <bc-field-json name="d-json" label="Config" value='{"key": "value", "count": 42}'></bc-field-json>
     </div>
   </div>
 
-  <!-- SPECIAL -->
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (4 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 4 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-richtext --&gt;
+&lt;bc-field-richtext name=&quot;content&quot; label=&quot;Content&quot;&gt;&lt;/bc-field-richtext&gt;
+
+&lt;!-- bc-field-markdown --&gt;
+&lt;bc-field-markdown name=&quot;readme&quot; label=&quot;README&quot;&gt;&lt;/bc-field-markdown&gt;
+
+&lt;!-- bc-field-code --&gt;
+&lt;bc-field-code name=&quot;script&quot; label=&quot;Script&quot; language=&quot;javascript&quot;&gt;&lt;/bc-field-code&gt;
+
+&lt;!-- bc-field-json --&gt;
+&lt;bc-field-json name=&quot;config&quot; label=&quot;Config&quot;&gt;&lt;/bc-field-json&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-richtext, @bitcode/components/bc-field-markdown, @bitcode/components/bc-field-code, @bitcode/components/bc-field-json';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-richtext */}
+      &lt;bc-field-richtext name=&quot;content&quot; label=&quot;Content&quot;&gt;&lt;/bc-field-richtext&gt;
+
+      {/* bc-field-markdown */}
+      &lt;bc-field-markdown name=&quot;readme&quot; label=&quot;README&quot;&gt;&lt;/bc-field-markdown&gt;
+
+      {/* bc-field-code */}
+      &lt;bc-field-code name=&quot;script&quot; label=&quot;Script&quot; language=&quot;javascript&quot;&gt;&lt;/bc-field-code&gt;
+
+      {/* bc-field-json */}
+      &lt;bc-field-json name=&quot;config&quot; label=&quot;Config&quot;&gt;&lt;/bc-field-json&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-richtext --&gt;
+  &lt;bc-field-richtext name=&quot;content&quot; label=&quot;Content&quot;&gt;&lt;/bc-field-richtext&gt;
+
+  &lt;!-- bc-field-markdown --&gt;
+  &lt;bc-field-markdown name=&quot;readme&quot; label=&quot;README&quot;&gt;&lt;/bc-field-markdown&gt;
+
+  &lt;!-- bc-field-code --&gt;
+  &lt;bc-field-code name=&quot;script&quot; label=&quot;Script&quot; language=&quot;javascript&quot;&gt;&lt;/bc-field-code&gt;
+
+  &lt;!-- bc-field-json --&gt;
+  &lt;bc-field-json name=&quot;config&quot; label=&quot;Config&quot;&gt;&lt;/bc-field-json&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-richtext --&gt;
+&lt;bc-field-richtext name=&quot;content&quot; label=&quot;Content&quot;&gt;&lt;/bc-field-richtext&gt;
+
+&lt;!-- bc-field-markdown --&gt;
+&lt;bc-field-markdown name=&quot;readme&quot; label=&quot;README&quot;&gt;&lt;/bc-field-markdown&gt;
+
+&lt;!-- bc-field-code --&gt;
+&lt;bc-field-code name=&quot;script&quot; label=&quot;Script&quot; language=&quot;javascript&quot;&gt;&lt;/bc-field-code&gt;
+
+&lt;!-- bc-field-json --&gt;
+&lt;bc-field-json name=&quot;config&quot; label=&quot;Config&quot;&gt;&lt;/bc-field-json&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <!-- FIELDS — SPECIAL -->
   <div class="demo-section" id="file">
     <h2><code>bc-field-file</code></h2>
     <div class="demo-box">
-      <bc-field-file name="demo-file" label="Attachment" accept=".pdf,.doc,.docx" max-size="5MB" hint="PDF or Word, max 5MB"></bc-field-file>
+      <bc-field-file name="d-file" label="Attachment" accept=".pdf,.doc" max-size="5MB" hint="PDF/Word max 5MB"></bc-field-file>
     </div>
   </div>
 
   <div class="demo-section" id="image">
     <h2><code>bc-field-image</code></h2>
     <div class="demo-box">
-      <bc-field-image name="demo-image" label="Avatar" max-size="2MB" hint="Drag or click to upload"></bc-field-image>
+      <bc-field-image name="d-img" label="Avatar" max-size="2MB" hint="Drag or click"></bc-field-image>
     </div>
   </div>
 
   <div class="demo-section" id="signature">
     <h2><code>bc-field-signature</code></h2>
     <div class="demo-box">
-      <bc-field-signature name="demo-sig" label="Signature" hint="Draw your signature" width="400" height="150"></bc-field-signature>
+      <bc-field-signature name="d-sig" label="Signature" hint="Draw" width="400" height="150"></bc-field-signature>
     </div>
   </div>
 
@@ -375,18 +988,1019 @@
     <h2><code>bc-field-barcode</code></h2>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-field-barcode name="demo-barcode" label="Barcode" value="1234567890" format="code128"></bc-field-barcode>
-        <bc-field-barcode name="demo-qr" label="QR Code" value="https://bitcode.dev" format="qr"></bc-field-barcode>
+        <bc-field-barcode name="d-bc" label="Barcode" value="1234567890" format="code128"></bc-field-barcode>
+        <bc-field-barcode name="d-qr" label="QR Code" value="https://bitcode.dev" format="qr"></bc-field-barcode>
       </div>
     </div>
   </div>
 
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (3 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 3 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-file --&gt;
+&lt;bc-field-file name=&quot;avatar&quot; label=&quot;Avatar&quot; accept=&quot;image/*&quot;&gt;&lt;/bc-field-file&gt;
+
+&lt;!-- bc-field-image --&gt;
+&lt;bc-field-image name=&quot;photo&quot; label=&quot;Photo&quot;&gt;&lt;/bc-field-image&gt;
+
+&lt;!-- bc-field-signature --&gt;
+&lt;bc-field-signature name=&quot;sig&quot; label=&quot;Signature&quot;&gt;&lt;/bc-field-signature&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-file, @bitcode/components/bc-field-image, @bitcode/components/bc-field-signature';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-file */}
+      &lt;bc-field-file name=&quot;avatar&quot; label=&quot;Avatar&quot; accept=&quot;image/*&quot;&gt;&lt;/bc-field-file&gt;
+
+      {/* bc-field-image */}
+      &lt;bc-field-image name=&quot;photo&quot; label=&quot;Photo&quot;&gt;&lt;/bc-field-image&gt;
+
+      {/* bc-field-signature */}
+      &lt;bc-field-signature name=&quot;sig&quot; label=&quot;Signature&quot;&gt;&lt;/bc-field-signature&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-file --&gt;
+  &lt;bc-field-file name=&quot;avatar&quot; label=&quot;Avatar&quot; accept=&quot;image/*&quot;&gt;&lt;/bc-field-file&gt;
+
+  &lt;!-- bc-field-image --&gt;
+  &lt;bc-field-image name=&quot;photo&quot; label=&quot;Photo&quot;&gt;&lt;/bc-field-image&gt;
+
+  &lt;!-- bc-field-signature --&gt;
+  &lt;bc-field-signature name=&quot;sig&quot; label=&quot;Signature&quot;&gt;&lt;/bc-field-signature&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-file --&gt;
+&lt;bc-field-file name=&quot;avatar&quot; label=&quot;Avatar&quot; accept=&quot;image/*&quot;&gt;&lt;/bc-field-file&gt;
+
+&lt;!-- bc-field-image --&gt;
+&lt;bc-field-image name=&quot;photo&quot; label=&quot;Photo&quot;&gt;&lt;/bc-field-image&gt;
+
+&lt;!-- bc-field-signature --&gt;
+&lt;bc-field-signature name=&quot;sig&quot; label=&quot;Signature&quot;&gt;&lt;/bc-field-signature&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <!-- FIELDS — RELATIONAL -->
+  <div class="demo-section" id="tags">
+    <h2><code>bc-field-tags</code></h2>
+    <p class="desc">Tag input with search dropdown. Standalone mode uses static options.</p>
+    <div class="demo-box">
+      <bc-field-tags name="d-tags" label="Tags" value='["javascript","web"]' clearable></bc-field-tags>
+    </div>
+  </div>
+
+  <div class="demo-section" id="link">
+    <h2><code>bc-field-link</code></h2>
+    <p class="desc">Many2one/ForeignKey selector with searchable dropdown.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-link name="d-link" label="Contact" model="contact" display-field="name" clearable value="demo-000001"></bc-field-link>
+        <bc-field-link name="d-link-co" label="Company" model="contact" display-field="company" clearable></bc-field-link>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dynlink">
+    <h2><code>bc-field-dynlink</code></h2>
+    <p class="desc">Polymorphic link field — selects a model type then a record from that model.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-field-dynlink name="d-dyn" label="Dynamic Link" model="contact" clearable></bc-field-dynlink>
+        <bc-field-dynlink name="d-dyn-lead" label="Lead Link" model="lead" clearable></bc-field-dynlink>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="tableselect">
+    <h2><code>bc-field-tableselect</code></h2>
+    <p class="desc">Multi-record selector with search and table view.</p>
+    <div class="demo-box">
+      <bc-field-tableselect name="d-ts" label="Select Contacts" model="contact" clearable value='["demo-000001","demo-000002"]'></bc-field-tableselect>
+    </div>
+  </div>
+
+  <div class="demo-section" id="morph">
+    <h2><code>bc-field-morph</code></h2>
+    <p class="desc">Polymorphic relationship field with type selector.</p>
+    <div class="demo-box">
+      <bc-field-morph name="d-morph" label="Morph" models='["contact","company"]' clearable></bc-field-morph>
+    </div>
+  </div>
+
+  <div class="demo-section" id="geo">
+    <h2><code>bc-field-geo</code></h2>
+    <p class="desc">Map-based geo point picker using Leaflet. Click to place marker.</p>
+    <div class="demo-box">
+      <bc-field-geo name="d-geo" label="Location" value='{"lat":-6.2088,"lng":106.8456}'></bc-field-geo>
+    </div>
+  </div>
+
+  <div class="demo-section" id="lookup">
+    <h2><code>bc-lookup-modal</code></h2>
+    <p class="desc">Modal for browsing/selecting records from a table.</p>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-lookup').open=true">Open Lookup</button>
+      <bc-lookup-modal id="d-lookup" modal-title="Select Contact" model="contact" columns='[{"field":"name","label":"Name"},{"field":"email","label":"Email"},{"field":"company","label":"Company"},{"field":"city","label":"City"}]' display-field="name"></bc-lookup-modal>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CHARTS -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (3 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 3 components — Vanilla HTML --&gt;
+&lt;!-- bc-field-link --&gt;
+&lt;bc-field-link name=&quot;ref&quot; label=&quot;Reference&quot; href=&quot;https://example.com&quot; text=&quot;Open&quot;&gt;&lt;/bc-field-link&gt;
+
+&lt;!-- bc-field-dynlink --&gt;
+&lt;bc-field-dynlink name=&quot;doc&quot; label=&quot;Document&quot; pattern=&quot;/docs/{id}&quot;&gt;&lt;/bc-field-dynlink&gt;
+
+&lt;!-- bc-field-tableselect --&gt;
+&lt;bc-field-tableselect name=&quot;product&quot; label=&quot;Product&quot; model=&quot;product&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;}]'&gt;&lt;/bc-field-tableselect&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-field-link, @bitcode/components/bc-field-dynlink, @bitcode/components/bc-field-tableselect';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-field-link */}
+      &lt;bc-field-link name=&quot;ref&quot; label=&quot;Reference&quot; href=&quot;https://example.com&quot; text=&quot;Open&quot;&gt;&lt;/bc-field-link&gt;
+
+      {/* bc-field-dynlink */}
+      &lt;bc-field-dynlink name=&quot;doc&quot; label=&quot;Document&quot; pattern=&quot;/docs/{id}&quot;&gt;&lt;/bc-field-dynlink&gt;
+
+      {/* bc-field-tableselect */}
+      &lt;bc-field-tableselect name=&quot;product&quot; label=&quot;Product&quot; model=&quot;product&quot; columns={[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;}]}&gt;&lt;/bc-field-tableselect&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-field-link --&gt;
+  &lt;bc-field-link name=&quot;ref&quot; label=&quot;Reference&quot; href=&quot;https://example.com&quot; text=&quot;Open&quot;&gt;&lt;/bc-field-link&gt;
+
+  &lt;!-- bc-field-dynlink --&gt;
+  &lt;bc-field-dynlink name=&quot;doc&quot; label=&quot;Document&quot; pattern=&quot;/docs/{id}&quot;&gt;&lt;/bc-field-dynlink&gt;
+
+  &lt;!-- bc-field-tableselect --&gt;
+  &lt;bc-field-tableselect name=&quot;product&quot; label=&quot;Product&quot; model=&quot;product&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;}]'&gt;&lt;/bc-field-tableselect&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-field-link --&gt;
+&lt;bc-field-link name=&quot;ref&quot; label=&quot;Reference&quot; href=&quot;https://example.com&quot; text=&quot;Open&quot;&gt;&lt;/bc-field-link&gt;
+
+&lt;!-- bc-field-dynlink --&gt;
+&lt;bc-field-dynlink name=&quot;doc&quot; label=&quot;Document&quot; pattern=&quot;/docs/{id}&quot;&gt;&lt;/bc-field-dynlink&gt;
+
+&lt;!-- bc-field-tableselect --&gt;
+&lt;bc-field-tableselect name=&quot;product&quot; label=&quot;Product&quot; model=&quot;product&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;}]'&gt;&lt;/bc-field-tableselect&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Charts</div>
+
+  <div class="demo-section" id="chart-bar">
+    <h2><code>bc-chart-bar</code></h2>
+    <div class="demo-box">
+      <bc-chart-bar chart-title="Sales by Region" data='[{"name":"Q1","value":120},{"name":"Q2","value":200},{"name":"Q3","value":150},{"name":"Q4","value":180}]' height="300px"></bc-chart-bar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-line">
+    <h2><code>bc-chart-line</code></h2>
+    <div class="demo-box">
+      <bc-chart-line chart-title="Revenue Trend" data='[{"name":"Jan","value":100},{"name":"Feb","value":140},{"name":"Mar","value":120},{"name":"Apr","value":180}]' smooth height="300px"></bc-chart-line>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-area">
+    <h2><code>bc-chart-area</code></h2>
+    <div class="demo-box">
+      <bc-chart-area chart-title="Traffic" data='[{"name":"Mon","value":820},{"name":"Tue","value":932},{"name":"Wed","value":901},{"name":"Thu","value":1290},{"name":"Fri","value":1330}]' smooth height="300px"></bc-chart-area>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-pie">
+    <h2><code>bc-chart-pie</code></h2>
+    <div class="demo-box">
+      <bc-chart-pie chart-title="Market Share" data='[{"name":"Chrome","value":62},{"name":"Firefox","value":15},{"name":"Safari","value":12},{"name":"Edge","value":8}]' donut height="300px"></bc-chart-pie>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-scatter">
+    <h2><code>bc-chart-scatter</code></h2>
+    <div class="demo-box">
+      <bc-chart-scatter chart-title="Correlation" data='[[10,8.04],[8,6.95],[13,7.58],[9,8.81],[11,8.33],[14,9.96],[6,7.24],[4,4.26]]' height="300px"></bc-chart-scatter>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-radar">
+    <h2><code>bc-chart-radar</code></h2>
+    <div class="demo-box">
+      <bc-chart-radar chart-title="Skills" data='{"indicators":[{"name":"Speed","max":100},{"name":"Strength","max":100},{"name":"Endurance","max":100},{"name":"Agility","max":100},{"name":"Flexibility","max":100}],"series":[{"name":"Athlete","data":[90,80,70,85,75]}]}' height="300px"></bc-chart-radar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-gauge">
+    <h2><code>bc-chart-gauge</code></h2>
+    <div class="demo-box">
+      <bc-chart-gauge chart-title="Performance" value="72" min="0" max="100" height="300px"></bc-chart-gauge>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-funnel">
+    <h2><code>bc-chart-funnel</code></h2>
+    <div class="demo-box">
+      <bc-chart-funnel chart-title="Conversion Funnel" data='[{"name":"Visits","value":100},{"name":"Leads","value":60},{"name":"Qualified","value":30},{"name":"Won","value":12}]' height="300px"></bc-chart-funnel>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-heatmap">
+    <h2><code>bc-chart-heatmap</code></h2>
+    <div class="demo-box">
+      <bc-chart-heatmap chart-title="Activity Heatmap" data='{"xAxis":["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],"yAxis":["Morning","Afternoon","Evening","Night"],"data":[[8,12,15,10,6,3,2],[15,20,25,18,12,5,3],[10,18,22,16,8,4,2],[3,5,8,6,4,2,1]]}' height="300px"></bc-chart-heatmap>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-candlestick">
+    <h2><code>bc-chart-candlestick</code></h2>
+    <div class="demo-box">
+      <bc-chart-candlestick chart-title="Stock Price" data='{"categories":["Mon","Tue","Wed","Thu","Fri"],"data":[[2320.26,2302.6,2287.3,2362.94],[2300,2291.3,2288.26,2308.38],[2295.35,2346.5,2295.35,2346.92],[2347.22,2358.98,2337.35,2363.8],[2360.75,2382.48,2347.89,2383.76]]}' height="300px"></bc-chart-candlestick>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-boxplot">
+    <h2><code>bc-chart-boxplot</code></h2>
+    <div class="demo-box">
+      <bc-chart-boxplot chart-title="Score Distribution" data='{"categories":["Math","Science","English","History","Art"],"data":[[40,55,65,78,92],[35,50,62,75,88],[45,60,70,82,95],[30,45,58,72,85],[50,65,75,85,98]]}' height="300px"></bc-chart-boxplot>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-sankey">
+    <h2><code>bc-chart-sankey</code></h2>
+    <div class="demo-box">
+      <bc-chart-sankey chart-title="Flow" data='{"nodes":[{"name":"a"},{"name":"b"},{"name":"c"}],"links":[{"source":"a","target":"b","value":5},{"source":"a","target":"c","value":3}]}' height="300px"></bc-chart-sankey>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-treemap">
+    <h2><code>bc-chart-treemap</code></h2>
+    <div class="demo-box">
+      <bc-chart-treemap chart-title="Disk Usage" data='{"name":"Storage","children":[{"name":"Documents","value":40,"children":[{"name":"Reports","value":25},{"name":"Letters","value":15}]},{"name":"Media","value":60,"children":[{"name":"Photos","value":30},{"name":"Videos","value":30}]},{"name":"Apps","value":80}]}' height="300px"></bc-chart-treemap>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-sunburst">
+    <h2><code>bc-chart-sunburst</code></h2>
+    <div class="demo-box">
+      <bc-chart-sunburst chart-title="Category Breakdown" data='{"name":"Root","children":[{"name":"Tech","value":50,"children":[{"name":"Phones","value":25},{"name":"Laptops","value":25}]},{"name":"Home","value":50,"children":[{"name":"Furniture","value":30},{"name":"Appliances","value":20}]}]}' height="300px"></bc-chart-sunburst>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-graph">
+    <h2><code>bc-chart-graph</code></h2>
+    <div class="demo-box">
+      <bc-chart-graph chart-title="Network" data='{"nodes":[{"name":"Node 1"},{"name":"Node 2"},{"name":"Node 3"}],"links":[{"source":"Node 1","target":"Node 2"},{"source":"Node 2","target":"Node 3"}]}' layout="force" height="300px"></bc-chart-graph>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-tree">
+    <h2><code>bc-chart-tree</code></h2>
+    <div class="demo-box">
+      <bc-chart-tree chart-title="Org Chart" data='{"name":"CEO","children":[{"name":"CTO"},{"name":"CFO"}]}' height="300px"></bc-chart-tree>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-themeriver">
+    <h2><code>bc-chart-themeriver</code></h2>
+    <div class="demo-box">
+      <bc-chart-themeriver chart-title="Traffic Sources" data='[["2025-01",120,"Direct"],["2025-01",80,"Email"],["2025-01",60,"Social"],["2025-01",40,"Referral"],["2025-02",150,"Direct"],["2025-02",95,"Email"],["2025-02",75,"Social"],["2025-02",55,"Referral"],["2025-03",180,"Direct"],["2025-03",110,"Email"],["2025-03",90,"Social"],["2025-03",70,"Referral"],["2025-04",160,"Direct"],["2025-04",130,"Email"],["2025-04",100,"Social"],["2025-04",65,"Referral"]]' height="300px"></bc-chart-themeriver>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-parallel">
+    <h2><code>bc-chart-parallel</code></h2>
+    <div class="demo-box">
+      <bc-chart-parallel chart-title="Product Analysis" data='{"dimensions":["Price ($)","Volume","Rating","Sales","Returns"],"data":[[29,1200,4.5,850,12],[49,800,4.2,620,8],[79,500,4.8,430,5],[149,300,4.6,280,3],[199,150,4.9,120,1]]}' height="300px"></bc-chart-parallel>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-pictorialbar">
+    <h2><code>bc-chart-pictorialbar</code></h2>
+    <div class="demo-box">
+      <bc-chart-pictorialbar chart-title="Progress" data='[{"name":"Complete","value":75}]' symbol="roundRect" height="300px"></bc-chart-pictorialbar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-polar">
+    <h2><code>bc-chart-polar</code></h2>
+    <div class="demo-box">
+      <bc-chart-polar chart-title="Polar" data='[{"name":"A","value":80},{"name":"B","value":60},{"name":"C","value":40}]' height="300px"></bc-chart-polar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-mixed">
+    <h2><code>bc-chart-mixed</code></h2>
+    <div class="demo-box">
+      <bc-chart-mixed chart-title="Revenue vs Growth" data='{"categories":["Jan","Feb","Mar","Apr","May"],"series":[{"name":"Revenue","type":"bar","data":[120,200,150,80,70]},{"name":"Growth","type":"line","data":[80,120,90,150,180]}]}' height="300px"></bc-chart-mixed>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-custom">
+    <h2><code>bc-chart-custom</code></h2>
+    <p class="desc">Pass raw ECharts option JSON for full customization.</p>
+    <div class="demo-box">
+      <bc-chart-custom option='{"title":{"text":"Custom Chart"},"xAxis":{"type":"category","data":["A","B","C"]},"yAxis":{"type":"value"},"series":[{"type":"bar","data":[23,45,12]}]}' height="400px"></bc-chart-custom>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-pivot">
+    <h2><code>bc-chart-pivot</code></h2>
+    <p class="desc">Pivot table with aggregation.</p>
+    <div class="demo-box">
+      <bc-chart-pivot data='[{"region":"West","product":"A","amount":100},{"region":"East","product":"A","amount":150},{"region":"West","product":"B","amount":80}]' rows='["region"]' cols='["product"]' value-field="amount"></bc-chart-pivot>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-progress">
+    <h2><code>bc-chart-progress</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-chart-progress value="65" max="100" label="Upload" show-percent></bc-chart-progress>
+        <bc-chart-progress value="30" max="100" label="Download" color="success" show-percent></bc-chart-progress>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-kpi">
+    <h2><code>bc-chart-kpi</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-chart-kpi value="$12,450" label="Revenue" trend="up"></bc-chart-kpi>
+        <bc-chart-kpi value="234" label="Orders" trend="down" color="danger"></bc-chart-kpi>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="chart-scorecard">
+    <h2><code>bc-chart-scorecard</code></h2>
+    <div class="demo-box">
+      <bc-chart-scorecard value="72" target="100" label="Goal Progress" height="200px"></bc-chart-scorecard>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DATATABLE -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (16 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 16 components — Vanilla HTML --&gt;
+&lt;!-- bc-chart-bar --&gt;
+&lt;bc-chart-bar chart-title=&quot;Sales&quot; data='[{&quot;name&quot;:&quot;Q1&quot;,&quot;value&quot;:120}]'&gt;&lt;/bc-chart-bar&gt;
+
+&lt;!-- bc-chart-line --&gt;
+&lt;bc-chart-line chart-title=&quot;Trend&quot; data='[{&quot;name&quot;:&quot;Jan&quot;,&quot;value&quot;:100}]' smooth&gt;&lt;/bc-chart-line&gt;
+
+&lt;!-- bc-chart-area --&gt;
+&lt;bc-chart-area chart-title=&quot;Traffic&quot; data='[{&quot;name&quot;:&quot;Mon&quot;,&quot;value&quot;:820}]'&gt;&lt;/bc-chart-area&gt;
+
+&lt;!-- bc-chart-pie --&gt;
+&lt;bc-chart-pie chart-title=&quot;Share&quot; data='[{&quot;name&quot;:&quot;A&quot;,&quot;value&quot;:60}]' donut&gt;&lt;/bc-chart-pie&gt;
+
+&lt;!-- bc-chart-scatter --&gt;
+&lt;bc-chart-scatter chart-title=&quot;Correlation&quot; data='[[10,8],[8,7]]'&gt;&lt;/bc-chart-scatter&gt;
+
+&lt;!-- bc-chart-radar --&gt;
+&lt;bc-chart-radar chart-title=&quot;Skills&quot; data='[{&quot;name&quot;:&quot;Speed&quot;,&quot;value&quot;:80}]'&gt;&lt;/bc-chart-radar&gt;
+
+&lt;!-- bc-chart-gauge --&gt;
+&lt;bc-chart-gauge chart-title=&quot;CPU&quot; value=&quot;72&quot; max=&quot;100&quot;&gt;&lt;/bc-chart-gauge&gt;
+
+&lt;!-- bc-chart-funnel --&gt;
+&lt;bc-chart-funnel chart-title=&quot;Pipeline&quot; data='[{&quot;name&quot;:&quot;Leads&quot;,&quot;value&quot;:100}]'&gt;&lt;/bc-chart-funnel&gt;
+
+&lt;!-- bc-chart-heatmap --&gt;
+&lt;bc-chart-heatmap chart-title=&quot;Activity&quot; data='[[0,0,5],[0,1,8]]'&gt;&lt;/bc-chart-heatmap&gt;
+
+&lt;!-- bc-chart-candlestick --&gt;
+&lt;bc-chart-candlestick chart-title=&quot;Stock&quot; data='[[&quot;2024-01&quot;,100,120,90,110]]'&gt;&lt;/bc-chart-candlestick&gt;
+
+&lt;!-- bc-chart-boxplot --&gt;
+&lt;bc-chart-boxplot chart-title=&quot;Dist&quot; data='[[1,2,3,4,5]]'&gt;&lt;/bc-chart-boxplot&gt;
+
+&lt;!-- bc-chart-sankey --&gt;
+&lt;bc-chart-sankey chart-title=&quot;Flow&quot; data='...'&gt;&lt;/bc-chart-sankey&gt;
+
+&lt;!-- bc-chart-treemap --&gt;
+&lt;bc-chart-treemap chart-title=&quot;Budget&quot; data='[{&quot;name&quot;:&quot;Eng&quot;,&quot;value&quot;:50}]'&gt;&lt;/bc-chart-treemap&gt;
+
+&lt;!-- bc-chart-graph --&gt;
+&lt;bc-chart-graph chart-title=&quot;Network&quot; data='...'&gt;&lt;/bc-chart-graph&gt;
+
+&lt;!-- bc-chart-themeriver --&gt;
+&lt;bc-chart-themeriver chart-title=&quot;Trend&quot; data='...'&gt;&lt;/bc-chart-themeriver&gt;
+
+&lt;!-- bc-chart-parallel --&gt;
+&lt;bc-chart-parallel chart-title=&quot;Multi&quot; data='...'&gt;&lt;/bc-chart-parallel&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-chart-bar, @bitcode/components/bc-chart-line, @bitcode/components/bc-chart-area, @bitcode/components/bc-chart-pie, @bitcode/components/bc-chart-scatter, @bitcode/components/bc-chart-radar, @bitcode/components/bc-chart-gauge, @bitcode/components/bc-chart-funnel, @bitcode/components/bc-chart-heatmap, @bitcode/components/bc-chart-candlestick, @bitcode/components/bc-chart-boxplot, @bitcode/components/bc-chart-sankey, @bitcode/components/bc-chart-treemap, @bitcode/components/bc-chart-graph, @bitcode/components/bc-chart-themeriver, @bitcode/components/bc-chart-parallel';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-chart-bar */}
+      &lt;bc-chart-bar chartTitle=&quot;Sales&quot; data={[{&quot;name&quot;:&quot;Q1&quot;,&quot;value&quot;:120}]}&gt;&lt;/bc-chart-bar&gt;
+
+      {/* bc-chart-line */}
+      &lt;bc-chart-line chartTitle=&quot;Trend&quot; data={[{&quot;name&quot;:&quot;Jan&quot;,&quot;value&quot;:100}]} smooth={true}&gt;&lt;/bc-chart-line&gt;
+
+      {/* bc-chart-area */}
+      &lt;bc-chart-area chartTitle=&quot;Traffic&quot; data={[{&quot;name&quot;:&quot;Mon&quot;,&quot;value&quot;:820}]}&gt;&lt;/bc-chart-area&gt;
+
+      {/* bc-chart-pie */}
+      &lt;bc-chart-pie chartTitle=&quot;Share&quot; data={[{&quot;name&quot;:&quot;A&quot;,&quot;value&quot;:60}]} donut={true}&gt;&lt;/bc-chart-pie&gt;
+
+      {/* bc-chart-scatter */}
+      &lt;bc-chart-scatter chartTitle=&quot;Correlation&quot; data={[[10,8],[8,7]]}&gt;&lt;/bc-chart-scatter&gt;
+
+      {/* bc-chart-radar */}
+      &lt;bc-chart-radar chartTitle=&quot;Skills&quot; data={[{&quot;name&quot;:&quot;Speed&quot;,&quot;value&quot;:80}]}&gt;&lt;/bc-chart-radar&gt;
+
+      {/* bc-chart-gauge */}
+      &lt;bc-chart-gauge chartTitle=&quot;CPU&quot; value=&quot;72&quot; max=&quot;100&quot;&gt;&lt;/bc-chart-gauge&gt;
+
+      {/* bc-chart-funnel */}
+      &lt;bc-chart-funnel chartTitle=&quot;Pipeline&quot; data={[{&quot;name&quot;:&quot;Leads&quot;,&quot;value&quot;:100}]}&gt;&lt;/bc-chart-funnel&gt;
+
+      {/* bc-chart-heatmap */}
+      &lt;bc-chart-heatmap chartTitle=&quot;Activity&quot; data={[[0,0,5],[0,1,8]]}&gt;&lt;/bc-chart-heatmap&gt;
+
+      {/* bc-chart-candlestick */}
+      &lt;bc-chart-candlestick chartTitle=&quot;Stock&quot; data={[[&quot;2024-01&quot;,100,120,90,110]]}&gt;&lt;/bc-chart-candlestick&gt;
+
+      {/* bc-chart-boxplot */}
+      &lt;bc-chart-boxplot chartTitle=&quot;Dist&quot; data={[[1,2,3,4,5]]}&gt;&lt;/bc-chart-boxplot&gt;
+
+      {/* bc-chart-sankey */}
+      &lt;bc-chart-sankey chartTitle=&quot;Flow&quot; data=&quot;...&quot;&gt;&lt;/bc-chart-sankey&gt;
+
+      {/* bc-chart-treemap */}
+      &lt;bc-chart-treemap chartTitle=&quot;Budget&quot; data={[{&quot;name&quot;:&quot;Eng&quot;,&quot;value&quot;:50}]}&gt;&lt;/bc-chart-treemap&gt;
+
+      {/* bc-chart-graph */}
+      &lt;bc-chart-graph chartTitle=&quot;Network&quot; data=&quot;...&quot;&gt;&lt;/bc-chart-graph&gt;
+
+      {/* bc-chart-themeriver */}
+      &lt;bc-chart-themeriver chartTitle=&quot;Trend&quot; data=&quot;...&quot;&gt;&lt;/bc-chart-themeriver&gt;
+
+      {/* bc-chart-parallel */}
+      &lt;bc-chart-parallel chartTitle=&quot;Multi&quot; data=&quot;...&quot;&gt;&lt;/bc-chart-parallel&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-chart-bar --&gt;
+  &lt;bc-chart-bar chart-title=&quot;Sales&quot; data='[{&quot;name&quot;:&quot;Q1&quot;,&quot;value&quot;:120}]'&gt;&lt;/bc-chart-bar&gt;
+
+  &lt;!-- bc-chart-line --&gt;
+  &lt;bc-chart-line chart-title=&quot;Trend&quot; data='[{&quot;name&quot;:&quot;Jan&quot;,&quot;value&quot;:100}]' smooth&gt;&lt;/bc-chart-line&gt;
+
+  &lt;!-- bc-chart-area --&gt;
+  &lt;bc-chart-area chart-title=&quot;Traffic&quot; data='[{&quot;name&quot;:&quot;Mon&quot;,&quot;value&quot;:820}]'&gt;&lt;/bc-chart-area&gt;
+
+  &lt;!-- bc-chart-pie --&gt;
+  &lt;bc-chart-pie chart-title=&quot;Share&quot; data='[{&quot;name&quot;:&quot;A&quot;,&quot;value&quot;:60}]' donut&gt;&lt;/bc-chart-pie&gt;
+
+  &lt;!-- bc-chart-scatter --&gt;
+  &lt;bc-chart-scatter chart-title=&quot;Correlation&quot; data='[[10,8],[8,7]]'&gt;&lt;/bc-chart-scatter&gt;
+
+  &lt;!-- bc-chart-radar --&gt;
+  &lt;bc-chart-radar chart-title=&quot;Skills&quot; data='[{&quot;name&quot;:&quot;Speed&quot;,&quot;value&quot;:80}]'&gt;&lt;/bc-chart-radar&gt;
+
+  &lt;!-- bc-chart-gauge --&gt;
+  &lt;bc-chart-gauge chart-title=&quot;CPU&quot; value=&quot;72&quot; max=&quot;100&quot;&gt;&lt;/bc-chart-gauge&gt;
+
+  &lt;!-- bc-chart-funnel --&gt;
+  &lt;bc-chart-funnel chart-title=&quot;Pipeline&quot; data='[{&quot;name&quot;:&quot;Leads&quot;,&quot;value&quot;:100}]'&gt;&lt;/bc-chart-funnel&gt;
+
+  &lt;!-- bc-chart-heatmap --&gt;
+  &lt;bc-chart-heatmap chart-title=&quot;Activity&quot; data='[[0,0,5],[0,1,8]]'&gt;&lt;/bc-chart-heatmap&gt;
+
+  &lt;!-- bc-chart-candlestick --&gt;
+  &lt;bc-chart-candlestick chart-title=&quot;Stock&quot; data='[[&quot;2024-01&quot;,100,120,90,110]]'&gt;&lt;/bc-chart-candlestick&gt;
+
+  &lt;!-- bc-chart-boxplot --&gt;
+  &lt;bc-chart-boxplot chart-title=&quot;Dist&quot; data='[[1,2,3,4,5]]'&gt;&lt;/bc-chart-boxplot&gt;
+
+  &lt;!-- bc-chart-sankey --&gt;
+  &lt;bc-chart-sankey chart-title=&quot;Flow&quot; data='...'&gt;&lt;/bc-chart-sankey&gt;
+
+  &lt;!-- bc-chart-treemap --&gt;
+  &lt;bc-chart-treemap chart-title=&quot;Budget&quot; data='[{&quot;name&quot;:&quot;Eng&quot;,&quot;value&quot;:50}]'&gt;&lt;/bc-chart-treemap&gt;
+
+  &lt;!-- bc-chart-graph --&gt;
+  &lt;bc-chart-graph chart-title=&quot;Network&quot; data='...'&gt;&lt;/bc-chart-graph&gt;
+
+  &lt;!-- bc-chart-themeriver --&gt;
+  &lt;bc-chart-themeriver chart-title=&quot;Trend&quot; data='...'&gt;&lt;/bc-chart-themeriver&gt;
+
+  &lt;!-- bc-chart-parallel --&gt;
+  &lt;bc-chart-parallel chart-title=&quot;Multi&quot; data='...'&gt;&lt;/bc-chart-parallel&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-chart-bar --&gt;
+&lt;bc-chart-bar chart-title=&quot;Sales&quot; data='[{&quot;name&quot;:&quot;Q1&quot;,&quot;value&quot;:120}]'&gt;&lt;/bc-chart-bar&gt;
+
+&lt;!-- bc-chart-line --&gt;
+&lt;bc-chart-line chart-title=&quot;Trend&quot; data='[{&quot;name&quot;:&quot;Jan&quot;,&quot;value&quot;:100}]' smooth&gt;&lt;/bc-chart-line&gt;
+
+&lt;!-- bc-chart-area --&gt;
+&lt;bc-chart-area chart-title=&quot;Traffic&quot; data='[{&quot;name&quot;:&quot;Mon&quot;,&quot;value&quot;:820}]'&gt;&lt;/bc-chart-area&gt;
+
+&lt;!-- bc-chart-pie --&gt;
+&lt;bc-chart-pie chart-title=&quot;Share&quot; data='[{&quot;name&quot;:&quot;A&quot;,&quot;value&quot;:60}]' donut&gt;&lt;/bc-chart-pie&gt;
+
+&lt;!-- bc-chart-scatter --&gt;
+&lt;bc-chart-scatter chart-title=&quot;Correlation&quot; data='[[10,8],[8,7]]'&gt;&lt;/bc-chart-scatter&gt;
+
+&lt;!-- bc-chart-radar --&gt;
+&lt;bc-chart-radar chart-title=&quot;Skills&quot; data='[{&quot;name&quot;:&quot;Speed&quot;,&quot;value&quot;:80}]'&gt;&lt;/bc-chart-radar&gt;
+
+&lt;!-- bc-chart-gauge --&gt;
+&lt;bc-chart-gauge chart-title=&quot;CPU&quot; value=&quot;72&quot; max=&quot;100&quot;&gt;&lt;/bc-chart-gauge&gt;
+
+&lt;!-- bc-chart-funnel --&gt;
+&lt;bc-chart-funnel chart-title=&quot;Pipeline&quot; data='[{&quot;name&quot;:&quot;Leads&quot;,&quot;value&quot;:100}]'&gt;&lt;/bc-chart-funnel&gt;
+
+&lt;!-- bc-chart-heatmap --&gt;
+&lt;bc-chart-heatmap chart-title=&quot;Activity&quot; data='[[0,0,5],[0,1,8]]'&gt;&lt;/bc-chart-heatmap&gt;
+
+&lt;!-- bc-chart-candlestick --&gt;
+&lt;bc-chart-candlestick chart-title=&quot;Stock&quot; data='[[&quot;2024-01&quot;,100,120,90,110]]'&gt;&lt;/bc-chart-candlestick&gt;
+
+&lt;!-- bc-chart-boxplot --&gt;
+&lt;bc-chart-boxplot chart-title=&quot;Dist&quot; data='[[1,2,3,4,5]]'&gt;&lt;/bc-chart-boxplot&gt;
+
+&lt;!-- bc-chart-sankey --&gt;
+&lt;bc-chart-sankey chart-title=&quot;Flow&quot; data='...'&gt;&lt;/bc-chart-sankey&gt;
+
+&lt;!-- bc-chart-treemap --&gt;
+&lt;bc-chart-treemap chart-title=&quot;Budget&quot; data='[{&quot;name&quot;:&quot;Eng&quot;,&quot;value&quot;:50}]'&gt;&lt;/bc-chart-treemap&gt;
+
+&lt;!-- bc-chart-graph --&gt;
+&lt;bc-chart-graph chart-title=&quot;Network&quot; data='...'&gt;&lt;/bc-chart-graph&gt;
+
+&lt;!-- bc-chart-themeriver --&gt;
+&lt;bc-chart-themeriver chart-title=&quot;Trend&quot; data='...'&gt;&lt;/bc-chart-themeriver&gt;
+
+&lt;!-- bc-chart-parallel --&gt;
+&lt;bc-chart-parallel chart-title=&quot;Multi&quot; data='...'&gt;&lt;/bc-chart-parallel&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Datatable</div>
+
+  <div class="demo-section" id="datatable">
+    <h2><code>bc-datatable</code></h2>
+    <p class="desc">Full-featured data table with sorting, filtering, pagination, and row selection.</p>
+    <div class="demo-box">
+      <bc-datatable model="contact" columns='[{"field":"name","label":"Name","sortable":true},{"field":"email","label":"Email","sortable":true},{"field":"company","label":"Company","sortable":true},{"field":"city","label":"City","sortable":true},{"field":"status","label":"Status","sortable":true,"filterable":true}]' view-title="Contacts"></bc-datatable>
+    </div>
+  </div>
+
+  <div class="demo-section" id="child-table">
+    <h2><code>bc-child-table</code></h2>
+    <p class="desc">Inline editable child/one2many table.</p>
+    <div class="demo-box">
+      <bc-child-table field="items" columns='[{"key":"product","label":"Product"},{"key":"qty","label":"Qty","type":"number"},{"key":"price","label":"Price","type":"number"}]' data='[{"product":"Widget A","qty":2,"price":10.50},{"product":"Widget B","qty":1,"price":25.00}]'></bc-child-table>
+    </div>
+  </div>
+
+  <div class="demo-section" id="filter-panel">
+    <h2><code>bc-filter-panel</code></h2>
+    <div class="demo-box">
+      <bc-filter-panel categories='[{"name":"Status","options":[{"label":"Active","value":"active","count":12},{"label":"Inactive","value":"inactive","count":5}]},{"name":"Type","options":[{"label":"Customer","value":"customer","count":8},{"label":"Vendor","value":"vendor","count":9}]}]' placeholder="Filter..."></bc-filter-panel>
+    </div>
+  </div>
+
+  <div class="demo-section" id="filter-bar">
+    <h2><code>bc-filter-bar</code></h2>
+    <div class="demo-box">
+      <bc-filter-bar presets='[{"label":"All","value":"all"},{"label":"Active","value":"active"},{"label":"This Month","value":"month"}]' placeholder="Quick filter..."></bc-filter-bar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="filter-builder">
+    <h2><code>bc-filter-builder</code></h2>
+    <p class="desc">Advanced query builder with AND/OR groups.</p>
+    <div class="demo-box">
+      <bc-filter-builder fields='[{"key":"name","label":"Name","type":"string"},{"key":"age","label":"Age","type":"number"},{"key":"status","label":"Status","type":"select"}]' show-json-toggle></bc-filter-builder>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DIALOGS -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (5 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 5 components — Vanilla HTML --&gt;
+&lt;!-- bc-datatable --&gt;
+&lt;bc-datatable model=&quot;contact&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;},{&quot;field&quot;:&quot;email&quot;,&quot;label&quot;:&quot;Email&quot;}]'&gt;&lt;/bc-datatable&gt;
+
+&lt;!-- bc-child-table --&gt;
+&lt;bc-child-table model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-child-table&gt;
+
+&lt;!-- bc-filter-panel --&gt;
+&lt;bc-filter-panel fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-panel&gt;
+
+&lt;!-- bc-filter-bar --&gt;
+&lt;bc-filter-bar fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-bar&gt;
+
+&lt;!-- bc-filter-builder --&gt;
+&lt;bc-filter-builder fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-builder&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-datatable, @bitcode/components/bc-child-table, @bitcode/components/bc-filter-panel, @bitcode/components/bc-filter-bar, @bitcode/components/bc-filter-builder';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-datatable */}
+      &lt;bc-datatable model=&quot;contact&quot; columns={[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;},{&quot;field&quot;:&quot;email&quot;,&quot;label&quot;:&quot;Email&quot;}]}&gt;&lt;/bc-datatable&gt;
+
+      {/* bc-child-table */}
+      &lt;bc-child-table model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;email&quot;]}&gt;&lt;/bc-child-table&gt;
+
+      {/* bc-filter-panel */}
+      &lt;bc-filter-panel fields={[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]}&gt;&lt;/bc-filter-panel&gt;
+
+      {/* bc-filter-bar */}
+      &lt;bc-filter-bar fields={[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]}&gt;&lt;/bc-filter-bar&gt;
+
+      {/* bc-filter-builder */}
+      &lt;bc-filter-builder fields={[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]}&gt;&lt;/bc-filter-builder&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-datatable --&gt;
+  &lt;bc-datatable model=&quot;contact&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;},{&quot;field&quot;:&quot;email&quot;,&quot;label&quot;:&quot;Email&quot;}]'&gt;&lt;/bc-datatable&gt;
+
+  &lt;!-- bc-child-table --&gt;
+  &lt;bc-child-table model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-child-table&gt;
+
+  &lt;!-- bc-filter-panel --&gt;
+  &lt;bc-filter-panel fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-panel&gt;
+
+  &lt;!-- bc-filter-bar --&gt;
+  &lt;bc-filter-bar fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-bar&gt;
+
+  &lt;!-- bc-filter-builder --&gt;
+  &lt;bc-filter-builder fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-builder&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-datatable --&gt;
+&lt;bc-datatable model=&quot;contact&quot; columns='[{&quot;field&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;},{&quot;field&quot;:&quot;email&quot;,&quot;label&quot;:&quot;Email&quot;}]'&gt;&lt;/bc-datatable&gt;
+
+&lt;!-- bc-child-table --&gt;
+&lt;bc-child-table model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-child-table&gt;
+
+&lt;!-- bc-filter-panel --&gt;
+&lt;bc-filter-panel fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-panel&gt;
+
+&lt;!-- bc-filter-bar --&gt;
+&lt;bc-filter-bar fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-bar&gt;
+
+&lt;!-- bc-filter-builder --&gt;
+&lt;bc-filter-builder fields='[{&quot;key&quot;:&quot;name&quot;,&quot;label&quot;:&quot;Name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-filter-builder&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Dialogs</div>
+
+  <div class="demo-section" id="dialog-modal">
+    <h2><code>bc-dialog-modal</code></h2>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-modal').open=true">Open Modal</button>
+      <bc-dialog-modal id="d-modal" dialog-title="Demo Modal">
+        <p style="padding:1rem">Modal content. Click X or overlay to close.</p>
+      </bc-dialog-modal>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-confirm">
+    <h2><code>bc-dialog-confirm</code></h2>
+    <p class="desc">Confirmation dialog with 4 variants: default, danger, warning, info.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <button type="button" class="demo-btn" onclick="document.getElementById('d-confirm').open=true">Default</button>
+        <button type="button" class="demo-btn" style="border-color:#ef4444;color:#ef4444" onclick="document.getElementById('d-confirm-d').open=true">Danger</button>
+        <button type="button" class="demo-btn" style="border-color:#f59e0b;color:#f59e0b" onclick="document.getElementById('d-confirm-w').open=true">Warning</button>
+        <button type="button" class="demo-btn" style="border-color:#3b82f6;color:#3b82f6" onclick="document.getElementById('d-confirm-i').open=true">Info</button>
+      </div>
+      <bc-dialog-confirm id="d-confirm" dialog-title="Confirm" message="Are you sure?" confirm-text="Yes" cancel-text="No"></bc-dialog-confirm>
+      <bc-dialog-confirm id="d-confirm-d" dialog-title="Delete?" message="This cannot be undone." variant="danger" confirm-text="Delete" cancel-text="Cancel"></bc-dialog-confirm>
+      <bc-dialog-confirm id="d-confirm-w" dialog-title="Warning" message="Proceed with caution." variant="warning" confirm-text="Continue" cancel-text="Go Back"></bc-dialog-confirm>
+      <bc-dialog-confirm id="d-confirm-i" dialog-title="Information" message="This action requires confirmation." variant="info" confirm-text="Got it" cancel-text="Cancel"></bc-dialog-confirm>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-alert">
+    <h2><code>bc-dialog-alert</code></h2>
+    <p class="desc">Alert dialog with 5 variants: default, success, danger, warning, info.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <button type="button" class="demo-btn" onclick="document.getElementById('d-alert').open=true">Default</button>
+        <button type="button" class="demo-btn" style="border-color:#10b981;color:#10b981" onclick="document.getElementById('d-alert-s').open=true">Success</button>
+        <button type="button" class="demo-btn" style="border-color:#ef4444;color:#ef4444" onclick="document.getElementById('d-alert-d').open=true">Danger</button>
+        <button type="button" class="demo-btn" style="border-color:#f59e0b;color:#f59e0b" onclick="document.getElementById('d-alert-w').open=true">Warning</button>
+        <button type="button" class="demo-btn" style="border-color:#3b82f6;color:#3b82f6" onclick="document.getElementById('d-alert-i').open=true">Info</button>
+      </div>
+      <bc-dialog-alert id="d-alert" dialog-title="Notice" message="This is a default alert."></bc-dialog-alert>
+      <bc-dialog-alert id="d-alert-s" dialog-title="Success!" message="Operation completed successfully." variant="success"></bc-dialog-alert>
+      <bc-dialog-alert id="d-alert-d" dialog-title="Error" message="Something went wrong." variant="danger"></bc-dialog-alert>
+      <bc-dialog-alert id="d-alert-w" dialog-title="Warning" message="Please review before proceeding." variant="warning"></bc-dialog-alert>
+      <bc-dialog-alert id="d-alert-i" dialog-title="Information" message="Here is some useful information." variant="info"></bc-dialog-alert>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-prompt">
+    <h2><code>bc-dialog-prompt</code></h2>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-prompt').open=true">Open Prompt</button>
+      <bc-dialog-prompt id="d-prompt" dialog-title="Enter Name" message="What is your name?" placeholder="John Doe"></bc-dialog-prompt>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-wizard">
+    <h2><code>bc-dialog-wizard</code></h2>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-wizard').open=true">Open Wizard</button>
+      <bc-dialog-wizard id="d-wizard" dialog-title="Setup Wizard" steps='["Account","Profile","Confirm"]'>
+        <div data-step="0" style="padding:1rem">Step 1: Account details</div>
+        <div data-step="1" style="padding:1rem">Step 2: Profile info</div>
+        <div data-step="2" style="padding:1rem">Step 3: Confirm</div>
+      </bc-dialog-wizard>
+    </div>
+  </div>
+
+  <div class="demo-section" id="dialog-quickentry">
+    <h2><code>bc-dialog-quickentry</code></h2>
+    <p class="desc">Quick record creation dialog with auto-generated form.</p>
+    <div class="demo-box">
+      <button type="button" class="demo-btn" onclick="document.getElementById('d-quick').open=true">Quick Entry</button>
+      <bc-dialog-quickentry id="d-quick" dialog-title="New Contact" model="contact" fields='["name","email","phone","company","city"]'></bc-dialog-quickentry>
+    </div>
+  </div>
+
+  <div class="demo-section" id="toast">
+    <h2><code>bc-toast</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <button type="button" class="demo-btn" style="border-color:#10b981;color:#10b981" onclick="showToast('success','Done!')">Success</button>
+        <button type="button" class="demo-btn" style="border-color:#ef4444;color:#ef4444" onclick="showToast('error','Failed!')">Error</button>
+        <button type="button" class="demo-btn" style="border-color:#f59e0b;color:#f59e0b" onclick="showToast('warning','Check input')">Warning</button>
+        <button type="button" class="demo-btn" style="border-color:#3b82f6;color:#3b82f6" onclick="showToast('info','FYI')">Info</button>
+      </div>
+      <bc-toast id="d-toast" duration="3000"></bc-toast>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
   <!-- LAYOUT -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (7 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 7 components — Vanilla HTML --&gt;
+&lt;!-- bc-dialog-modal --&gt;
+&lt;bc-dialog-modal dialog-title=&quot;Confirm&quot; open&gt;Content here&lt;/bc-dialog-modal&gt;
+
+&lt;!-- bc-dialog-confirm --&gt;
+&lt;bc-dialog-confirm dialog-title=&quot;Delete?&quot; message=&quot;Are you sure?&quot;&gt;&lt;/bc-dialog-confirm&gt;
+
+&lt;!-- bc-dialog-alert --&gt;
+&lt;bc-dialog-alert dialog-title=&quot;Info&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-dialog-alert&gt;
+
+&lt;!-- bc-dialog-prompt --&gt;
+&lt;bc-dialog-prompt dialog-title=&quot;Name&quot; message=&quot;Enter name:&quot; value=&quot;&quot;&gt;&lt;/bc-dialog-prompt&gt;
+
+&lt;!-- bc-dialog-wizard --&gt;
+&lt;bc-dialog-wizard dialog-title=&quot;Setup&quot; steps='[{&quot;title&quot;:&quot;Step 1&quot;},{&quot;title&quot;:&quot;Step 2&quot;}]'&gt;&lt;/bc-dialog-wizard&gt;
+
+&lt;!-- bc-dialog-quickentry --&gt;
+&lt;bc-dialog-quickentry dialog-title=&quot;New&quot; model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-dialog-quickentry&gt;
+
+&lt;!-- bc-toast --&gt;
+&lt;bc-toast variant=&quot;success&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-toast&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-dialog-modal, @bitcode/components/bc-dialog-confirm, @bitcode/components/bc-dialog-alert, @bitcode/components/bc-dialog-prompt, @bitcode/components/bc-dialog-wizard, @bitcode/components/bc-dialog-quickentry, @bitcode/components/bc-toast';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-dialog-modal */}
+      &lt;bc-dialog-modal dialogTitle=&quot;Confirm&quot; open={true}&gt;Content here&lt;/bc-dialog-modal&gt;
+
+      {/* bc-dialog-confirm */}
+      &lt;bc-dialog-confirm dialogTitle=&quot;Delete?&quot; message=&quot;Are you sure?&quot;&gt;&lt;/bc-dialog-confirm&gt;
+
+      {/* bc-dialog-alert */}
+      &lt;bc-dialog-alert dialogTitle=&quot;Info&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-dialog-alert&gt;
+
+      {/* bc-dialog-prompt */}
+      &lt;bc-dialog-prompt dialogTitle=&quot;Name&quot; message=&quot;Enter name:&quot; value=&quot;&quot;&gt;&lt;/bc-dialog-prompt&gt;
+
+      {/* bc-dialog-wizard */}
+      &lt;bc-dialog-wizard dialogTitle=&quot;Setup&quot; steps={[{&quot;title&quot;:&quot;Step 1&quot;},{&quot;title&quot;:&quot;Step 2&quot;}]}&gt;&lt;/bc-dialog-wizard&gt;
+
+      {/* bc-dialog-quickentry */}
+      &lt;bc-dialog-quickentry dialogTitle=&quot;New&quot; model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;email&quot;]}&gt;&lt;/bc-dialog-quickentry&gt;
+
+      {/* bc-toast */}
+      &lt;bc-toast variant=&quot;success&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-toast&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-dialog-modal --&gt;
+  &lt;bc-dialog-modal dialog-title=&quot;Confirm&quot; open&gt;Content here&lt;/bc-dialog-modal&gt;
+
+  &lt;!-- bc-dialog-confirm --&gt;
+  &lt;bc-dialog-confirm dialog-title=&quot;Delete?&quot; message=&quot;Are you sure?&quot;&gt;&lt;/bc-dialog-confirm&gt;
+
+  &lt;!-- bc-dialog-alert --&gt;
+  &lt;bc-dialog-alert dialog-title=&quot;Info&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-dialog-alert&gt;
+
+  &lt;!-- bc-dialog-prompt --&gt;
+  &lt;bc-dialog-prompt dialog-title=&quot;Name&quot; message=&quot;Enter name:&quot; value=&quot;&quot;&gt;&lt;/bc-dialog-prompt&gt;
+
+  &lt;!-- bc-dialog-wizard --&gt;
+  &lt;bc-dialog-wizard dialog-title=&quot;Setup&quot; steps='[{&quot;title&quot;:&quot;Step 1&quot;},{&quot;title&quot;:&quot;Step 2&quot;}]'&gt;&lt;/bc-dialog-wizard&gt;
+
+  &lt;!-- bc-dialog-quickentry --&gt;
+  &lt;bc-dialog-quickentry dialog-title=&quot;New&quot; model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-dialog-quickentry&gt;
+
+  &lt;!-- bc-toast --&gt;
+  &lt;bc-toast variant=&quot;success&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-toast&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-dialog-modal --&gt;
+&lt;bc-dialog-modal dialog-title=&quot;Confirm&quot; open&gt;Content here&lt;/bc-dialog-modal&gt;
+
+&lt;!-- bc-dialog-confirm --&gt;
+&lt;bc-dialog-confirm dialog-title=&quot;Delete?&quot; message=&quot;Are you sure?&quot;&gt;&lt;/bc-dialog-confirm&gt;
+
+&lt;!-- bc-dialog-alert --&gt;
+&lt;bc-dialog-alert dialog-title=&quot;Info&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-dialog-alert&gt;
+
+&lt;!-- bc-dialog-prompt --&gt;
+&lt;bc-dialog-prompt dialog-title=&quot;Name&quot; message=&quot;Enter name:&quot; value=&quot;&quot;&gt;&lt;/bc-dialog-prompt&gt;
+
+&lt;!-- bc-dialog-wizard --&gt;
+&lt;bc-dialog-wizard dialog-title=&quot;Setup&quot; steps='[{&quot;title&quot;:&quot;Step 1&quot;},{&quot;title&quot;:&quot;Step 2&quot;}]'&gt;&lt;/bc-dialog-wizard&gt;
+
+&lt;!-- bc-dialog-quickentry --&gt;
+&lt;bc-dialog-quickentry dialog-title=&quot;New&quot; model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-dialog-quickentry&gt;
+
+&lt;!-- bc-toast --&gt;
+&lt;bc-toast variant=&quot;success&quot; message=&quot;Saved!&quot;&gt;&lt;/bc-toast&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Layout</div>
+
   <div class="demo-section" id="section">
     <h2><code>bc-section</code></h2>
     <div class="demo-box">
-      <bc-section section-title="Collapsible Section" description="Click to toggle" collapsible>
-        <p style="padding:1rem">Section content here. Can be collapsed.</p>
+      <bc-section section-title="Collapsible" description="Click to toggle" collapsible>
+        <p style="padding:1rem">Collapsible content.</p>
       </bc-section>
     </div>
   </div>
@@ -395,93 +2009,1345 @@
     <h2><code>bc-tabs</code></h2>
     <div class="demo-box">
       <bc-tabs>
-        <bc-tab label="Tab 1"><div style="padding:1rem">Content of Tab 1</div></bc-tab>
-        <bc-tab label="Tab 2"><div style="padding:1rem">Content of Tab 2</div></bc-tab>
-        <bc-tab label="Tab 3"><div style="padding:1rem">Content of Tab 3</div></bc-tab>
+        <bc-tab label="Tab 1"><div style="padding:1rem">Tab 1 content</div></bc-tab>
+        <bc-tab label="Tab 2"><div style="padding:1rem">Tab 2 content</div></bc-tab>
+        <bc-tab label="Tab 3"><div style="padding:1rem">Tab 3 content</div></bc-tab>
       </bc-tabs>
     </div>
   </div>
 
-  <!-- DIALOGS -->
-  <div class="demo-section" id="dialog">
-    <h2><code>bc-dialog-modal</code></h2>
+  <div class="demo-section" id="row">
+    <h2><code>bc-row</code></h2>
     <div class="demo-box">
-      <button type="button" onclick="document.getElementById('demo-modal').open=true" style="padding:0.5rem 1rem;border:1px solid #e5e7eb;border-radius:0.375rem;cursor:pointer">Open Modal</button>
-      <bc-dialog-modal id="demo-modal" dialog-title="Demo Modal">
-        <p style="padding:1rem">This is modal content. Click X or overlay to close.</p>
-      </bc-dialog-modal>
+      <bc-row gap="md">
+        <div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">Col 1</div>
+        <div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">Col 2</div>
+        <div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">Col 3</div>
+      </bc-row>
     </div>
   </div>
 
-  <div class="demo-section" id="toast">
-    <h2><code>bc-toast</code></h2>
+  <div class="demo-section" id="column">
+    <h2><code>bc-column</code></h2>
     <div class="demo-box">
-      <div class="demo-row">
-        <button type="button" onclick="showToast('success','Operation completed!')" style="padding:0.5rem 1rem;border:1px solid #10b981;border-radius:0.375rem;color:#10b981;cursor:pointer">Success Toast</button>
-        <button type="button" onclick="showToast('error','Something went wrong!')" style="padding:0.5rem 1rem;border:1px solid #ef4444;border-radius:0.375rem;color:#ef4444;cursor:pointer">Error Toast</button>
-        <button type="button" onclick="showToast('warning','Please check your input')" style="padding:0.5rem 1rem;border:1px solid #f59e0b;border-radius:0.375rem;color:#f59e0b;cursor:pointer">Warning Toast</button>
+      <bc-row gap="md">
+        <bc-column width="4"><div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">4/12</div></bc-column>
+        <bc-column width="8"><div style="background:var(--bc-bg-tertiary,#f3f4f6);padding:1rem;border-radius:0.25rem">8/12</div></bc-column>
+      </bc-row>
+    </div>
+  </div>
+
+  <div class="demo-section" id="header">
+    <h2><code>bc-header</code></h2>
+    <div class="demo-box">
+      <bc-header buttons='[{"label":"Edit","icon":"edit"},{"label":"Delete","icon":"delete"}]' states='[{"label":"Draft","value":"draft"},{"label":"Confirmed","value":"confirmed"},{"label":"Done","value":"done"}]' status-value="confirmed"></bc-header>
+    </div>
+  </div>
+
+  <div class="demo-section" id="sheet">
+    <h2><code>bc-sheet</code></h2>
+    <div class="demo-box">
+      <bc-sheet>
+        <p style="padding:1rem">Card-like container with slot content.</p>
+      </bc-sheet>
+    </div>
+  </div>
+
+  <div class="demo-section" id="separator">
+    <h2><code>bc-separator</code></h2>
+    <div class="demo-box">
+      <p>Content above</p>
+      <bc-separator label="OR"></bc-separator>
+      <p>Content below</p>
+    </div>
+  </div>
+
+  <div class="demo-section" id="html-block">
+    <h2><code>bc-html-block</code></h2>
+    <div class="demo-box">
+      <bc-html-block content="<h4 style='color:var(--bc-primary)'>Dynamic HTML</h4><p>Rendered from string.</p>"></bc-html-block>
+    </div>
+  </div>
+
+  <div class="demo-section" id="button-box">
+    <h2><code>bc-button-box</code></h2>
+    <p class="desc">Odoo-style smart buttons with count badges.</p>
+    <div class="demo-box">
+      <bc-button-box buttons='[{"label":"Contacts","icon":"person","count":42},{"label":"Opportunities","icon":"star","count":7},{"label":"Meetings","icon":"calendar","count":3}]'></bc-button-box>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- MEDIA -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (10 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 10 components — Vanilla HTML --&gt;
+&lt;!-- bc-section --&gt;
+&lt;bc-section title=&quot;Section Title&quot;&gt;Content&lt;/bc-section&gt;
+
+&lt;!-- bc-tabs --&gt;
+&lt;bc-tabs&gt;&lt;bc-tab label=&quot;Tab 1&quot;&gt;Content 1&lt;/bc-tab&gt;&lt;bc-tab label=&quot;Tab 2&quot;&gt;Content 2&lt;/bc-tab&gt;&lt;/bc-tabs&gt;
+
+&lt;!-- bc-tab --&gt;
+&lt;bc-tab label=&quot;Tab Content&quot;&gt;Panel content here&lt;/bc-tab&gt;
+
+&lt;!-- bc-row --&gt;
+&lt;bc-row gap=&quot;1rem&quot;&gt;&lt;div&gt;Col 1&lt;/div&gt;&lt;div&gt;Col 2&lt;/div&gt;&lt;/bc-row&gt;
+
+&lt;!-- bc-column --&gt;
+&lt;bc-column width=&quot;50%&quot;&gt;Half-width column&lt;/bc-column&gt;
+
+&lt;!-- bc-header --&gt;
+&lt;bc-header title=&quot;Page Title&quot; subtitle=&quot;Description&quot;&gt;&lt;/bc-header&gt;
+
+&lt;!-- bc-sheet --&gt;
+&lt;bc-sheet title=&quot;Card Title&quot;&gt;Card content&lt;/bc-sheet&gt;
+
+&lt;!-- bc-separator --&gt;
+&lt;bc-separator&gt;&lt;/bc-separator&gt;
+
+&lt;!-- bc-html-block --&gt;
+&lt;bc-html-block content=&quot;&lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Text&lt;/p&gt;&quot;&gt;&lt;/bc-html-block&gt;
+
+&lt;!-- bc-button-box --&gt;
+&lt;bc-button-box&gt;&lt;button&gt;Action&lt;/button&gt;&lt;/bc-button-box&gt;</code></pre>
       </div>
-      <bc-toast id="demo-toast" duration="3000"></bc-toast>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-section, @bitcode/components/bc-tabs, @bitcode/components/bc-tab, @bitcode/components/bc-row, @bitcode/components/bc-column, @bitcode/components/bc-header, @bitcode/components/bc-sheet, @bitcode/components/bc-separator, @bitcode/components/bc-html-block, @bitcode/components/bc-button-box';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-section */}
+      &lt;bc-section title=&quot;Section Title&quot;&gt;Content&lt;/bc-section&gt;
+
+      {/* bc-tabs */}
+      &lt;bc-tabs&gt;&lt;bc-tab label=&quot;Tab 1&quot;&gt;Content 1&lt;/bc-tab&gt;&lt;bc-tab label=&quot;Tab 2&quot;&gt;Content 2&lt;/bc-tab&gt;&lt;/bc-tabs&gt;
+
+      {/* bc-tab */}
+      &lt;bc-tab label=&quot;Tab Content&quot;&gt;Panel content here&lt;/bc-tab&gt;
+
+      {/* bc-row */}
+      &lt;bc-row gap=&quot;1rem&quot;&gt;&lt;div&gt;Col 1&lt;/div&gt;&lt;div&gt;Col 2&lt;/div&gt;&lt;/bc-row&gt;
+
+      {/* bc-column */}
+      &lt;bc-column width=&quot;50%&quot;&gt;Half-width column&lt;/bc-column&gt;
+
+      {/* bc-header */}
+      &lt;bc-header title=&quot;Page Title&quot; subtitle=&quot;Description&quot;&gt;&lt;/bc-header&gt;
+
+      {/* bc-sheet */}
+      &lt;bc-sheet title=&quot;Card Title&quot;&gt;Card content&lt;/bc-sheet&gt;
+
+      {/* bc-separator */}
+      &lt;bc-separator&gt;&lt;/bc-separator&gt;
+
+      {/* bc-html-block */}
+      &lt;bc-html-block content=&quot;&lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Text&lt;/p&gt;&quot;&gt;&lt;/bc-html-block&gt;
+
+      {/* bc-button-box */}
+      &lt;bc-button-box&gt;&lt;button&gt;Action&lt;/button&gt;&lt;/bc-button-box&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-section --&gt;
+  &lt;bc-section title=&quot;Section Title&quot;&gt;Content&lt;/bc-section&gt;
+
+  &lt;!-- bc-tabs --&gt;
+  &lt;bc-tabs&gt;&lt;bc-tab label=&quot;Tab 1&quot;&gt;Content 1&lt;/bc-tab&gt;&lt;bc-tab label=&quot;Tab 2&quot;&gt;Content 2&lt;/bc-tab&gt;&lt;/bc-tabs&gt;
+
+  &lt;!-- bc-tab --&gt;
+  &lt;bc-tab label=&quot;Tab Content&quot;&gt;Panel content here&lt;/bc-tab&gt;
+
+  &lt;!-- bc-row --&gt;
+  &lt;bc-row gap=&quot;1rem&quot;&gt;&lt;div&gt;Col 1&lt;/div&gt;&lt;div&gt;Col 2&lt;/div&gt;&lt;/bc-row&gt;
+
+  &lt;!-- bc-column --&gt;
+  &lt;bc-column width=&quot;50%&quot;&gt;Half-width column&lt;/bc-column&gt;
+
+  &lt;!-- bc-header --&gt;
+  &lt;bc-header title=&quot;Page Title&quot; subtitle=&quot;Description&quot;&gt;&lt;/bc-header&gt;
+
+  &lt;!-- bc-sheet --&gt;
+  &lt;bc-sheet title=&quot;Card Title&quot;&gt;Card content&lt;/bc-sheet&gt;
+
+  &lt;!-- bc-separator --&gt;
+  &lt;bc-separator&gt;&lt;/bc-separator&gt;
+
+  &lt;!-- bc-html-block --&gt;
+  &lt;bc-html-block content=&quot;&lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Text&lt;/p&gt;&quot;&gt;&lt;/bc-html-block&gt;
+
+  &lt;!-- bc-button-box --&gt;
+  &lt;bc-button-box&gt;&lt;button&gt;Action&lt;/button&gt;&lt;/bc-button-box&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-section --&gt;
+&lt;bc-section title=&quot;Section Title&quot;&gt;Content&lt;/bc-section&gt;
+
+&lt;!-- bc-tabs --&gt;
+&lt;bc-tabs&gt;&lt;bc-tab label=&quot;Tab 1&quot;&gt;Content 1&lt;/bc-tab&gt;&lt;bc-tab label=&quot;Tab 2&quot;&gt;Content 2&lt;/bc-tab&gt;&lt;/bc-tabs&gt;
+
+&lt;!-- bc-tab --&gt;
+&lt;bc-tab label=&quot;Tab Content&quot;&gt;Panel content here&lt;/bc-tab&gt;
+
+&lt;!-- bc-row --&gt;
+&lt;bc-row gap=&quot;1rem&quot;&gt;&lt;div&gt;Col 1&lt;/div&gt;&lt;div&gt;Col 2&lt;/div&gt;&lt;/bc-row&gt;
+
+&lt;!-- bc-column --&gt;
+&lt;bc-column width=&quot;50%&quot;&gt;Half-width column&lt;/bc-column&gt;
+
+&lt;!-- bc-header --&gt;
+&lt;bc-header title=&quot;Page Title&quot; subtitle=&quot;Description&quot;&gt;&lt;/bc-header&gt;
+
+&lt;!-- bc-sheet --&gt;
+&lt;bc-sheet title=&quot;Card Title&quot;&gt;Card content&lt;/bc-sheet&gt;
+
+&lt;!-- bc-separator --&gt;
+&lt;bc-separator&gt;&lt;/bc-separator&gt;
+
+&lt;!-- bc-html-block --&gt;
+&lt;bc-html-block content=&quot;&lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Text&lt;/p&gt;&quot;&gt;&lt;/bc-html-block&gt;
+
+&lt;!-- bc-button-box --&gt;
+&lt;bc-button-box&gt;&lt;button&gt;Action&lt;/button&gt;&lt;/bc-button-box&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Media Viewers</div>
+
+  <div class="demo-section" id="viewer-pdf">
+    <h2><code>bc-viewer-pdf</code></h2>
+    <div class="demo-box">
+      <bc-viewer-pdf src="https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf" height="400px"></bc-viewer-pdf>
     </div>
   </div>
 
-  <!-- WIDGETS -->
-  <div class="demo-section" id="badge">
-    <h2><code>bc-widget-badge</code></h2>
+  <div class="demo-section" id="viewer-image">
+    <h2><code>bc-viewer-image</code></h2>
     <div class="demo-box">
       <div class="demo-row">
-        <bc-widget-badge value="Active" variant="success"></bc-widget-badge>
-        <bc-widget-badge value="Pending" variant="warning"></bc-widget-badge>
-        <bc-widget-badge value="Closed" variant="danger"></bc-widget-badge>
-        <bc-widget-badge value="Draft" variant="secondary"></bc-widget-badge>
+        <bc-viewer-image src="https://picsum.photos/400/300" alt="Random image" zoomable></bc-viewer-image>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="viewer-video">
+    <h2><code>bc-viewer-video</code></h2>
+    <div class="demo-box">
+      <bc-viewer-video src="https://www.w3schools.com/html/mov_bbb.mp4" controls height="300px"></bc-viewer-video>
+    </div>
+  </div>
+
+  <div class="demo-section" id="viewer-audio">
+    <h2><code>bc-viewer-audio</code></h2>
+    <div class="demo-box">
+      <bc-viewer-audio src="https://www.w3schools.com/html/horse.mp3" controls></bc-viewer-audio>
+    </div>
+  </div>
+
+  <div class="demo-section" id="viewer-document">
+    <h2><code>bc-viewer-document</code></h2>
+    <p class="desc">Document viewer using Office Online or Google Docs viewer. Requires a publicly accessible document URL.</p>
+    <div class="demo-box">
+      <bc-viewer-document src="https://calibre-ebook.com/downloads/demos/demo.docx" provider="google" height="400px" download></bc-viewer-document>
+    </div>
+  </div>
+
+  <div class="demo-section" id="viewer-youtube">
+    <h2><code>bc-viewer-youtube</code></h2>
+    <div class="demo-box">
+      <bc-viewer-youtube src="https://www.youtube.com/watch?v=jNQXAC9IVRw" height="300px"></bc-viewer-youtube>
+    </div>
+  </div>
+
+  <div class="demo-section" id="viewer-instagram">
+    <h2><code>bc-viewer-instagram</code></h2>
+    <p class="desc">Instagram embed via oEmbed.</p>
+    <div class="demo-box">
+      <bc-viewer-instagram src="https://www.instagram.com/p/EXAMPLE/"></bc-viewer-instagram>
+    </div>
+  </div>
+
+  <div class="demo-section" id="viewer-tiktok">
+    <h2><code>bc-viewer-tiktok</code></h2>
+    <p class="desc">TikTok video embed.</p>
+    <div class="demo-box">
+      <bc-viewer-tiktok src="https://www.tiktok.com/@example/video/123"></bc-viewer-tiktok>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- VIEWS -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (8 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 8 components — Vanilla HTML --&gt;
+&lt;!-- bc-viewer-pdf --&gt;
+&lt;bc-viewer-pdf src=&quot;/files/doc.pdf&quot;&gt;&lt;/bc-viewer-pdf&gt;
+
+&lt;!-- bc-viewer-image --&gt;
+&lt;bc-viewer-image src=&quot;/files/photo.jpg&quot; thumbnail&gt;&lt;/bc-viewer-image&gt;
+
+&lt;!-- bc-viewer-video --&gt;
+&lt;bc-viewer-video src=&quot;/files/clip.mp4&quot;&gt;&lt;/bc-viewer-video&gt;
+
+&lt;!-- bc-viewer-audio --&gt;
+&lt;bc-viewer-audio src=&quot;/files/podcast.mp3&quot;&gt;&lt;/bc-viewer-audio&gt;
+
+&lt;!-- bc-viewer-document --&gt;
+&lt;bc-viewer-document src=&quot;/files/report.docx&quot;&gt;&lt;/bc-viewer-document&gt;
+
+&lt;!-- bc-viewer-youtube --&gt;
+&lt;bc-viewer-youtube video-id=&quot;dQw4w9WgXcQ&quot;&gt;&lt;/bc-viewer-youtube&gt;
+
+&lt;!-- bc-viewer-instagram --&gt;
+&lt;bc-viewer-instagram post-url=&quot;https://instagram.com/p/xxx&quot;&gt;&lt;/bc-viewer-instagram&gt;
+
+&lt;!-- bc-viewer-tiktok --&gt;
+&lt;bc-viewer-tiktok video-url=&quot;https://tiktok.com/@x/video/123&quot;&gt;&lt;/bc-viewer-tiktok&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-viewer-pdf, @bitcode/components/bc-viewer-image, @bitcode/components/bc-viewer-video, @bitcode/components/bc-viewer-audio, @bitcode/components/bc-viewer-document, @bitcode/components/bc-viewer-youtube, @bitcode/components/bc-viewer-instagram, @bitcode/components/bc-viewer-tiktok';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-viewer-pdf */}
+      &lt;bc-viewer-pdf src=&quot;/files/doc.pdf&quot;&gt;&lt;/bc-viewer-pdf&gt;
+
+      {/* bc-viewer-image */}
+      &lt;bc-viewer-image src=&quot;/files/photo.jpg&quot; thumbnail={true}&gt;&lt;/bc-viewer-image&gt;
+
+      {/* bc-viewer-video */}
+      &lt;bc-viewer-video src=&quot;/files/clip.mp4&quot;&gt;&lt;/bc-viewer-video&gt;
+
+      {/* bc-viewer-audio */}
+      &lt;bc-viewer-audio src=&quot;/files/podcast.mp3&quot;&gt;&lt;/bc-viewer-audio&gt;
+
+      {/* bc-viewer-document */}
+      &lt;bc-viewer-document src=&quot;/files/report.docx&quot;&gt;&lt;/bc-viewer-document&gt;
+
+      {/* bc-viewer-youtube */}
+      &lt;bc-viewer-youtube videoId=&quot;dQw4w9WgXcQ&quot;&gt;&lt;/bc-viewer-youtube&gt;
+
+      {/* bc-viewer-instagram */}
+      &lt;bc-viewer-instagram postUrl=&quot;https://instagram.com/p/xxx&quot;&gt;&lt;/bc-viewer-instagram&gt;
+
+      {/* bc-viewer-tiktok */}
+      &lt;bc-viewer-tiktok videoUrl=&quot;https://tiktok.com/@x/video/123&quot;&gt;&lt;/bc-viewer-tiktok&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-viewer-pdf --&gt;
+  &lt;bc-viewer-pdf src=&quot;/files/doc.pdf&quot;&gt;&lt;/bc-viewer-pdf&gt;
+
+  &lt;!-- bc-viewer-image --&gt;
+  &lt;bc-viewer-image src=&quot;/files/photo.jpg&quot; thumbnail&gt;&lt;/bc-viewer-image&gt;
+
+  &lt;!-- bc-viewer-video --&gt;
+  &lt;bc-viewer-video src=&quot;/files/clip.mp4&quot;&gt;&lt;/bc-viewer-video&gt;
+
+  &lt;!-- bc-viewer-audio --&gt;
+  &lt;bc-viewer-audio src=&quot;/files/podcast.mp3&quot;&gt;&lt;/bc-viewer-audio&gt;
+
+  &lt;!-- bc-viewer-document --&gt;
+  &lt;bc-viewer-document src=&quot;/files/report.docx&quot;&gt;&lt;/bc-viewer-document&gt;
+
+  &lt;!-- bc-viewer-youtube --&gt;
+  &lt;bc-viewer-youtube video-id=&quot;dQw4w9WgXcQ&quot;&gt;&lt;/bc-viewer-youtube&gt;
+
+  &lt;!-- bc-viewer-instagram --&gt;
+  &lt;bc-viewer-instagram post-url=&quot;https://instagram.com/p/xxx&quot;&gt;&lt;/bc-viewer-instagram&gt;
+
+  &lt;!-- bc-viewer-tiktok --&gt;
+  &lt;bc-viewer-tiktok video-url=&quot;https://tiktok.com/@x/video/123&quot;&gt;&lt;/bc-viewer-tiktok&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-viewer-pdf --&gt;
+&lt;bc-viewer-pdf src=&quot;/files/doc.pdf&quot;&gt;&lt;/bc-viewer-pdf&gt;
+
+&lt;!-- bc-viewer-image --&gt;
+&lt;bc-viewer-image src=&quot;/files/photo.jpg&quot; thumbnail&gt;&lt;/bc-viewer-image&gt;
+
+&lt;!-- bc-viewer-video --&gt;
+&lt;bc-viewer-video src=&quot;/files/clip.mp4&quot;&gt;&lt;/bc-viewer-video&gt;
+
+&lt;!-- bc-viewer-audio --&gt;
+&lt;bc-viewer-audio src=&quot;/files/podcast.mp3&quot;&gt;&lt;/bc-viewer-audio&gt;
+
+&lt;!-- bc-viewer-document --&gt;
+&lt;bc-viewer-document src=&quot;/files/report.docx&quot;&gt;&lt;/bc-viewer-document&gt;
+
+&lt;!-- bc-viewer-youtube --&gt;
+&lt;bc-viewer-youtube video-id=&quot;dQw4w9WgXcQ&quot;&gt;&lt;/bc-viewer-youtube&gt;
+
+&lt;!-- bc-viewer-instagram --&gt;
+&lt;bc-viewer-instagram post-url=&quot;https://instagram.com/p/xxx&quot;&gt;&lt;/bc-viewer-instagram&gt;
+
+&lt;!-- bc-viewer-tiktok --&gt;
+&lt;bc-viewer-tiktok video-url=&quot;https://tiktok.com/@x/video/123&quot;&gt;&lt;/bc-viewer-tiktok&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Views</div>
+
+  <div class="demo-section" id="view-list">
+    <h2><code>bc-view-list</code></h2>
+    <p class="desc">Paginated list/table view with sorting and search.</p>
+    <div class="demo-box">
+      <bc-view-list model="contact" view-title="Contacts" fields='["name","email","company","city","status"]'></bc-view-list>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-form">
+    <h2><code>bc-view-form</code></h2>
+    <p class="desc">Auto-generated form with CRUD and permissions.</p>
+    <div class="demo-box">
+      <bc-view-form model="contact" view-title="Contact" fields='["name","email","phone","company","city","status"]'></bc-view-form>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-kanban">
+    <h2><code>bc-view-kanban</code></h2>
+    <p class="desc">Simple kanban view. Drag cards between columns.</p>
+    <div class="demo-box">
+      <bc-view-kanban model="lead" view-title="Sales Pipeline" fields='["name","partner","expected_revenue","probability","user"]' config='{"group_by":"stage"}'></bc-view-kanban>
+    </div>
+  </div>
+
+  <div class="demo-section" id="kanban-board">
+    <h2><code>bc-kanban-board</code> <span class="badge">Enterprise</span></h2>
+    <p class="desc">Full-featured kanban board with Trello/Jira-level features. Click cards to see detail panel with comments, subtasks, attachments, and activity. Drag cards and columns to reorder. Add new cards and columns.</p>
+    <div class="demo-box">
+      <bc-kanban-board
+        model="kb_card"
+        board-title="Project Alpha — Sprint Board"
+        group-by="stage"
+        card-title-field="name"
+        card-description-field="description"
+        card-priority-field="priority"
+        card-assignees-field="assignees"
+        card-due-date-field="due_date"
+        card-labels-field="labels"
+        columns-config='[{"id":"todo","name":"To Do","color":"#6b7280"},{"id":"in_progress","name":"In Progress","color":"#f59e0b"},{"id":"review","name":"Review","color":"#3b82f6"},{"id":"done","name":"Done","color":"#10b981"}]'
+        comment-model="kb_comment"
+        activity-model="kb_activity"
+        mention-model="kb_user"
+        allow-add-column="true"
+        allow-add-card="true"
+        allow-rename-column="true"
+        allow-delete-column="true"
+        allow-reorder-columns="true"
+      ></bc-kanban-board>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-calendar">
+    <h2><code>bc-view-calendar</code></h2>
+    <p class="desc">Calendar view using FullCalendar.</p>
+    <div class="demo-box">
+      <bc-view-calendar model="event" view-title="Events" fields='["name","start","end"]' date-field="start" title-field="name"></bc-view-calendar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-gantt">
+    <h2><code>bc-view-gantt</code></h2>
+    <p class="desc">Full-featured Gantt chart with tree hierarchy, drag-and-drop, dependencies, and multi-scale timeline.</p>
+    <div class="demo-box">
+      <bc-view-gantt view-title="Project Timeline" height="420px" config='{"open_tree_initially":true,"show_progress":true,"drag_move":true,"drag_resize":true,"drag_progress":true,"grid_width":280,"row_height":34}' tasks='[{"id":"p1","text":"Phase 1 — Planning","start_date":"2025-12-01","end_date":"2025-12-10","progress":1,"parent":"0","type":"project"},{"id":"t1","text":"Requirements Gathering","start_date":"2025-12-01","end_date":"2025-12-05","progress":1,"parent":"p1"},{"id":"t2","text":"System Design","start_date":"2025-12-04","end_date":"2025-12-10","progress":1,"parent":"p1"},{"id":"p2","text":"Phase 2 — Development","start_date":"2025-12-08","end_date":"2025-12-22","progress":0.45,"parent":"0","type":"project","color":"#3b82f6"},{"id":"t3","text":"Backend Development","start_date":"2025-12-08","end_date":"2025-12-20","progress":0.65,"parent":"p2"},{"id":"t4","text":"Frontend Development","start_date":"2025-12-10","end_date":"2025-12-22","progress":0.4,"parent":"p2"},{"id":"t5","text":"API Integration","start_date":"2025-12-15","end_date":"2025-12-22","progress":0.2,"parent":"p2"},{"id":"p3","text":"Phase 3 — Delivery","start_date":"2025-12-20","end_date":"2026-01-05","progress":0,"parent":"0","type":"project","color":"#10b981"},{"id":"t6","text":"Testing & QA","start_date":"2025-12-20","end_date":"2025-12-28","progress":0,"parent":"p3"},{"id":"t7","text":"Go Live","start_date":"2025-12-31","end_date":"2025-12-31","progress":0,"parent":"p3","type":"milestone"},{"id":"t8","text":"User Training","start_date":"2026-01-02","end_date":"2026-01-05","progress":0,"parent":"p3"}]' links='[{"id":"l1","source":"t1","target":"t2","type":"0"},{"id":"l2","source":"t2","target":"t3","type":"0"},{"id":"l3","source":"t3","target":"t5","type":"0"},{"id":"l4","source":"t4","target":"t6","type":"0"},{"id":"l5","source":"t5","target":"t6","type":"0"},{"id":"l6","source":"t6","target":"t7","type":"0"}]' columns='[{"name":"text","label":"Task","tree":true,"width":180},{"name":"start_date","label":"Start","align":"center","width":90},{"name":"duration","label":"Days","align":"center","width":60}]' scales='[{"unit":"month","step":1,"format":"%M %Y"},{"unit":"day","step":1,"format":"%d"}]'></bc-view-gantt>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-map">
+    <h2><code>bc-view-map</code></h2>
+    <p class="desc">Map view using Leaflet markers.</p>
+    <div class="demo-box">
+      <bc-view-map model="branch" view-title="Office Locations" fields='["name","location","address","manager"]' geo-field="location" name-field="name"></bc-view-map>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-tree">
+    <h2><code>bc-view-tree</code></h2>
+    <p class="desc">Hierarchical tree view.</p>
+    <div class="demo-box">
+      <bc-view-tree model="category" view-title="Product Categories" fields='["name","parent_id"]' parent-field="parent_id"></bc-view-tree>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-report">
+    <h2><code>bc-view-report</code></h2>
+    <p class="desc">Report view with totals and grouping.</p>
+    <div class="demo-box">
+      <bc-view-report model="sale" view-title="Sales Report" fields='["name","product","customer","region","quantity","unit_price","amount","date"]'></bc-view-report>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-editor">
+    <h2><code>bc-view-editor</code></h2>
+    <p class="desc">Visual drag-and-drop view editor for building form layouts.</p>
+    <div class="demo-box">
+      <bc-view-editor model-fields='[{"name":"name","type":"string"},{"name":"email","type":"string"},{"name":"phone","type":"string"},{"name":"company","type":"string"},{"name":"city","type":"string"},{"name":"status","type":"select"},{"name":"notes","type":"text"},{"name":"revenue","type":"number"},{"name":"active","type":"boolean"},{"name":"birthday","type":"date"}]' view-json='{"layout":[{"section":{"title":"Contact Info","collapsible":true},"rows":[{"row":[{"field":"name","width":6},{"field":"email","width":6}]},{"row":[{"field":"phone","width":4},{"field":"company","width":4},{"field":"city","width":4}]}]},{"section":{"title":"Details","collapsible":true},"rows":[{"row":[{"field":"status","width":3},{"field":"revenue","width":3},{"field":"active","width":3},{"field":"birthday","width":3}]}]},{"rows":[{"row":[{"field":"notes","width":12}]}]}]}'></bc-view-editor>
+    </div>
+  </div>
+
+  <div class="demo-section" id="view-activity">
+    <h2><code>bc-view-activity</code></h2>
+    <p class="desc">Activity log for a model.</p>
+    <div class="demo-box">
+      <bc-view-activity model="contact" view-title="Activity Log" fields='["name","description","user","created_at"]'></bc-view-activity>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- WIDGETS -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (10 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 10 components — Vanilla HTML --&gt;
+&lt;!-- bc-view-list --&gt;
+&lt;bc-view-list model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-view-list&gt;
+
+&lt;!-- bc-view-form --&gt;
+&lt;bc-view-form model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]'&gt;&lt;/bc-view-form&gt;
+
+&lt;!-- bc-view-kanban --&gt;
+&lt;bc-view-kanban model=&quot;lead&quot; fields='[&quot;name&quot;,&quot;stage&quot;]'&gt;&lt;/bc-view-kanban&gt;
+
+&lt;!-- bc-view-calendar --&gt;
+&lt;bc-view-calendar model=&quot;event&quot; fields='[&quot;name&quot;,&quot;start&quot;,&quot;end&quot;]'&gt;&lt;/bc-view-calendar&gt;
+
+&lt;!-- bc-view-gantt --&gt;
+&lt;bc-view-gantt tasks='[{&quot;id&quot;:&quot;1&quot;,&quot;text&quot;:&quot;Task 1&quot;,&quot;start&quot;:&quot;2024-01-01&quot;,&quot;duration&quot;:5}]'&gt;&lt;/bc-view-gantt&gt;
+
+&lt;!-- bc-view-map --&gt;
+&lt;bc-view-map model=&quot;branch&quot; fields='[&quot;name&quot;,&quot;lat&quot;,&quot;lng&quot;]'&gt;&lt;/bc-view-map&gt;
+
+&lt;!-- bc-view-tree --&gt;
+&lt;bc-view-tree model=&quot;category&quot; fields='[&quot;name&quot;,&quot;parent&quot;]'&gt;&lt;/bc-view-tree&gt;
+
+&lt;!-- bc-view-report --&gt;
+&lt;bc-view-report model=&quot;sale&quot; fields='[&quot;name&quot;,&quot;amount&quot;]'&gt;&lt;/bc-view-report&gt;
+
+&lt;!-- bc-view-editor --&gt;
+&lt;bc-view-editor model-fields='[{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-view-editor&gt;
+
+&lt;!-- bc-view-activity --&gt;
+&lt;bc-view-activity model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;desc&quot;]'&gt;&lt;/bc-view-activity&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-view-list, @bitcode/components/bc-view-form, @bitcode/components/bc-view-kanban, @bitcode/components/bc-view-calendar, @bitcode/components/bc-view-gantt, @bitcode/components/bc-view-map, @bitcode/components/bc-view-tree, @bitcode/components/bc-view-report, @bitcode/components/bc-view-editor, @bitcode/components/bc-view-activity';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-view-list */}
+      &lt;bc-view-list model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;email&quot;]}&gt;&lt;/bc-view-list&gt;
+
+      {/* bc-view-form */}
+      &lt;bc-view-form model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]}&gt;&lt;/bc-view-form&gt;
+
+      {/* bc-view-kanban */}
+      &lt;bc-view-kanban model=&quot;lead&quot; fields={[&quot;name&quot;,&quot;stage&quot;]}&gt;&lt;/bc-view-kanban&gt;
+
+      {/* bc-view-calendar */}
+      &lt;bc-view-calendar model=&quot;event&quot; fields={[&quot;name&quot;,&quot;start&quot;,&quot;end&quot;]}&gt;&lt;/bc-view-calendar&gt;
+
+      {/* bc-view-gantt */}
+      &lt;bc-view-gantt tasks={[{&quot;id&quot;:&quot;1&quot;,&quot;text&quot;:&quot;Task 1&quot;,&quot;start&quot;:&quot;2024-01-01&quot;,&quot;duration&quot;:5}]}&gt;&lt;/bc-view-gantt&gt;
+
+      {/* bc-view-map */}
+      &lt;bc-view-map model=&quot;branch&quot; fields={[&quot;name&quot;,&quot;lat&quot;,&quot;lng&quot;]}&gt;&lt;/bc-view-map&gt;
+
+      {/* bc-view-tree */}
+      &lt;bc-view-tree model=&quot;category&quot; fields={[&quot;name&quot;,&quot;parent&quot;]}&gt;&lt;/bc-view-tree&gt;
+
+      {/* bc-view-report */}
+      &lt;bc-view-report model=&quot;sale&quot; fields={[&quot;name&quot;,&quot;amount&quot;]}&gt;&lt;/bc-view-report&gt;
+
+      {/* bc-view-editor */}
+      &lt;bc-view-editor modelFields={[{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;}]}&gt;&lt;/bc-view-editor&gt;
+
+      {/* bc-view-activity */}
+      &lt;bc-view-activity model=&quot;contact&quot; fields={[&quot;name&quot;,&quot;desc&quot;]}&gt;&lt;/bc-view-activity&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-view-list --&gt;
+  &lt;bc-view-list model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-view-list&gt;
+
+  &lt;!-- bc-view-form --&gt;
+  &lt;bc-view-form model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]'&gt;&lt;/bc-view-form&gt;
+
+  &lt;!-- bc-view-kanban --&gt;
+  &lt;bc-view-kanban model=&quot;lead&quot; fields='[&quot;name&quot;,&quot;stage&quot;]'&gt;&lt;/bc-view-kanban&gt;
+
+  &lt;!-- bc-view-calendar --&gt;
+  &lt;bc-view-calendar model=&quot;event&quot; fields='[&quot;name&quot;,&quot;start&quot;,&quot;end&quot;]'&gt;&lt;/bc-view-calendar&gt;
+
+  &lt;!-- bc-view-gantt --&gt;
+  &lt;bc-view-gantt tasks='[{&quot;id&quot;:&quot;1&quot;,&quot;text&quot;:&quot;Task 1&quot;,&quot;start&quot;:&quot;2024-01-01&quot;,&quot;duration&quot;:5}]'&gt;&lt;/bc-view-gantt&gt;
+
+  &lt;!-- bc-view-map --&gt;
+  &lt;bc-view-map model=&quot;branch&quot; fields='[&quot;name&quot;,&quot;lat&quot;,&quot;lng&quot;]'&gt;&lt;/bc-view-map&gt;
+
+  &lt;!-- bc-view-tree --&gt;
+  &lt;bc-view-tree model=&quot;category&quot; fields='[&quot;name&quot;,&quot;parent&quot;]'&gt;&lt;/bc-view-tree&gt;
+
+  &lt;!-- bc-view-report --&gt;
+  &lt;bc-view-report model=&quot;sale&quot; fields='[&quot;name&quot;,&quot;amount&quot;]'&gt;&lt;/bc-view-report&gt;
+
+  &lt;!-- bc-view-editor --&gt;
+  &lt;bc-view-editor model-fields='[{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-view-editor&gt;
+
+  &lt;!-- bc-view-activity --&gt;
+  &lt;bc-view-activity model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;desc&quot;]'&gt;&lt;/bc-view-activity&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-view-list --&gt;
+&lt;bc-view-list model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;]'&gt;&lt;/bc-view-list&gt;
+
+&lt;!-- bc-view-form --&gt;
+&lt;bc-view-form model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]'&gt;&lt;/bc-view-form&gt;
+
+&lt;!-- bc-view-kanban --&gt;
+&lt;bc-view-kanban model=&quot;lead&quot; fields='[&quot;name&quot;,&quot;stage&quot;]'&gt;&lt;/bc-view-kanban&gt;
+
+&lt;!-- bc-view-calendar --&gt;
+&lt;bc-view-calendar model=&quot;event&quot; fields='[&quot;name&quot;,&quot;start&quot;,&quot;end&quot;]'&gt;&lt;/bc-view-calendar&gt;
+
+&lt;!-- bc-view-gantt --&gt;
+&lt;bc-view-gantt tasks='[{&quot;id&quot;:&quot;1&quot;,&quot;text&quot;:&quot;Task 1&quot;,&quot;start&quot;:&quot;2024-01-01&quot;,&quot;duration&quot;:5}]'&gt;&lt;/bc-view-gantt&gt;
+
+&lt;!-- bc-view-map --&gt;
+&lt;bc-view-map model=&quot;branch&quot; fields='[&quot;name&quot;,&quot;lat&quot;,&quot;lng&quot;]'&gt;&lt;/bc-view-map&gt;
+
+&lt;!-- bc-view-tree --&gt;
+&lt;bc-view-tree model=&quot;category&quot; fields='[&quot;name&quot;,&quot;parent&quot;]'&gt;&lt;/bc-view-tree&gt;
+
+&lt;!-- bc-view-report --&gt;
+&lt;bc-view-report model=&quot;sale&quot; fields='[&quot;name&quot;,&quot;amount&quot;]'&gt;&lt;/bc-view-report&gt;
+
+&lt;!-- bc-view-editor --&gt;
+&lt;bc-view-editor model-fields='[{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:&quot;string&quot;}]'&gt;&lt;/bc-view-editor&gt;
+
+&lt;!-- bc-view-activity --&gt;
+&lt;bc-view-activity model=&quot;contact&quot; fields='[&quot;name&quot;,&quot;desc&quot;]'&gt;&lt;/bc-view-activity&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Widgets</div>
+
+  <div class="demo-section" id="badge">
+    <h2><code>bc-badge</code></h2>
+    <p class="desc">Inline badge/tag with color variants.</p>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-badge value="Active" variant="success"></bc-badge>
+        <bc-badge value="Pending" variant="warning"></bc-badge>
+        <bc-badge value="Closed" variant="danger"></bc-badge>
+        <bc-badge value="Draft" variant="secondary"></bc-badge>
+        <bc-badge value="New" variant="info"></bc-badge>
       </div>
     </div>
   </div>
 
   <div class="demo-section" id="progress">
-    <h2><code>bc-widget-progress</code></h2>
+    <h2><code>bc-progress</code></h2>
+    <p class="desc">Progress bar with percentage display.</p>
     <div class="demo-box">
-      <bc-widget-progress value="65" max="100"></bc-widget-progress>
+      <bc-progress value="65" max="100"></bc-progress>
     </div>
   </div>
+
+  <div class="demo-section" id="priority">
+    <h2><code>bc-priority</code></h2>
+    <div class="demo-box">
+      <div class="demo-row">
+        <bc-priority value="3" label="High"></bc-priority>
+        <bc-priority value="2" label="Medium"></bc-priority>
+        <bc-priority value="1" label="Low"></bc-priority>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" id="handle">
+    <h2><code>bc-handle</code></h2>
+    <p class="desc">Drag handle for reordering.</p>
+    <div class="demo-box">
+      <bc-handle></bc-handle>
+    </div>
+  </div>
+
+  <div class="demo-section" id="copy">
+    <h2><code>bc-copy</code></h2>
+    <div class="demo-box">
+      <bc-copy value="https://bitcode.dev/docs/getting-started"></bc-copy>
+    </div>
+  </div>
+
+  <div class="demo-section" id="url">
+    <h2><code>bc-url</code></h2>
+    <div class="demo-box">
+      <bc-url value="https://bitcode.dev"></bc-url>
+    </div>
+  </div>
+
+  <div class="demo-section" id="email">
+    <h2><code>bc-email</code></h2>
+    <div class="demo-box">
+      <bc-email value="hello@bitcode.dev"></bc-email>
+    </div>
+  </div>
+
+  <div class="demo-section" id="phone">
+    <h2><code>bc-phone</code></h2>
+    <div class="demo-box">
+      <bc-phone value="+6281234567890"></bc-phone>
+    </div>
+  </div>
+
+  <div class="demo-section" id="domain">
+    <h2><code>bc-domain</code></h2>
+    <p class="desc">Domain filter builder display.</p>
+    <div class="demo-box">
+      <bc-domain value='[["status","=","active"]]'></bc-domain>
+    </div>
+  </div>
+
+  <div class="demo-section" id="statusbar">
+    <h2><code>bc-statusbar</code></h2>
+    <div class="demo-box">
+      <bc-statusbar states='[{"label":"Draft","value":"draft"},{"label":"Review","value":"review"},{"label":"Approved","value":"approved"},{"label":"Published","value":"published"}]' value="review"></bc-statusbar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="placeholder">
+    <h2><code>bc-placeholder</code></h2>
+    <div class="demo-box">
+      <bc-placeholder text="No data available"></bc-placeholder>
+    </div>
+  </div>
+
+  <div class="demo-section" id="sync-status">
+    <h2><code>bc-sync-status</code></h2>
+    <p class="desc">Offline sync status indicator.</p>
+    <div class="demo-box">
+      <bc-sync-status compact></bc-sync-status>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PRINT -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (12 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 12 components — Vanilla HTML --&gt;
+&lt;!-- bc-badge --&gt;
+&lt;bc-badge value=&quot;Active&quot; variant=&quot;success&quot;&gt;&lt;/bc-badge&gt;
+
+&lt;!-- bc-progress --&gt;
+&lt;bc-progress value=&quot;65&quot; max=&quot;100&quot;&gt;&lt;/bc-progress&gt;
+
+&lt;!-- bc-priority --&gt;
+&lt;bc-priority value=&quot;3&quot; label=&quot;High&quot;&gt;&lt;/bc-priority&gt;
+
+&lt;!-- bc-handle --&gt;
+&lt;bc-handle&gt;&lt;/bc-handle&gt;
+
+&lt;!-- bc-copy --&gt;
+&lt;bc-copy value=&quot;https://example.com&quot;&gt;&lt;/bc-copy&gt;
+
+&lt;!-- bc-url --&gt;
+&lt;bc-url value=&quot;https://example.com&quot;&gt;&lt;/bc-url&gt;
+
+&lt;!-- bc-email --&gt;
+&lt;bc-email value=&quot;hello@example.com&quot;&gt;&lt;/bc-email&gt;
+
+&lt;!-- bc-phone --&gt;
+&lt;bc-phone value=&quot;+6281234567890&quot;&gt;&lt;/bc-phone&gt;
+
+&lt;!-- bc-domain --&gt;
+&lt;bc-domain value='[[&quot;status&quot;,&quot;=&quot;,&quot;active&quot;]]'&gt;&lt;/bc-domain&gt;
+
+&lt;!-- bc-statusbar --&gt;
+&lt;bc-statusbar states='[{&quot;label&quot;:&quot;Draft&quot;,&quot;value&quot;:&quot;draft&quot;}]' value=&quot;draft&quot;&gt;&lt;/bc-statusbar&gt;
+
+&lt;!-- bc-placeholder --&gt;
+&lt;bc-placeholder text=&quot;No data&quot;&gt;&lt;/bc-placeholder&gt;
+
+&lt;!-- bc-sync-status --&gt;
+&lt;bc-sync-status compact&gt;&lt;/bc-sync-status&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-badge, @bitcode/components/bc-progress, @bitcode/components/bc-priority, @bitcode/components/bc-handle, @bitcode/components/bc-copy, @bitcode/components/bc-url, @bitcode/components/bc-email, @bitcode/components/bc-phone, @bitcode/components/bc-domain, @bitcode/components/bc-statusbar, @bitcode/components/bc-placeholder, @bitcode/components/bc-sync-status';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-badge */}
+      &lt;bc-badge value=&quot;Active&quot; variant=&quot;success&quot;&gt;&lt;/bc-badge&gt;
+
+      {/* bc-progress */}
+      &lt;bc-progress value=&quot;65&quot; max=&quot;100&quot;&gt;&lt;/bc-progress&gt;
+
+      {/* bc-priority */}
+      &lt;bc-priority value=&quot;3&quot; label=&quot;High&quot;&gt;&lt;/bc-priority&gt;
+
+      {/* bc-handle */}
+      &lt;bc-handle&gt;&lt;/bc-handle&gt;
+
+      {/* bc-copy */}
+      &lt;bc-copy value=&quot;https://example.com&quot;&gt;&lt;/bc-copy&gt;
+
+      {/* bc-url */}
+      &lt;bc-url value=&quot;https://example.com&quot;&gt;&lt;/bc-url&gt;
+
+      {/* bc-email */}
+      &lt;bc-email value=&quot;hello@example.com&quot;&gt;&lt;/bc-email&gt;
+
+      {/* bc-phone */}
+      &lt;bc-phone value=&quot;+6281234567890&quot;&gt;&lt;/bc-phone&gt;
+
+      {/* bc-domain */}
+      &lt;bc-domain value={[[&quot;status&quot;,&quot;=&quot;,&quot;active&quot;]]}&gt;&lt;/bc-domain&gt;
+
+      {/* bc-statusbar */}
+      &lt;bc-statusbar states={[{&quot;label&quot;:&quot;Draft&quot;,&quot;value&quot;:&quot;draft&quot;}]} value=&quot;draft&quot;&gt;&lt;/bc-statusbar&gt;
+
+      {/* bc-placeholder */}
+      &lt;bc-placeholder text=&quot;No data&quot;&gt;&lt;/bc-placeholder&gt;
+
+      {/* bc-sync-status */}
+      &lt;bc-sync-status compact={true}&gt;&lt;/bc-sync-status&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-badge --&gt;
+  &lt;bc-badge value=&quot;Active&quot; variant=&quot;success&quot;&gt;&lt;/bc-badge&gt;
+
+  &lt;!-- bc-progress --&gt;
+  &lt;bc-progress value=&quot;65&quot; max=&quot;100&quot;&gt;&lt;/bc-progress&gt;
+
+  &lt;!-- bc-priority --&gt;
+  &lt;bc-priority value=&quot;3&quot; label=&quot;High&quot;&gt;&lt;/bc-priority&gt;
+
+  &lt;!-- bc-handle --&gt;
+  &lt;bc-handle&gt;&lt;/bc-handle&gt;
+
+  &lt;!-- bc-copy --&gt;
+  &lt;bc-copy value=&quot;https://example.com&quot;&gt;&lt;/bc-copy&gt;
+
+  &lt;!-- bc-url --&gt;
+  &lt;bc-url value=&quot;https://example.com&quot;&gt;&lt;/bc-url&gt;
+
+  &lt;!-- bc-email --&gt;
+  &lt;bc-email value=&quot;hello@example.com&quot;&gt;&lt;/bc-email&gt;
+
+  &lt;!-- bc-phone --&gt;
+  &lt;bc-phone value=&quot;+6281234567890&quot;&gt;&lt;/bc-phone&gt;
+
+  &lt;!-- bc-domain --&gt;
+  &lt;bc-domain value='[[&quot;status&quot;,&quot;=&quot;,&quot;active&quot;]]'&gt;&lt;/bc-domain&gt;
+
+  &lt;!-- bc-statusbar --&gt;
+  &lt;bc-statusbar states='[{&quot;label&quot;:&quot;Draft&quot;,&quot;value&quot;:&quot;draft&quot;}]' value=&quot;draft&quot;&gt;&lt;/bc-statusbar&gt;
+
+  &lt;!-- bc-placeholder --&gt;
+  &lt;bc-placeholder text=&quot;No data&quot;&gt;&lt;/bc-placeholder&gt;
+
+  &lt;!-- bc-sync-status --&gt;
+  &lt;bc-sync-status compact&gt;&lt;/bc-sync-status&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-badge --&gt;
+&lt;bc-badge value=&quot;Active&quot; variant=&quot;success&quot;&gt;&lt;/bc-badge&gt;
+
+&lt;!-- bc-progress --&gt;
+&lt;bc-progress value=&quot;65&quot; max=&quot;100&quot;&gt;&lt;/bc-progress&gt;
+
+&lt;!-- bc-priority --&gt;
+&lt;bc-priority value=&quot;3&quot; label=&quot;High&quot;&gt;&lt;/bc-priority&gt;
+
+&lt;!-- bc-handle --&gt;
+&lt;bc-handle&gt;&lt;/bc-handle&gt;
+
+&lt;!-- bc-copy --&gt;
+&lt;bc-copy value=&quot;https://example.com&quot;&gt;&lt;/bc-copy&gt;
+
+&lt;!-- bc-url --&gt;
+&lt;bc-url value=&quot;https://example.com&quot;&gt;&lt;/bc-url&gt;
+
+&lt;!-- bc-email --&gt;
+&lt;bc-email value=&quot;hello@example.com&quot;&gt;&lt;/bc-email&gt;
+
+&lt;!-- bc-phone --&gt;
+&lt;bc-phone value=&quot;+6281234567890&quot;&gt;&lt;/bc-phone&gt;
+
+&lt;!-- bc-domain --&gt;
+&lt;bc-domain value='[[&quot;status&quot;,&quot;=&quot;,&quot;active&quot;]]'&gt;&lt;/bc-domain&gt;
+
+&lt;!-- bc-statusbar --&gt;
+&lt;bc-statusbar states='[{&quot;label&quot;:&quot;Draft&quot;,&quot;value&quot;:&quot;draft&quot;}]' value=&quot;draft&quot;&gt;&lt;/bc-statusbar&gt;
+
+&lt;!-- bc-placeholder --&gt;
+&lt;bc-placeholder text=&quot;No data&quot;&gt;&lt;/bc-placeholder&gt;
+
+&lt;!-- bc-sync-status --&gt;
+&lt;bc-sync-status compact&gt;&lt;/bc-sync-status&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Print</div>
+
+  <div class="demo-section" id="print">
+    <h2><code>bc-print</code></h2>
+    <div class="demo-box">
+      <bc-print label="Print Invoice"></bc-print>
+    </div>
+  </div>
+
+  <div class="demo-section" id="export">
+    <h2><code>bc-export</code></h2>
+    <div class="demo-box">
+      <bc-export label="Export Excel"></bc-export>
+    </div>
+  </div>
+
+  <div class="demo-section" id="report-link">
+    <h2><code>bc-report-link</code></h2>
+    <div class="demo-box">
+      <bc-report-link label="Monthly Report"></bc-report-link>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SEARCH -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (3 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 3 components — Vanilla HTML --&gt;
+&lt;!-- bc-print --&gt;
+&lt;bc-print&gt;&lt;h1&gt;Invoice&lt;/h1&gt;&lt;p&gt;Content to print&lt;/p&gt;&lt;/bc-print&gt;
+
+&lt;!-- bc-export --&gt;
+&lt;bc-export model=&quot;contact&quot; format=&quot;csv&quot;&gt;&lt;/bc-export&gt;
+
+&lt;!-- bc-report-link --&gt;
+&lt;bc-report-link report=&quot;sales-summary&quot; title=&quot;Sales Report&quot;&gt;&lt;/bc-report-link&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-print, @bitcode/components/bc-export, @bitcode/components/bc-report-link';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-print */}
+      &lt;bc-print&gt;&lt;h1&gt;Invoice&lt;/h1&gt;&lt;p&gt;Content to print&lt;/p&gt;&lt;/bc-print&gt;
+
+      {/* bc-export */}
+      &lt;bc-export model=&quot;contact&quot; format=&quot;csv&quot;&gt;&lt;/bc-export&gt;
+
+      {/* bc-report-link */}
+      &lt;bc-report-link report=&quot;sales-summary&quot; title=&quot;Sales Report&quot;&gt;&lt;/bc-report-link&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-print --&gt;
+  &lt;bc-print&gt;&lt;h1&gt;Invoice&lt;/h1&gt;&lt;p&gt;Content to print&lt;/p&gt;&lt;/bc-print&gt;
+
+  &lt;!-- bc-export --&gt;
+  &lt;bc-export model=&quot;contact&quot; format=&quot;csv&quot;&gt;&lt;/bc-export&gt;
+
+  &lt;!-- bc-report-link --&gt;
+  &lt;bc-report-link report=&quot;sales-summary&quot; title=&quot;Sales Report&quot;&gt;&lt;/bc-report-link&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-print --&gt;
+&lt;bc-print&gt;&lt;h1&gt;Invoice&lt;/h1&gt;&lt;p&gt;Content to print&lt;/p&gt;&lt;/bc-print&gt;
+
+&lt;!-- bc-export --&gt;
+&lt;bc-export model=&quot;contact&quot; format=&quot;csv&quot;&gt;&lt;/bc-export&gt;
+
+&lt;!-- bc-report-link --&gt;
+&lt;bc-report-link report=&quot;sales-summary&quot; title=&quot;Sales Report&quot;&gt;&lt;/bc-report-link&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Search</div>
+
+  <div class="demo-section" id="search">
+    <h2><code>bc-search</code></h2>
+    <p class="desc">Search input with autocomplete suggestions from model data.</p>
+    <div class="demo-box">
+      <bc-search model="contact" placeholder="Search contacts..."></bc-search>
+    </div>
+  </div>
+
+  <div class="demo-section" id="favorites">
+    <h2><code>bc-favorites</code></h2>
+    <p class="desc">Saved filter favorites.</p>
+    <div class="demo-box">
+      <bc-favorites placeholder="Saved filters..."></bc-favorites>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SOCIAL -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (2 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 2 components — Vanilla HTML --&gt;
+&lt;!-- bc-search --&gt;
+&lt;bc-search placeholder=&quot;Search...&quot; model=&quot;contact&quot;&gt;&lt;/bc-search&gt;
+
+&lt;!-- bc-favorites --&gt;
+&lt;bc-favorites model=&quot;contact&quot;&gt;&lt;/bc-favorites&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-search, @bitcode/components/bc-favorites';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-search */}
+      &lt;bc-search placeholder=&quot;Search...&quot; model=&quot;contact&quot;&gt;&lt;/bc-search&gt;
+
+      {/* bc-favorites */}
+      &lt;bc-favorites model=&quot;contact&quot;&gt;&lt;/bc-favorites&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-search --&gt;
+  &lt;bc-search placeholder=&quot;Search...&quot; model=&quot;contact&quot;&gt;&lt;/bc-search&gt;
+
+  &lt;!-- bc-favorites --&gt;
+  &lt;bc-favorites model=&quot;contact&quot;&gt;&lt;/bc-favorites&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-search --&gt;
+&lt;bc-search placeholder=&quot;Search...&quot; model=&quot;contact&quot;&gt;&lt;/bc-search&gt;
+
+&lt;!-- bc-favorites --&gt;
+&lt;bc-favorites model=&quot;contact&quot;&gt;&lt;/bc-favorites&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
+  <div class="group-heading">Social</div>
+
+  <div class="demo-section" id="chatter">
+    <h2><code>bc-chatter</code></h2>
+    <p class="desc">Odoo-style comment feed with messages, notes, and system activity.</p>
+    <div class="demo-box">
+      <bc-chatter record-id="demo-1" model="contact"></bc-chatter>
+    </div>
+  </div>
+
+  <div class="demo-section" id="timeline">
+    <h2><code>bc-timeline</code></h2>
+    <p class="desc">Audit timeline showing field change history for a record.</p>
+    <div class="demo-box">
+      <bc-timeline record-id="demo-1" model="contact"></bc-timeline>
+    </div>
+  </div>
+
+  <div class="demo-section" id="activity">
+    <h2><code>bc-activity</code></h2>
+    <p class="desc">Activity scheduler for calls, meetings, and to-dos.</p>
+    <div class="demo-box">
+      <bc-activity record-id="demo-1" model="contact"></bc-activity>
+    </div>
+  </div>
+
+  <div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (3 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 3 components — Vanilla HTML --&gt;
+&lt;!-- bc-chatter --&gt;
+&lt;bc-chatter model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-chatter&gt;
+
+&lt;!-- bc-timeline --&gt;
+&lt;bc-timeline model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-timeline&gt;
+
+&lt;!-- bc-activity --&gt;
+&lt;bc-activity model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-activity&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-chatter, @bitcode/components/bc-timeline, @bitcode/components/bc-activity';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-chatter */}
+      &lt;bc-chatter model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-chatter&gt;
+
+      {/* bc-timeline */}
+      &lt;bc-timeline model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-timeline&gt;
+
+      {/* bc-activity */}
+      &lt;bc-activity model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-activity&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-chatter --&gt;
+  &lt;bc-chatter model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-chatter&gt;
+
+  &lt;!-- bc-timeline --&gt;
+  &lt;bc-timeline model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-timeline&gt;
+
+  &lt;!-- bc-activity --&gt;
+  &lt;bc-activity model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-activity&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-chatter --&gt;
+&lt;bc-chatter model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-chatter&gt;
+
+&lt;!-- bc-timeline --&gt;
+&lt;bc-timeline model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-timeline&gt;
+
+&lt;!-- bc-activity --&gt;
+&lt;bc-activity model=&quot;contact&quot; record-id=&quot;1&quot;&gt;&lt;/bc-activity&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>
+
 
 </main>
 
 <script>
-  function scrollTo(id) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-    document.querySelector(`.sidebar-link[data-section="${id}"]`)?.classList.add('active');
-  }
-
-  function filterSidebar(query) {
-    const q = query.toLowerCase();
-    document.querySelectorAll('.sidebar-link').forEach(link => {
-      const text = link.textContent.toLowerCase();
-      link.classList.toggle('hidden', q && !text.includes(q));
-    });
-  }
-
   function setTheme(theme) {
-    if (theme === 'system') {
-      document.documentElement.removeAttribute('data-bc-theme');
-    } else if (theme === 'light') {
-      document.documentElement.removeAttribute('data-bc-theme');
+    if (window.BcSetup) {
+      window.BcSetup.setTheme(theme);
     } else {
-      document.documentElement.setAttribute('data-bc-theme', theme);
+      if (theme === 'system') {
+        const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-bc-theme', dark ? 'dark' : 'light');
+      } else {
+        document.documentElement.setAttribute('data-bc-theme', theme);
+      }
     }
   }
 
-  function setSize(size) {
-    document.querySelectorAll('[size]').forEach(el => el.setAttribute('size', size));
+  document.getElementById('themeSelect').addEventListener('change', function() {
+    setTheme(this.value);
+  });
+
+  document.getElementById('sizeSelect').addEventListener('change', function() {
+    document.querySelectorAll('[size]').forEach(function(el) {
+      el.setAttribute('size', this.value);
+    }.bind(this));
+  });
+
+  document.querySelectorAll('.sidebar-link').forEach(function(link) {
+    link.addEventListener('click', function() {
+      var id = this.getAttribute('data-section');
+      var el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        document.querySelectorAll('.sidebar-link').forEach(function(l) { l.classList.remove('active'); });
+        this.classList.add('active');
+      }
+    });
+  });
+
+  function filterSidebar(query) {
+    var q = query.toLowerCase();
+    document.querySelectorAll('.sidebar-link').forEach(function(link) {
+      var text = link.textContent.toLowerCase();
+      if (q && !text.includes(q)) {
+        link.classList.add('hidden');
+      } else {
+        link.classList.remove('hidden');
+      }
+    });
   }
 
   function showToast(variant, message) {
-    const toast = document.getElementById('demo-toast');
+    var toast = document.getElementById('d-toast');
     toast.setAttribute('variant', variant);
     toast.setAttribute('message', message);
     toast.setAttribute('dialog-title', variant.charAt(0).toUpperCase() + variant.slice(1));
     toast.open = true;
+  }
+
+  function showFwTab(btn, fw) {
+    var container = btn.closest('.framework-examples');
+    container.querySelectorAll('.fw-tab').forEach(function(t) { t.classList.remove('active'); });
+    container.querySelectorAll('.fw-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    container.querySelector('[data-fw="' + fw + '"]').classList.add('active');
   }
 </script>
 

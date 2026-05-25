@@ -1,19 +1,25 @@
-:host {
+﻿:host {
   display: block;
 }
 
 .bc-sheet {
-  background: var(--bc-bg);
-  border-radius: var(--bc-radius-lg);
-  box-shadow: var(--bc-shadow-md);
-  padding: var(--bc-spacing-lg);
+  background: var(--bc-bg, #ffffff);
+  border-radius: var(--bc-radius-lg, 0.5rem);
+  box-shadow: var(--bc-shadow-md, 0 4px 6px rgba(0,0,0,0.1));
+  padding: var(--bc-spacing-lg, 1.5rem);
   max-width: 1200px;
   margin: 0 auto;
 }
 
+[data-bc-theme="dark"] .bc-sheet {
+  background: var(--bc-bg-secondary);
+  border: 1px solid var(--bc-border-color);
+  box-shadow: var(--bc-shadow-lg);
+}
+
 @media (max-width: 768px) {
   .bc-sheet {
-    padding: var(--bc-spacing-md);
+    padding: var(--bc-spacing-md, 1rem);
     border-radius: 0;
     box-shadow: none;
   }

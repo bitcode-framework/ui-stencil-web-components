@@ -1,0 +1,229 @@
+<div class="framework-examples">
+  <details class="fw-details">
+    <summary class="fw-summary">📦 Framework Examples (16 components)</summary>
+    <div class="fw-tabs">
+      <button class="fw-tab active" onclick="showFwTab(this, 'vanilla')">Vanilla JS</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'react')">React</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'vue')">Vue</button>
+      <button class="fw-tab" onclick="showFwTab(this, 'angular')">Angular</button>
+    </div>
+    <div class="fw-content">
+      <div class="fw-panel active" data-fw="vanilla">
+        <pre><code>&lt;!-- 16 components — Vanilla HTML --&gt;
+&lt;!-- bc-chart-bar --&gt;
+&lt;bc-chart-bar chart-title=&quot;Sales&quot; data='[{&quot;name&quot;:&quot;Q1&quot;,&quot;value&quot;:120}]'&gt;&lt;/bc-chart-bar&gt;
+
+&lt;!-- bc-chart-line --&gt;
+&lt;bc-chart-line chart-title=&quot;Trend&quot; data='[{&quot;name&quot;:&quot;Jan&quot;,&quot;value&quot;:100}]' smooth&gt;&lt;/bc-chart-line&gt;
+
+&lt;!-- bc-chart-area --&gt;
+&lt;bc-chart-area chart-title=&quot;Traffic&quot; data='[{&quot;name&quot;:&quot;Mon&quot;,&quot;value&quot;:820}]'&gt;&lt;/bc-chart-area&gt;
+
+&lt;!-- bc-chart-pie --&gt;
+&lt;bc-chart-pie chart-title=&quot;Share&quot; data='[{&quot;name&quot;:&quot;A&quot;,&quot;value&quot;:60}]' donut&gt;&lt;/bc-chart-pie&gt;
+
+&lt;!-- bc-chart-scatter --&gt;
+&lt;bc-chart-scatter chart-title=&quot;Correlation&quot; data='[[10,8],[8,7]]'&gt;&lt;/bc-chart-scatter&gt;
+
+&lt;!-- bc-chart-radar --&gt;
+&lt;bc-chart-radar chart-title=&quot;Skills&quot; data='[{&quot;name&quot;:&quot;Speed&quot;,&quot;value&quot;:80}]'&gt;&lt;/bc-chart-radar&gt;
+
+&lt;!-- bc-chart-gauge --&gt;
+&lt;bc-chart-gauge chart-title=&quot;CPU&quot; value=&quot;72&quot; max=&quot;100&quot;&gt;&lt;/bc-chart-gauge&gt;
+
+&lt;!-- bc-chart-funnel --&gt;
+&lt;bc-chart-funnel chart-title=&quot;Pipeline&quot; data='[{&quot;name&quot;:&quot;Leads&quot;,&quot;value&quot;:100}]'&gt;&lt;/bc-chart-funnel&gt;
+
+&lt;!-- bc-chart-heatmap --&gt;
+&lt;bc-chart-heatmap chart-title=&quot;Activity&quot; data='[[0,0,5],[0,1,8]]'&gt;&lt;/bc-chart-heatmap&gt;
+
+&lt;!-- bc-chart-candlestick --&gt;
+&lt;bc-chart-candlestick chart-title=&quot;Stock&quot; data='[[&quot;2024-01&quot;,100,120,90,110]]'&gt;&lt;/bc-chart-candlestick&gt;
+
+&lt;!-- bc-chart-boxplot --&gt;
+&lt;bc-chart-boxplot chart-title=&quot;Dist&quot; data='[[1,2,3,4,5]]'&gt;&lt;/bc-chart-boxplot&gt;
+
+&lt;!-- bc-chart-sankey --&gt;
+&lt;bc-chart-sankey chart-title=&quot;Flow&quot; data='...'&gt;&lt;/bc-chart-sankey&gt;
+
+&lt;!-- bc-chart-treemap --&gt;
+&lt;bc-chart-treemap chart-title=&quot;Budget&quot; data='[{&quot;name&quot;:&quot;Eng&quot;,&quot;value&quot;:50}]'&gt;&lt;/bc-chart-treemap&gt;
+
+&lt;!-- bc-chart-graph --&gt;
+&lt;bc-chart-graph chart-title=&quot;Network&quot; data='...'&gt;&lt;/bc-chart-graph&gt;
+
+&lt;!-- bc-chart-themeriver --&gt;
+&lt;bc-chart-themeriver chart-title=&quot;Trend&quot; data='...'&gt;&lt;/bc-chart-themeriver&gt;
+
+&lt;!-- bc-chart-parallel --&gt;
+&lt;bc-chart-parallel chart-title=&quot;Multi&quot; data='...'&gt;&lt;/bc-chart-parallel&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="react">
+        <pre><code>import '@bitcode/components/bc-chart-bar, @bitcode/components/bc-chart-line, @bitcode/components/bc-chart-area, @bitcode/components/bc-chart-pie, @bitcode/components/bc-chart-scatter, @bitcode/components/bc-chart-radar, @bitcode/components/bc-chart-gauge, @bitcode/components/bc-chart-funnel, @bitcode/components/bc-chart-heatmap, @bitcode/components/bc-chart-candlestick, @bitcode/components/bc-chart-boxplot, @bitcode/components/bc-chart-sankey, @bitcode/components/bc-chart-treemap, @bitcode/components/bc-chart-graph, @bitcode/components/bc-chart-themeriver, @bitcode/components/bc-chart-parallel';
+// All bc-* tags work as JSX — they're standard Web Components
+// Set props via attributes or ref
+
+export default function Demo() {
+  return (
+    &lt;&gt;
+      {/* bc-chart-bar */}
+      &lt;bc-chart-bar chartTitle=&quot;Sales&quot; data={[{&quot;name&quot;:&quot;Q1&quot;,&quot;value&quot;:120}]}&gt;&lt;/bc-chart-bar&gt;
+
+      {/* bc-chart-line */}
+      &lt;bc-chart-line chartTitle=&quot;Trend&quot; data={[{&quot;name&quot;:&quot;Jan&quot;,&quot;value&quot;:100}]} smooth={true}&gt;&lt;/bc-chart-line&gt;
+
+      {/* bc-chart-area */}
+      &lt;bc-chart-area chartTitle=&quot;Traffic&quot; data={[{&quot;name&quot;:&quot;Mon&quot;,&quot;value&quot;:820}]}&gt;&lt;/bc-chart-area&gt;
+
+      {/* bc-chart-pie */}
+      &lt;bc-chart-pie chartTitle=&quot;Share&quot; data={[{&quot;name&quot;:&quot;A&quot;,&quot;value&quot;:60}]} donut={true}&gt;&lt;/bc-chart-pie&gt;
+
+      {/* bc-chart-scatter */}
+      &lt;bc-chart-scatter chartTitle=&quot;Correlation&quot; data={[[10,8],[8,7]]}&gt;&lt;/bc-chart-scatter&gt;
+
+      {/* bc-chart-radar */}
+      &lt;bc-chart-radar chartTitle=&quot;Skills&quot; data={[{&quot;name&quot;:&quot;Speed&quot;,&quot;value&quot;:80}]}&gt;&lt;/bc-chart-radar&gt;
+
+      {/* bc-chart-gauge */}
+      &lt;bc-chart-gauge chartTitle=&quot;CPU&quot; value=&quot;72&quot; max=&quot;100&quot;&gt;&lt;/bc-chart-gauge&gt;
+
+      {/* bc-chart-funnel */}
+      &lt;bc-chart-funnel chartTitle=&quot;Pipeline&quot; data={[{&quot;name&quot;:&quot;Leads&quot;,&quot;value&quot;:100}]}&gt;&lt;/bc-chart-funnel&gt;
+
+      {/* bc-chart-heatmap */}
+      &lt;bc-chart-heatmap chartTitle=&quot;Activity&quot; data={[[0,0,5],[0,1,8]]}&gt;&lt;/bc-chart-heatmap&gt;
+
+      {/* bc-chart-candlestick */}
+      &lt;bc-chart-candlestick chartTitle=&quot;Stock&quot; data={[[&quot;2024-01&quot;,100,120,90,110]]}&gt;&lt;/bc-chart-candlestick&gt;
+
+      {/* bc-chart-boxplot */}
+      &lt;bc-chart-boxplot chartTitle=&quot;Dist&quot; data={[[1,2,3,4,5]]}&gt;&lt;/bc-chart-boxplot&gt;
+
+      {/* bc-chart-sankey */}
+      &lt;bc-chart-sankey chartTitle=&quot;Flow&quot; data=&quot;...&quot;&gt;&lt;/bc-chart-sankey&gt;
+
+      {/* bc-chart-treemap */}
+      &lt;bc-chart-treemap chartTitle=&quot;Budget&quot; data={[{&quot;name&quot;:&quot;Eng&quot;,&quot;value&quot;:50}]}&gt;&lt;/bc-chart-treemap&gt;
+
+      {/* bc-chart-graph */}
+      &lt;bc-chart-graph chartTitle=&quot;Network&quot; data=&quot;...&quot;&gt;&lt;/bc-chart-graph&gt;
+
+      {/* bc-chart-themeriver */}
+      &lt;bc-chart-themeriver chartTitle=&quot;Trend&quot; data=&quot;...&quot;&gt;&lt;/bc-chart-themeriver&gt;
+
+      {/* bc-chart-parallel */}
+      &lt;bc-chart-parallel chartTitle=&quot;Multi&quot; data=&quot;...&quot;&gt;&lt;/bc-chart-parallel&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="vue">
+        <pre><code>&lt;template&gt;
+  &lt;!-- bc-chart-bar --&gt;
+  &lt;bc-chart-bar chart-title=&quot;Sales&quot; data='[{&quot;name&quot;:&quot;Q1&quot;,&quot;value&quot;:120}]'&gt;&lt;/bc-chart-bar&gt;
+
+  &lt;!-- bc-chart-line --&gt;
+  &lt;bc-chart-line chart-title=&quot;Trend&quot; data='[{&quot;name&quot;:&quot;Jan&quot;,&quot;value&quot;:100}]' smooth&gt;&lt;/bc-chart-line&gt;
+
+  &lt;!-- bc-chart-area --&gt;
+  &lt;bc-chart-area chart-title=&quot;Traffic&quot; data='[{&quot;name&quot;:&quot;Mon&quot;,&quot;value&quot;:820}]'&gt;&lt;/bc-chart-area&gt;
+
+  &lt;!-- bc-chart-pie --&gt;
+  &lt;bc-chart-pie chart-title=&quot;Share&quot; data='[{&quot;name&quot;:&quot;A&quot;,&quot;value&quot;:60}]' donut&gt;&lt;/bc-chart-pie&gt;
+
+  &lt;!-- bc-chart-scatter --&gt;
+  &lt;bc-chart-scatter chart-title=&quot;Correlation&quot; data='[[10,8],[8,7]]'&gt;&lt;/bc-chart-scatter&gt;
+
+  &lt;!-- bc-chart-radar --&gt;
+  &lt;bc-chart-radar chart-title=&quot;Skills&quot; data='[{&quot;name&quot;:&quot;Speed&quot;,&quot;value&quot;:80}]'&gt;&lt;/bc-chart-radar&gt;
+
+  &lt;!-- bc-chart-gauge --&gt;
+  &lt;bc-chart-gauge chart-title=&quot;CPU&quot; value=&quot;72&quot; max=&quot;100&quot;&gt;&lt;/bc-chart-gauge&gt;
+
+  &lt;!-- bc-chart-funnel --&gt;
+  &lt;bc-chart-funnel chart-title=&quot;Pipeline&quot; data='[{&quot;name&quot;:&quot;Leads&quot;,&quot;value&quot;:100}]'&gt;&lt;/bc-chart-funnel&gt;
+
+  &lt;!-- bc-chart-heatmap --&gt;
+  &lt;bc-chart-heatmap chart-title=&quot;Activity&quot; data='[[0,0,5],[0,1,8]]'&gt;&lt;/bc-chart-heatmap&gt;
+
+  &lt;!-- bc-chart-candlestick --&gt;
+  &lt;bc-chart-candlestick chart-title=&quot;Stock&quot; data='[[&quot;2024-01&quot;,100,120,90,110]]'&gt;&lt;/bc-chart-candlestick&gt;
+
+  &lt;!-- bc-chart-boxplot --&gt;
+  &lt;bc-chart-boxplot chart-title=&quot;Dist&quot; data='[[1,2,3,4,5]]'&gt;&lt;/bc-chart-boxplot&gt;
+
+  &lt;!-- bc-chart-sankey --&gt;
+  &lt;bc-chart-sankey chart-title=&quot;Flow&quot; data='...'&gt;&lt;/bc-chart-sankey&gt;
+
+  &lt;!-- bc-chart-treemap --&gt;
+  &lt;bc-chart-treemap chart-title=&quot;Budget&quot; data='[{&quot;name&quot;:&quot;Eng&quot;,&quot;value&quot;:50}]'&gt;&lt;/bc-chart-treemap&gt;
+
+  &lt;!-- bc-chart-graph --&gt;
+  &lt;bc-chart-graph chart-title=&quot;Network&quot; data='...'&gt;&lt;/bc-chart-graph&gt;
+
+  &lt;!-- bc-chart-themeriver --&gt;
+  &lt;bc-chart-themeriver chart-title=&quot;Trend&quot; data='...'&gt;&lt;/bc-chart-themeriver&gt;
+
+  &lt;!-- bc-chart-parallel --&gt;
+  &lt;bc-chart-parallel chart-title=&quot;Multi&quot; data='...'&gt;&lt;/bc-chart-parallel&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No import needed — bc-* components are registered globally
+// via '@bitcode/components' loader in main.ts
+&lt;/script&gt;</code></pre>
+      </div>
+      <div class="fw-panel" data-fw="angular">
+        <pre><code>&lt;!-- app-demo.component.html --&gt;
+&lt;!-- Add CUSTOM_ELEMENTS_SCHEMA to your module --&gt;
+&lt;!-- bc-chart-bar --&gt;
+&lt;bc-chart-bar chart-title=&quot;Sales&quot; data='[{&quot;name&quot;:&quot;Q1&quot;,&quot;value&quot;:120}]'&gt;&lt;/bc-chart-bar&gt;
+
+&lt;!-- bc-chart-line --&gt;
+&lt;bc-chart-line chart-title=&quot;Trend&quot; data='[{&quot;name&quot;:&quot;Jan&quot;,&quot;value&quot;:100}]' smooth&gt;&lt;/bc-chart-line&gt;
+
+&lt;!-- bc-chart-area --&gt;
+&lt;bc-chart-area chart-title=&quot;Traffic&quot; data='[{&quot;name&quot;:&quot;Mon&quot;,&quot;value&quot;:820}]'&gt;&lt;/bc-chart-area&gt;
+
+&lt;!-- bc-chart-pie --&gt;
+&lt;bc-chart-pie chart-title=&quot;Share&quot; data='[{&quot;name&quot;:&quot;A&quot;,&quot;value&quot;:60}]' donut&gt;&lt;/bc-chart-pie&gt;
+
+&lt;!-- bc-chart-scatter --&gt;
+&lt;bc-chart-scatter chart-title=&quot;Correlation&quot; data='[[10,8],[8,7]]'&gt;&lt;/bc-chart-scatter&gt;
+
+&lt;!-- bc-chart-radar --&gt;
+&lt;bc-chart-radar chart-title=&quot;Skills&quot; data='[{&quot;name&quot;:&quot;Speed&quot;,&quot;value&quot;:80}]'&gt;&lt;/bc-chart-radar&gt;
+
+&lt;!-- bc-chart-gauge --&gt;
+&lt;bc-chart-gauge chart-title=&quot;CPU&quot; value=&quot;72&quot; max=&quot;100&quot;&gt;&lt;/bc-chart-gauge&gt;
+
+&lt;!-- bc-chart-funnel --&gt;
+&lt;bc-chart-funnel chart-title=&quot;Pipeline&quot; data='[{&quot;name&quot;:&quot;Leads&quot;,&quot;value&quot;:100}]'&gt;&lt;/bc-chart-funnel&gt;
+
+&lt;!-- bc-chart-heatmap --&gt;
+&lt;bc-chart-heatmap chart-title=&quot;Activity&quot; data='[[0,0,5],[0,1,8]]'&gt;&lt;/bc-chart-heatmap&gt;
+
+&lt;!-- bc-chart-candlestick --&gt;
+&lt;bc-chart-candlestick chart-title=&quot;Stock&quot; data='[[&quot;2024-01&quot;,100,120,90,110]]'&gt;&lt;/bc-chart-candlestick&gt;
+
+&lt;!-- bc-chart-boxplot --&gt;
+&lt;bc-chart-boxplot chart-title=&quot;Dist&quot; data='[[1,2,3,4,5]]'&gt;&lt;/bc-chart-boxplot&gt;
+
+&lt;!-- bc-chart-sankey --&gt;
+&lt;bc-chart-sankey chart-title=&quot;Flow&quot; data='...'&gt;&lt;/bc-chart-sankey&gt;
+
+&lt;!-- bc-chart-treemap --&gt;
+&lt;bc-chart-treemap chart-title=&quot;Budget&quot; data='[{&quot;name&quot;:&quot;Eng&quot;,&quot;value&quot;:50}]'&gt;&lt;/bc-chart-treemap&gt;
+
+&lt;!-- bc-chart-graph --&gt;
+&lt;bc-chart-graph chart-title=&quot;Network&quot; data='...'&gt;&lt;/bc-chart-graph&gt;
+
+&lt;!-- bc-chart-themeriver --&gt;
+&lt;bc-chart-themeriver chart-title=&quot;Trend&quot; data='...'&gt;&lt;/bc-chart-themeriver&gt;
+
+&lt;!-- bc-chart-parallel --&gt;
+&lt;bc-chart-parallel chart-title=&quot;Multi&quot; data='...'&gt;&lt;/bc-chart-parallel&gt;</code></pre>
+      </div>
+    </div>
+  </details>
+</div>

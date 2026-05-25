@@ -257,7 +257,7 @@ class BcSetupImpl {
       mq.addEventListener('change', handler);
       this._systemThemeCleanup = () => mq.removeEventListener('change', handler);
     } else if (theme === 'light') {
-      document.documentElement.removeAttribute('data-bc-theme');
+      document.documentElement.setAttribute('data-bc-theme', 'light');
       this._currentResolvedTheme = 'light';
       this._notifyThemeChange('light');
     } else {
@@ -347,6 +347,9 @@ class BcSetupImpl {
 }
 
 export const BcSetup = new BcSetupImpl();
+
+export { registerResolver, getRegisteredPrefixes, resolveTemplate } from './template-resolver';
+export type { TemplateResolverFn } from './template-resolver';
 
 export { validateAllFields, resetAllFields, clearAllErrors, getFormData } from './field-utils';
 

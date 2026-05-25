@@ -1,0 +1,43 @@
+<div class="group-heading">Datatable</div>
+
+  <div class="demo-section" id="datatable">
+    <h2><code>bc-datatable</code></h2>
+    <p class="desc">Full-featured data table with sorting, filtering, pagination, and row selection.</p>
+    <div class="demo-box">
+      <bc-datatable model="contact" columns='[{"field":"name","label":"Name","sortable":true},{"field":"email","label":"Email","sortable":true},{"field":"company","label":"Company","sortable":true},{"field":"city","label":"City","sortable":true},{"field":"status","label":"Status","sortable":true,"filterable":true}]' view-title="Contacts"></bc-datatable>
+    </div>
+  </div>
+
+  <div class="demo-section" id="child-table">
+    <h2><code>bc-child-table</code></h2>
+    <p class="desc">Inline editable child/one2many table.</p>
+    <div class="demo-box">
+      <bc-child-table field="items" columns='[{"key":"product","label":"Product"},{"key":"qty","label":"Qty","type":"number"},{"key":"price","label":"Price","type":"number"}]' data='[{"product":"Widget A","qty":2,"price":10.50},{"product":"Widget B","qty":1,"price":25.00}]'></bc-child-table>
+    </div>
+  </div>
+
+  <div class="demo-section" id="filter-panel">
+    <h2><code>bc-filter-panel</code></h2>
+    <div class="demo-box">
+      <bc-filter-panel categories='[{"name":"Status","options":[{"label":"Active","value":"active","count":12},{"label":"Inactive","value":"inactive","count":5}]},{"name":"Type","options":[{"label":"Customer","value":"customer","count":8},{"label":"Vendor","value":"vendor","count":9}]}]' placeholder="Filter..."></bc-filter-panel>
+    </div>
+  </div>
+
+  <div class="demo-section" id="filter-bar">
+    <h2><code>bc-filter-bar</code></h2>
+    <div class="demo-box">
+      <bc-filter-bar presets='[{"label":"All","value":"all"},{"label":"Active","value":"active"},{"label":"This Month","value":"month"}]' placeholder="Quick filter..."></bc-filter-bar>
+    </div>
+  </div>
+
+  <div class="demo-section" id="filter-builder">
+    <h2><code>bc-filter-builder</code></h2>
+    <p class="desc">Advanced query builder with AND/OR groups.</p>
+    <div class="demo-box">
+      <bc-filter-builder fields='[{"key":"name","label":"Name","type":"string"},{"key":"age","label":"Age","type":"number"},{"key":"status","label":"Status","type":"select"}]' show-json-toggle></bc-filter-builder>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DIALOGS -->
+  <!-- ═══════════════════════════════════════════ -->

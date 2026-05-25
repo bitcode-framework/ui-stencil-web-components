@@ -1,22 +1,22 @@
-@import '../field-base.css';
+﻿@import '../field-base.css';
 
 .bc-color-wrapper {
   display: flex;
   align-items: center;
-  gap: var(--bc-spacing-sm);
+  gap: var(--bc-spacing-sm, 0.5rem);
 }
 
 input[type="color"] {
   width: 2.5rem;
   height: 2.5rem;
-  border: 1px solid var(--bc-border-color);
-  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-border-color, #e5e7eb);
+  border-radius: var(--bc-radius-md, 0.375rem);
   cursor: pointer;
   padding: 0.125rem;
 }
 
 .bc-color-hex {
-  font-family: var(--bc-font-mono);
-  font-size: var(--bc-font-size-sm);
-  color: var(--bc-text-secondary);
+  font-family: var(--bc-font-mono, ui-monospace, monospace);
+  font-size: var(--bc-font-size-sm, 0.875rem);
+  color: var(--bc-text-secondary, #6b7280);
 }

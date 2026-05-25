@@ -6,6 +6,8 @@
 <bc-field-json name="myfield" label="My Field" />
 ```
 
+Uses the same editor chrome as `bc-field-code`, with JSON-oriented token coloring and a cleaner IDE-style surface in both light and dark themes.
+
 ## Props
 
 | Prop | Type | Default | Description |

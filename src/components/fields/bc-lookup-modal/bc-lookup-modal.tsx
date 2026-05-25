@@ -1,5 +1,8 @@
-import { Component, Prop, State, Event, EventEmitter, Element, h } from '@stencil/core';
+import { Component, Prop, State, Event, EventEmitter, Element, Watch, h } from '@stencil/core';
 import { getApiClient } from '../../../core/api-client';
+import { fetchData } from '../../../core/data-fetcher';
+import { BcSetup } from '../../../core/bc-setup';
+import { DataFetcher } from '../../../core/types';
 import { i18n } from '../../../core/i18n';
 
 @Component({ tag: 'bc-lookup-modal', styleUrl: 'bc-lookup-modal.css', shadow: false })
@@ -7,11 +10,16 @@ export class BcLookupModal {
   @Element() el!: HTMLElement;
   @Prop({ mutable: true }) open: boolean = false;
   @Prop() model: string = '';
+  @Prop() localData?: string;
   @Prop() displayField: string = 'name';
   @Prop() columns: string = '[]';
   @Prop() multiple: boolean = false;
   @Prop() apiUrl: string = '';
   @Prop() modalTitle: string = '';
+  @Prop() dataSource: string = '';
+  @Prop() fetchHeaders: string = '';
+  @Prop() fetchOptions?: string;
+  dataFetcher?: DataFetcher;
 
   @State() data: Array<Record<string, unknown>> = [];
   @State() total: number = 0;
@@ -22,6 +30,7 @@ export class BcLookupModal {
 
   @Event() lcLookupSelect!: EventEmitter<{ records: Array<Record<string, unknown>> }>;
   @Event() lcLookupClose!: EventEmitter<void>;
+  @Event() lcError!: EventEmitter<{message: string}>;
 
   private getCols(): Array<{ field: string; label?: string }> {
     try { return JSON.parse(this.columns); } catch { return [{ field: this.displayField }]; }
@@ -31,14 +40,45 @@ export class BcLookupModal {
 
   async componentDidLoad() { if (this.open) await this.fetchData(); }
 
+  @Watch('open')
+  onOpenChange() { if (this.open) this.fetchData(); }
+
   private async fetchData() {
     this.loading = true;
     try {
-      const api = getApiClient();
-      const res = await api.list(this.model, { page: this.page, pageSize: 10, q: this.query || undefined });
-      this.data = res.data;
-      this.total = res.total;
-    } catch { this.data = []; this.total = 0; }
+      if (this.dataFetcher) {
+        const result = await this.dataFetcher({ page: this.page, pageSize: 10, search: this.query || undefined });
+        this.data = result.data as Array<Record<string, unknown>>;
+        this.total = result.total;
+      } else if (this.dataSource || this.apiUrl) {
+        const src = this.dataSource || this.apiUrl;
+        const baseUrl = BcSetup.getBaseUrl();
+        let url = src;
+        if (url && !url.startsWith('http') && baseUrl) url = baseUrl + url;
+        const headers = { ...BcSetup.getHeaders(), ...(this.fetchHeaders ? JSON.parse(this.fetchHeaders) : {}) };
+        const sep = url.includes('?') ? '&' : '?';
+        const q = this.query ? `&q=${encodeURIComponent(this.query)}` : '';
+        const res = await fetch(`${url}${sep}page=${this.page}&pageSize=10${q}`, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        this.data = json.data || json;
+        this.total = json.total || this.data.length;
+      } else if (this.model) {
+        try {
+          const result = await fetchData({ element: this.el, model: this.model, localData: this.localData, fetchOptions: this.fetchOptions ? JSON.parse(this.fetchOptions) : undefined, fetchHeaders: this.fetchHeaders, params: { page: this.page, pageSize: 10, search: this.query || undefined } });
+          this.data = result.data as Array<Record<string, unknown>>;
+          this.total = result.total;
+        } catch {
+          const api = getApiClient();
+          const res = await api.list(this.model, { page: this.page, pageSize: 10, q: this.query || undefined });
+          this.data = res.data;
+          this.total = res.total;
+        }
+      }
+    } catch (err) {
+      this.data = []; this.total = 0;
+      this.lcError.emit({ message: String(err) });
+    }
     this.loading = false;
   }
 

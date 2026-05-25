@@ -1,12 +1,12 @@
-:host {
+﻿:host {
   display: block;
-  margin-bottom: var(--bc-spacing-lg);
+  margin-bottom: var(--bc-spacing-lg, 1.5rem);
 }
 
 .bc-section {
-  border: 1px solid var(--bc-border-color);
-  border-radius: var(--bc-radius-lg);
-  background: var(--bc-bg);
+  border: 1px solid var(--bc-border-color, #e5e7eb);
+  border-radius: var(--bc-radius-lg, 0.5rem);
+  background: var(--bc-bg, #ffffff);
   overflow: hidden;
 }
 
@@ -14,9 +14,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--bc-spacing-sm) var(--bc-spacing-md);
-  background: var(--bc-bg-secondary);
-  border-bottom: 1px solid var(--bc-border-color);
+  padding: var(--bc-spacing-sm, 0.5rem) var(--bc-spacing-md, 1rem);
+  background: var(--bc-bg-secondary, #f9fafb);
+  border-bottom: 1px solid var(--bc-border-color, #e5e7eb);
 }
 
 .is-collapsible .bc-section-header {
@@ -25,7 +25,7 @@
 }
 
 .is-collapsible .bc-section-header:hover {
-  background: var(--bc-bg-hover);
+  background: var(--bc-bg-hover, #f3f4f6);
 }
 
 .is-collapsed .bc-section-header {
@@ -34,23 +34,23 @@
 
 .bc-section-title {
   margin: 0;
-  font-size: var(--bc-font-size-base);
-  font-weight: var(--bc-font-weight-semibold);
-  color: var(--bc-text);
+  font-size: var(--bc-font-size-base, 1rem);
+  font-weight: var(--bc-font-weight-semibold, 600);
+  color: var(--bc-text, #111827);
 }
 
 .bc-section-desc {
   margin: 0.125rem 0 0;
-  font-size: var(--bc-font-size-sm);
-  color: var(--bc-text-secondary);
+  font-size: var(--bc-font-size-sm, 0.875rem);
+  color: var(--bc-text-secondary, #6b7280);
 }
 
 .bc-section-toggle {
-  font-size: var(--bc-font-size-xs);
-  color: var(--bc-text-secondary);
-  transition: transform var(--bc-transition);
+  font-size: var(--bc-font-size-xs, 0.75rem);
+  color: var(--bc-text-secondary, #6b7280);
+  transition: transform var(--bc-transition, 150ms ease);
 }
 
 .bc-section-body {
-  padding: var(--bc-spacing-md);
+  padding: var(--bc-spacing-md, 1rem);
 }
