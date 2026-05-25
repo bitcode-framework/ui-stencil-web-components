@@ -248,7 +248,7 @@ function genVanilla(tags) {
 }
 
 function genReact(tags) {
-  return `import '${esc(tags.map(t => '@bitcode-framework/ui-components/' + t).join(', '))}';
+  return `import '${esc(tags.map(t => '@bitcode-framework/ui-web-components/' + t).join(', '))}';
 // All bc-* tags work as JSX — they're standard Web Components
 // Set props via attributes or ref
 
@@ -275,7 +275,7 @@ ${tags.map(tag => {
 
 <script setup>
 // No import needed — bc-* components are registered globally
-// via '@bitcode-framework/ui-components' loader in main.ts
+// via '@bitcode-framework/ui-web-components' loader in main.ts
 </script>`;
 }
 

@@ -1,4 +1,4 @@
-# @bitcode-framework/ui-components — Documentation
+# @bitcode-framework/ui-web-components — Documentation
 
 Standalone enterprise Web Component library. Works anywhere — plain HTML, React, Vue, Angular, or any framework. No build step required for consumers.
 

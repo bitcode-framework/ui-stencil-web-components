@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@bitcode-framework/ui-components` will be documented in this file.
+All notable changes to `@bitcode-framework/ui-web-components` will be documented in this file.
 
 ## [0.2.0] - 2026-07-28
 
@@ -15,7 +15,7 @@ Complete enterprise upgrade of all 103 components. Every component is now standa
 - **data-fetcher** — 4-level data fetching: local data, URL endpoint, event intercept, custom fetcher function
 - **validation-engine** — 3-level validation pipeline: built-in rules, custom JS validators, server-side validation
 - **field-utils** — Shared utilities: dirty/touched tracking, ARIA attributes, CSS classes, FormProxy, debounce
-- **Barrel exports** — `import { BcSetup, validateAllFields } from '@bitcode-framework/ui-components/utils'`
+- **Barrel exports** — `import { BcSetup, validateAllFields } from '@bitcode-framework/ui-web-components/utils'`
 
 #### Theming
 - Light theme (default)
