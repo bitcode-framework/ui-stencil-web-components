@@ -4,9 +4,9 @@ Enterprise-grade Stencil Web Components for business applications. 127 component
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![npm version](https://img.shields.io/npm/v/@bitcode-framework/ui-web-components.svg)](https://www.npmjs.com/package/@bitcode-framework/ui-web-components)
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://bitcode-framework.github.io/ui-stencil-web-components/demo/)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://bitcode-framework.github.io/ui-web-components/demo/)
 
-**[Live Demo →](https://bitcode-framework.github.io/ui-stencil-web-components/demo/)** — interactive component gallery with all 127 components.
+**[Live Demo →](https://bitcode-framework.github.io/ui-web-components/demo/)** — interactive component gallery with all 127 components.
 
 ## What is @bitcode-framework/ui-web-components?
 
@@ -338,7 +338,7 @@ export class AppModule {}
 |------|-------------|
 | [go-json](https://github.com/bitcode-framework/go-json) | JSON/JSONC programming language engine |
 | [go-json-runtimes](https://github.com/bitcode-framework/go-json-runtimes) | Script runtime engines for go-json (Goja, QuickJS, Yaegi, Node.js, Python) |
-| [ui-stencil-web-components](https://github.com/bitcode-framework/ui-stencil-web-components) | This repository |
+| [ui-web-components](https://github.com/bitcode-framework/ui-web-components) | This repository |
 | [ui-tauri](https://github.com/bitcode-framework/ui-tauri) | Tauri 2.0 native shell for desktop and mobile |
 
 ## Documentation
